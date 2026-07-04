@@ -14,6 +14,31 @@ Act I should create the question that the next act answers:
 
 > What happens if one line is not enough?
 
+## Revision status
+
+This guide incorporates feedback from the first implementation review:
+
+```text
+content/videos/backpropagation/reviews/act1-review-001.md
+```
+
+## Target duration
+
+Act I should target approximately **90–120 seconds**.
+
+The previous 37-second implementation was too fast.
+
+Do not compress the act to fit under one minute.
+
+## Pacing rules
+
+- Every major concept needs visual breathing room.
+- Add short pauses after important labels appear.
+- Do not introduce inputs, weights, sum, activation, output, and decision boundary in one rapid chain.
+- Narration should feel possible at normal speaking speed.
+- Prefer fewer simultaneous animations.
+- Important visual transitions should take around 1–2 seconds, not a few frames.
+
 ## Source files
 
 Read these files before implementation:
@@ -38,8 +63,36 @@ A viewer should be able to visually understand:
 5. The neuron combines information.
 6. An output is produced.
 7. Changing a weight changes the decision.
-8. The perceptron becomes a linear decision boundary.
-9. One line cannot separate every pattern.
+8. A concrete two-input classification example appears.
+9. The concrete example becomes a 2D graph.
+10. The perceptron line separates two classes.
+11. The line is then generalized as a decision boundary.
+12. One line cannot separate every pattern.
+
+## Concrete example requirement
+
+Before introducing the abstract idea of a line or decision boundary, show a small concrete example.
+
+Use this example unless there is a strong implementation reason to choose another:
+
+```text
+x₁ = hours studied
+x₂ = hours slept
+output = pass / not pass
+```
+
+The example should progress like this:
+
+1. Show two named inputs entering the perceptron.
+2. Show a few labeled examples, such as students represented as points.
+3. Use two classes: `pass` and `not pass`.
+4. Place the examples on a 2D graph.
+5. Draw a line separating most/all of the examples.
+6. Then generalize: with two inputs, a perceptron draws a line between classes.
+
+The exact example is not important. The important rule is:
+
+> concrete example first, abstraction second.
 
 ## Suggested reusable components
 
@@ -63,19 +116,26 @@ scene-rosenblatt
 scene-inputs-and-weights
 scene-weighted-sum
 scene-learning-weight-change
+scene-concrete-example
 scene-decision-boundary
 scene-limitation
 ```
 
-## Good first Codex task
+## Good next Codex task
 
 ```text
-Implement Act I of the backpropagation video from the Markdown source files.
+Revise Act I using the content source files first.
 
-Use content/videos/backpropagation/04-animation-spec.md as the source of truth.
-Use content/videos/backpropagation/05-narration.md for pacing.
-Use content/videos/backpropagation/act1-implementation.md for Act I-specific acceptance criteria.
-Keep the implementation minimal and readable.
-Create reusable components only for repeated concepts.
+Do not only edit Motion Canvas implementation files.
+
+First update or confirm:
+- content/videos/backpropagation/04-animation-spec.md
+- content/videos/backpropagation/05-narration.md
+- content/videos/backpropagation/act1-implementation.md
+
+Then update the Motion Canvas implementation to match the revised specs.
+
+Act I should target 90–120 seconds.
+It must include a concrete two-input classification example before generalizing to a decision boundary line.
 Do not implement future acts.
 ```
