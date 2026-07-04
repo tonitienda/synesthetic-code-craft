@@ -9,7 +9,7 @@ Keep this process lightweight. The priority is to produce the first usable video
 Implement Act I of:
 
 ```text
-content/videos/backpropagation-from-scratch/
+content/videos/backpropagation/
 ```
 
 ## Before implementing
@@ -18,13 +18,11 @@ Read these files in order:
 
 ```text
 AGENTS.md
-content/videos/backpropagation-from-scratch/README.md
-content/videos/backpropagation-from-scratch/00-video.md
-content/videos/backpropagation-from-scratch/04-animation-spec.md
-content/videos/backpropagation-from-scratch/05-narration.md
+content/videos/backpropagation/README.md
+content/videos/backpropagation/00-video.md
+content/videos/backpropagation/04-animation-spec.md
+content/videos/backpropagation/05-narration.md
 ```
-
-If `00-video.md` does not exist, continue with the other files.
 
 ## Implementation loop
 
@@ -49,9 +47,10 @@ For each scene:
 ## Good first Codex task
 
 ```text
-Implement Act I of the backpropagation-from-scratch video from the Markdown source files.
+Implement Act I of the backpropagation video from the Markdown source files.
 
-Use 04-animation-spec.md as the source of truth.
+Use content/videos/backpropagation/04-animation-spec.md as the source of truth.
+Use content/videos/backpropagation/05-narration.md for pacing.
 Keep the implementation minimal and readable.
 Create reusable components only for repeated concepts such as Neuron, Connection, Signal, and DecisionBoundaryGraph.
 Do not implement future acts.
