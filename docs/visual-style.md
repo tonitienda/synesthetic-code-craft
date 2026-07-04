@@ -30,15 +30,15 @@ Avoid motion that only decorates the scene.
 
 These are starting conventions, not permanent rules.
 
-- circles: units, nodes, neurons, components
+- circles: units, nodes, components
 - lines: connections or dependencies
 - moving dots: signals, data, information flow
-- line thickness: importance, strength, or weight
+- line thickness: importance, strength, intensity, or weight
 - glow/pulse: current focus
 - red: error, failure, mismatch, impossible case
 - blue: input/data
 - green: output/success
-- orange/yellow: weights or adjustable parameters
+- orange/yellow: adjustable parameters
 
 ## Text
 
@@ -54,16 +54,12 @@ These are starting conventions, not permanent rules.
 - Do not shake the camera.
 - Do not use fast zooms.
 
-## For Act I backpropagation
+## Local video guidance
 
-The viewer should be able to visually understand:
+Video-specific visual acceptance criteria should live next to the video content.
 
-1. a neuron appears
-2. inputs connect to it
-3. weights appear on connections
-4. signals move through weighted inputs
-5. the neuron combines information
-6. an output is produced
-7. changing a weight changes the decision
-8. the perceptron becomes a linear decision boundary
-9. one line cannot separate every pattern
+Example:
+
+```text
+content/videos/<video-slug>/act1-implementation.md
+```
