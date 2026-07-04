@@ -2,20 +2,92 @@
 
 ## Project purpose
 
-This repository contains Motion Canvas videos for educational, YouTube-ready technical explanations. Keep each video self-contained enough that future humans and agents can find the scene entry point, supporting script, and preview assets quickly.
+This repository creates educational, YouTube-ready technical explanations with Motion Canvas.
+
+The current workflow is Markdown-first:
+
+```text
+content source files → Motion Canvas implementation → rendered video
+```
+
+The goal is to produce useful videos, not to design a perfect framework. Earn every abstraction by using it in the first video.
+
+## Core rule
+
+Do not invent video structure directly in Motion Canvas.
+
+Implement from the Markdown source files under:
+
+```text
+content/videos/<video-slug>/
+```
+
+For the current first test, use:
+
+```text
+content/videos/backpropagation-from-scratch/
+```
+
+## Source priority
+
+When implementing a scene or act, use sources in this order:
+
+1. `04-animation-spec.md` — source of truth for visuals and timing intent
+2. `05-narration.md` — narration text and conceptual pacing
+3. `03-beats.md` — story sequence and transitions
+4. `02-treatment.md` — tone, audience, and conceptual goals
+5. `01-research.md` — factual background
+6. `00-video.md` — overall video scope, if present
+
+## Implementation scope
+
+Implement only the requested act or scene.
+
+Do not implement future acts unless explicitly asked.
+
+For the first implementation pass, focus on Act I only.
+
+## Ambiguity rule
+
+If the animation specification is ambiguous:
+
+- choose the simplest interpretation that preserves the concept, or
+- add a TODO comment explaining the ambiguity.
+
+Do not add major new scenes, concepts, jokes, visual metaphors, or stylistic changes without explicit instruction.
 
 ## Working conventions
 
-- Prefer Motion Canvas scenes in `src/scenes/` and project entry points in `src/projects/`.
-- For every new video, create a dedicated directory under `src/videos/<video-slug>/` with at least:
-  - `script.md` containing timestamped narration and visual beats.
-  - `screenshots/README.md` explaining where generated screenshot artifacts are produced.
-  - optional notes/assets that are specific to that video.
+- Prefer Motion Canvas scenes in `src/scenes/` and project entry points in `src/projects/` unless the existing repo structure clearly uses a different convention.
+- For every substantial video, keep a dedicated implementation directory under `src/videos/<video-slug>/`.
+- Keep the content source under `content/videos/<video-slug>/` separate from the Motion Canvas implementation under `src/`.
 - Add or update npm scripts in `package.json` for serving and building each new project.
 - Update `README.md` when adding, renaming, or changing how to run a video.
 - Do not commit binary screenshot/video exports; generate them into `artifacts/` and upload them from CI instead.
-- Keep visuals legible at 16:9 presentation size: large text, high contrast, and restrained on-screen copy.
-- Use consistent formatting with the existing codebase: TypeScript, TSX scenes, two-space indentation, and semicolons.
+
+## Visual style
+
+- dark background
+- minimal geometry
+- calm motion
+- generous spacing
+- high contrast
+- restrained on-screen copy
+- soft glow is acceptable
+- avoid neon excess
+- avoid crowded screens
+- no hype aesthetics
+- motion should explain the concept
+
+## Code style
+
+- Use TypeScript and TSX scenes.
+- Use two-space indentation and semicolons.
+- Prefer reusable Motion Canvas components.
+- Keep scene files readable.
+- Keep timings easy to tune.
+- Do not over-engineer abstractions before they are used.
+- Make the animation understandable even before final TTS/audio is added.
 
 ## Testing expectations
 
@@ -25,4 +97,6 @@ Before committing code changes, run at least:
 npm run build
 ```
 
-If the change adds a video-specific build script, also run that script when practical. For preview changes, run the relevant `npm run screenshots:<slug>` command or the generic screenshot generator.
+If the change adds a video-specific build script, also run that script when practical.
+
+For preview changes, run the relevant `npm run screenshots:<slug>` command or the generic screenshot generator when practical.
