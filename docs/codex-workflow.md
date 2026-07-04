@@ -14,9 +14,15 @@ content/README.md
 content/language/animation-spec-v0.md
 content/videos/<video-slug>/README.md
 content/videos/<video-slug>/00-video.md
-content/videos/<video-slug>/04-animation-spec.md
-content/videos/<video-slug>/05-narration.md
 ```
+
+Then read the most specific source file available for the requested work.
+
+Prefer this order:
+
+1. `04-timeline.md` — timing, narration, and animation source of truth when present
+2. `04-animation-spec.md` — visual source when no timeline exists yet
+3. `05-narration.md` — narration reference when no timeline exists yet
 
 If a video or act has a local implementation guide, read that too.
 
@@ -30,8 +36,8 @@ content/videos/<video-slug>/act1-implementation.md
 
 For each scene:
 
-1. Read the relevant scene in `04-animation-spec.md`.
-2. Check the matching narration in `05-narration.md`.
+1. Read the relevant scene in the timeline or animation spec.
+2. Use the narration blocks to pace the scene.
 3. Implement the simplest Motion Canvas version that communicates the concept clearly.
 4. Prefer reusable components only when a visual pattern appears more than once.
 5. Run the relevant build command when practical.
