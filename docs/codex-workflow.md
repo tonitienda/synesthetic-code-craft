@@ -2,26 +2,28 @@
 
 This guide explains how Codex should implement videos in this repository.
 
-Keep this process lightweight. The priority is to produce the first usable video and learn from the result.
+Keep this process lightweight. The priority is to produce usable videos and learn from real implementation feedback.
 
-## Current target
-
-Implement Act I of:
-
-```text
-content/videos/backpropagation/
-```
-
-## Before implementing
+## Before implementing a video or act
 
 Read these files in order:
 
 ```text
 AGENTS.md
-content/videos/backpropagation/README.md
-content/videos/backpropagation/00-video.md
-content/videos/backpropagation/04-animation-spec.md
-content/videos/backpropagation/05-narration.md
+content/README.md
+content/language/animation-spec-v0.md
+content/videos/<video-slug>/README.md
+content/videos/<video-slug>/00-video.md
+content/videos/<video-slug>/04-animation-spec.md
+content/videos/<video-slug>/05-narration.md
+```
+
+If a video or act has a local implementation guide, read that too.
+
+Example:
+
+```text
+content/videos/<video-slug>/act1-implementation.md
 ```
 
 ## Implementation loop
@@ -35,26 +37,17 @@ For each scene:
 5. Run the relevant build command when practical.
 6. Leave TODO comments for genuine ambiguities.
 
-## Do not do this yet
+## Avoid premature framework work
 
-- Do not implement the full backpropagation video.
-- Do not implement Acts II–VII.
-- Do not build a generic animation compiler.
-- Do not create a large DSL parser.
-- Do not redesign the repo structure.
-- Do not add complex visual systems unless Act I needs them.
+Do not build generic infrastructure unless it directly helps the requested scene or act.
 
-## Good first Codex task
+In particular, do not automatically:
 
-```text
-Implement Act I of the backpropagation video from the Markdown source files.
-
-Use content/videos/backpropagation/04-animation-spec.md as the source of truth.
-Use content/videos/backpropagation/05-narration.md for pacing.
-Keep the implementation minimal and readable.
-Create reusable components only for repeated concepts such as Neuron, Connection, Signal, and DecisionBoundaryGraph.
-Do not implement future acts.
-```
+- implement future acts
+- build a generic animation compiler
+- create a large DSL parser
+- redesign the repo structure
+- add complex visual systems before they are needed
 
 ## Review mindset
 
