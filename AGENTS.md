@@ -25,7 +25,7 @@ content/videos/<video-slug>/
 For the current first test, use:
 
 ```text
-content/videos/backpropagation-from-scratch/
+content/videos/backpropagation/
 ```
 
 ## Source priority
