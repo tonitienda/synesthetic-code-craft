@@ -22,6 +22,14 @@ This guide incorporates feedback from the first implementation review:
 content/videos/backpropagation/reviews/act1-review-001.md
 ```
 
+The next implementation pass should use the timeline file as the source of truth:
+
+```text
+content/videos/backpropagation/04-timeline.md
+```
+
+If `04-timeline.md` conflicts with `04-animation-spec.md` or `05-narration.md`, prefer `04-timeline.md`.
+
 ## Target duration
 
 Act I should target approximately **90–120 seconds**.
@@ -38,6 +46,8 @@ Do not compress the act to fit under one minute.
 - Narration should feel possible at normal speaking speed.
 - Prefer fewer simultaneous animations.
 - Important visual transitions should take around 1–2 seconds, not a few frames.
+- Scene timestamps in `04-timeline.md` are relative to each scene.
+- Scene durations in `04-timeline.md` are timing budgets. Adjust only slightly when implementation requires it.
 
 ## Source files
 
@@ -47,9 +57,15 @@ Read these files before implementation:
 content/videos/backpropagation/README.md
 content/videos/backpropagation/00-video.md
 content/videos/backpropagation/03-beats.md
+content/videos/backpropagation/04-timeline.md
+content/videos/backpropagation/06-codex-implementation.md
+```
+
+Reference only if needed:
+
+```text
 content/videos/backpropagation/04-animation-spec.md
 content/videos/backpropagation/05-narration.md
-content/videos/backpropagation/06-codex-implementation.md
 ```
 
 ## Act I visual acceptance criteria
@@ -124,16 +140,13 @@ scene-limitation
 ## Good next Codex task
 
 ```text
-Revise Act I using the content source files first.
+Revise Act I using content/videos/backpropagation/04-timeline.md as the source of truth.
 
 Do not only edit Motion Canvas implementation files.
 
-First update or confirm:
-- content/videos/backpropagation/04-animation-spec.md
-- content/videos/backpropagation/05-narration.md
-- content/videos/backpropagation/act1-implementation.md
+Use the timeline scene durations, timestamps, narration, and animation notes to guide the implementation.
 
-Then update the Motion Canvas implementation to match the revised specs.
+If 04-timeline.md conflicts with 04-animation-spec.md or 05-narration.md, prefer 04-timeline.md.
 
 Act I should target 90–120 seconds.
 It must include a concrete two-input classification example before generalizing to a decision boundary line.
