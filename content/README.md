@@ -29,14 +29,15 @@ content/
 ├── language/
 │   └── animation-spec-v0.md
 └── videos/
-    └── backpropagation-basics/
+    └── backpropagation/
+        ├── 00-video.md
         ├── README.md
         ├── 01-research.md
         ├── 02-treatment.md
         ├── 03-beats.md
         ├── 04-animation-spec.md
         ├── 05-narration.md
-        └── 06-motion-canvas.md
+        └── 06-codex-implementation.md
 ```
 
 ## Philosophy
