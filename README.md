@@ -8,6 +8,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
 - `containers-image-to-running-process` — explains how container images become bounded running processes.
+- `containers-image-to-running-process-alive` — alternative containers implementation focused on one evolving, dynamic visual system.
 
 ## Quick start
 
@@ -23,6 +24,7 @@ npm run start:intro
 npm run start:deep-dive
 npm run start:backpropagation
 npm run start:containers
+npm run start:containers:alive
 ```
 
 ## Build
@@ -33,6 +35,7 @@ npm run build:intro
 npm run build:deep-dive
 npm run build:backpropagation
 npm run build:containers
+npm run build:containers:alive
 ```
 
 ## Narration exports
@@ -51,11 +54,12 @@ The `:audio` scripts call the macOS `say` command when available. On non-macOS e
 
 Binary screenshots are not committed. Pull requests that touch Motion Canvas projects, scenes, or video folders run the `Motion Canvas previews` workflow, which builds the project, generates PNG preview frames for changed video folders, and uploads them as the `motion-canvas-screenshots` artifact.
 
-To generate the same previews locally for the backpropagation video:
+To generate the same previews locally for the backpropagation and containers videos:
 
 ```bash
 npm run screenshots:backpropagation
 npm run screenshots:containers
+npm run screenshots:containers:alive
 ```
 
 Generated files are written to `artifacts/screenshots/`, which is ignored by Git.
@@ -63,3 +67,9 @@ Generated files are written to `artifacts/screenshots/`, which is ignored by Git
 ## Video folders
 
 Each substantial video should include a dedicated folder under `src/videos/<slug>/` with timestamped narration, production notes, and representative screenshots. For examples, see `src/videos/backpropagation-basics/` and `src/videos/containers-image-to-running-process/`.
+
+## Motion design direction
+
+Educational videos should feel alive, not like static slide decks. Prefer persistent visual systems whose components enter, move, unfold, split, merge, pulse, and change state as the idea develops. Hard cuts are acceptable for major act breaks, but when the same concept continues, evolve the existing component instead of replacing the whole screen.
+
+Clean implementation is not enough. The Motion Canvas code should also protect the aesthetic intent: balanced composition, generous negative space, tasteful color, purposeful motion, and moments of visual delight that make the explanation memorable without becoming noisy.
