@@ -48,15 +48,38 @@ Every phase artifact should start with YAML front matter.
 
 ```yaml
 ---
-type: specs | research | treatment | beats | narration | scene-timeline | implementation-plan | review
+type: specs
 phase: "00-specs"
 video: "<video-slug>"
-status: draft | ready-for-review | changes-requested | approved | superseded
+status: draft
 depends_on: []
 version: 1
 approved_by:
 approved_at:
 ---
+```
+
+Allowed `type` values:
+
+```text
+specs
+research
+treatment
+beats
+narration
+scene-timeline
+implementation-plan
+review
+```
+
+Allowed `status` values:
+
+```text
+draft
+ready-for-review
+changes-requested
+approved
+superseded
 ```
 
 Rules:
@@ -338,7 +361,7 @@ Use YAML front matter with `type: narration`, followed by a fenced parseable nar
 
 Markdown outside the fenced block is allowed for human notes, but tooling should be able to ignore it.
 
-```markdown
+````markdown
 ---
 type: narration
 phase: "04-narration"
@@ -374,7 +397,7 @@ segments:
     pause_after: 0.8
     delivery: calm
 ```
-```
+````
 
 ## Narration schema
 
