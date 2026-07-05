@@ -14,13 +14,13 @@ container = process + filesystem view + namespaces + cgroups
 - `theme.ts` keeps the calm dark palette local to this video.
 - `components.tsx` provides only the diagram primitives used by the first implementation pass.
 - Scene files live in `src/scenes/containersAct*.tsx` and intentionally map one-to-one to the implementation scenes in `06-implementation-plan.md`.
-- Each scene uses a shared reveal/hold/fade rhythm with multiple overlaid diagram states so the rendered video does not become a static slide deck or a vertically stacked set of panels. The current pacing is intentionally around seven minutes before final TTS/audio tuning.
-- `src/scenes/containersAliveStory.tsx` is an alternative implementation that favors more dynamic visual continuity inside each conceptual section instead of mostly static scene cards.
-- Each scene uses small timing constants and a simple reveal/hold/fade rhythm so narration alignment can be tuned without changing the visual model.
+- Implementations must preserve the timing budgets and `Moment:` cues from `05-scene-timeline.md`.
+- `src/scenes/containersAliveTimelinePaced.tsx` is the current `containers:alive` implementation. It uses explicit timeline cues and lasts about 610 seconds so the approved 7–10 minute pacing is represented in code.
+- `src/scenes/containersAliveStory.tsx` remains as an earlier dynamic sketch, but it is not the timeline-paced version.
 
 ## Alternative alive implementation
 
-The alternative project is intentionally more dynamic and aesthetic-first:
+The alternative project is intentionally more dynamic and aesthetic-first, while still respecting the approved scene timing:
 
 ```bash
 npm run start:containers:alive
@@ -28,7 +28,7 @@ npm run build:containers:alive
 npm run screenshots:containers:alive
 ```
 
-Use it to explore the same approved conceptual chain with more motion, transformation, and visual continuity. Cuts or fresh compositions can make sense at act boundaries; the important constraint is to avoid resetting the entire screen every few seconds while the same concept is still being explained.
+Use it to explore the same approved conceptual chain with more motion, transformation, and visual continuity. Cuts or fresh compositions can make sense at act boundaries; the important constraints are to keep continuity inside a concept and to preserve the approved duration budget.
 
 ## Project commands
 
