@@ -1,6 +1,6 @@
 ---
 type: scene-timeline
-status: in-progress
+status: ready
 depends_on:
   - 03-beats.md
   - 04-narration.md
@@ -26,7 +26,7 @@ container = process + filesystem view + namespaces + cgroups
 
 ## Status notes
 
-- Draft status is `in-progress` until a human reviews timing, act/scene grouping, and component names.
+- Status is `ready`.
 - Acts are story containers from the approved beats; scenes are implementation units inside acts.
 - Timed moment headings are relative to the start of their scene, not the full act or video.
 - Timings are budgets, not frame-perfect edit points.
