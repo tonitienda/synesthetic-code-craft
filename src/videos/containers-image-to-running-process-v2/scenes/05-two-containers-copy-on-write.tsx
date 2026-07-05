@@ -10,7 +10,7 @@ export default makeContainersV2Scene({
     {
       label: 'n017 shared image layers',
       hold: 3.3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={26} alignItems={'center'}>
           <ContainerPair />
           <Caption text={'one shared read-only foundation, two running containers'} tone={'ok'} />
@@ -20,7 +20,7 @@ export default makeContainersV2Scene({
     {
       label: 'n018 private writable layers',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout gap={120} alignItems={'center'}>
           <Layout layout direction={'column'} gap={16} alignItems={'center'}>
             <WritableLayer label={'Writable A'} />
@@ -36,7 +36,7 @@ export default makeContainersV2Scene({
     {
       label: 'n020 read shared original',
       hold: 3.2,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={28} alignItems={'center'}>
           <Layout layout gap={36} alignItems={'center'}>
             <Txt text={'Container A'} fontSize={30} fill={c.text} />
@@ -53,7 +53,7 @@ export default makeContainersV2Scene({
     {
       label: 'n021 write records private change',
       hold: 3.6,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={30} alignItems={'center'}>
           <Layout layout gap={40} alignItems={'center'}>
             <Txt text={'Container A writes'} fontSize={31} fill={c.amber} fontWeight={800} />
@@ -67,7 +67,7 @@ export default makeContainersV2Scene({
     {
       label: 'n022 independent views',
       hold: 4,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={28} alignItems={'center'}>
           <Layout layout gap={72} alignItems={'center'}>
             <Layout layout direction={'column'} gap={14} alignItems={'center'}>
