@@ -1,6 +1,6 @@
 ---
 type: scene-timeline
-status: in-progress
+status: ready
 depends_on:
   - 03-beats.md
   - 04-narration.md
@@ -36,7 +36,6 @@ container = process + filesystem view + namespaces + cgroups
 
 ## Status notes
 
-- Status is `in-progress` because this file has been reduced from a mixed timeline/design document into a focused scene timeline and needs human review again.
 - Acts are story containers inherited from the approved beats and narration.
 - Scenes are edit/timing units, not final Motion Canvas scenes.
 - Timing values are budgets, not frame-perfect edit points.
