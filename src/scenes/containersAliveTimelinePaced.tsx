@@ -82,6 +82,7 @@ export default makeScene2D(function* (view) {
   const cgroupFrame = createRef<Rect>();
   const pipeline = createRef<Layout>();
   const finalMap = createRef<Layout>();
+  const ociNote = createRef<Layout>();
 
   view.add(
     <>
@@ -112,6 +113,11 @@ export default makeScene2D(function* (view) {
         <Pill label={'run'} color={c.amber} />
         <Txt text={'→'} fontSize={30} fill={c.dim} />
         <Pill label={'container'} color={c.green} />
+      </Layout>
+
+      <Layout ref={ociNote} layout direction={'column'} gap={6} x={520} y={-165} alignItems={'start'} opacity={0}>
+        <Txt text={'Docker interface'} fontSize={24} fontWeight={800} fill={c.violet} />
+        <Txt text={'model maps broadly to OCI-style images and runtimes'} fontSize={19} fill={c.muted} />
       </Layout>
 
       <Rect ref={image} x={-420} y={20} width={300} height={190} radius={30} fill={c.panel} stroke={c.cyan} lineWidth={5} opacity={0}>
@@ -232,7 +238,21 @@ export default makeScene2D(function* (view) {
 
   // Act 2 — Four nouns, four roles. Act budget: 75s.
   setCue('Act 2', 'Scene 2.1 / Moment: 0.0s — Vocabulary map', 55);
-  yield* run(0.7, command().opacity(0, 0.7), registry().opacity(1, 0.7), image().opacity(1, 0.7), runtime().opacity(1, 0.7), containerA().opacity(1, 0.7));
+  yield* run(
+    0.7,
+    command().opacity(0, 0.7),
+    registry().opacity(1, 0.7),
+    registry().position([-60, 20], 0.7),
+    image().opacity(1, 0.7),
+    image().position([-420, 20], 0.7),
+    image().scale(1, 0.7),
+    runtime().opacity(1, 0.7),
+    runtime().position([300, 20], 0.7),
+    runtime().scale(1, 0.7),
+    containerA().opacity(1, 0.7),
+    containerA().position([420, 80], 0.7),
+    process().position([420, 65], 0.7),
+  );
   yield* waitUntil(73);
   setCue('Act 2', 'Scene 2.1 / Moment: 18.0s — Image definition', 73);
   yield* run(0.8, image().scale(1.12, 0.8), layers().opacity(1, 0.8), config().opacity(1, 0.8));
@@ -244,12 +264,12 @@ export default makeScene2D(function* (view) {
   yield* run(0.8, pipeline().opacity(1, 0.8), pipeline().position([0, -270], 0.8), registry().scale(1, 0.8));
   yield* waitUntil(128);
   setCue('Act 2', 'Scene 2.2 / Moment: 28.0s — Docker doorway, OCI note', 128);
-  yield* run(0.7, cue().fill(c.violet, 0.7), cue().fill(c.amber, 0.7));
+  yield* run(0.7, ociNote().opacity(1, 0.7), ociNote().position([520, -150], 0.7));
   yield* waitUntil(130);
 
   // Act 3 — Open the image. Scene budget: 80s.
   setCue('Act 3', 'Scene 3.1 / Moment: 0.0s — Image is not a blob', 130);
-  yield* run(0.9, registry().opacity(0.25, 0.9), runtime().opacity(0.25, 0.9), containerA().opacity(0.25, 0.9), image().position([0, -40], 0.9), image().scale(1.2, 0.9), layers().position([0, 230], 0.9), config().position([410, 230], 0.9), layers().opacity(1, 0.9), config().opacity(1, 0.9));
+  yield* run(0.9, registry().opacity(0.25, 0.9), runtime().opacity(0.25, 0.9), containerA().opacity(0.25, 0.9), ociNote().opacity(0, 0.9), image().position([0, -40], 0.9), image().scale(1.2, 0.9), layers().position([0, 230], 0.9), config().position([410, 230], 0.9), layers().opacity(1, 0.9), config().opacity(1, 0.9));
   yield* waitUntil(152);
   setCue('Act 3', 'Scene 3.1 / Moment: 22.0s — Ordered filesystem changes', 152);
   yield* run(1.1, layers().scale(1.14, 1.1), image().opacity(0.45, 1.1));
@@ -299,10 +319,24 @@ export default makeScene2D(function* (view) {
 
   // Act 6 — The host sees a process with boundaries. Act budget: 100s.
   setCue('Act 6', 'Scene 6.1 / Moment: 0.0s — Host kernel foundation', 430);
-  yield* run(0.9, kernel().opacity(1, 0.9), image().opacity(0.18, 0.9), registry().opacity(0.18, 0.9), runtime().opacity(0.18, 0.9));
+  yield* run(
+    0.9,
+    kernel().opacity(1, 0.9),
+    image().opacity(0.18, 0.9),
+    registry().opacity(0.18, 0.9),
+    runtime().opacity(0.18, 0.9),
+    containerA().position([420, 80], 0.9),
+    process().position([420, 65], 0.9),
+    writableA().position([420, -35], 0.9),
+    fileA().position([420, 160], 0.9),
+    containerB().opacity(0.12, 0.9),
+    processB().opacity(0.12, 0.9),
+    namespaceFrame().position([420, 80], 0.9),
+    cgroupFrame().position([420, 80], 0.9),
+  );
   yield* waitUntil(458);
   setCue('Act 6', 'Scene 6.1 / Moment: 28.0s — Not just a casual process', 458);
-  yield* run(0.9, namespaceFrame().opacity(1, 0.9), cgroupFrame().opacity(1, 0.9), containerB().opacity(0.22, 0.9));
+  yield* run(0.9, namespaceFrame().opacity(1, 0.9), cgroupFrame().opacity(1, 0.9), containerB().opacity(0.08, 0.9));
   yield* waitUntil(475);
   setCue('Act 6', 'Scene 6.2 / Moment: 0.0s — Namespaces shape the view', 475);
   yield* run(0.9, namespaceFrame().scale(1.06, 0.9), cue().fill(c.violet, 0.9));
@@ -322,7 +356,7 @@ export default makeScene2D(function* (view) {
   yield* run(0.9, formula().opacity(1, 0.9), finalMap().opacity(0, 0.9), image().opacity(0.25, 0.9), runtime().opacity(0.25, 0.9));
   yield* waitUntil(581);
   setCue('Act 7', 'Scene 7.2 / Moment: 26.0s — Optional commit loop', 581);
-  yield* run(0.8, writableA().scale(1.08, 0.4), image().scale(1.08, 0.4));
+  yield* run(0.4, writableA().scale(1.08, 0.4), image().scale(1.08, 0.4));
   yield* run(0.4, writableA().scale(1, 0.4), image().scale(1, 0.4));
   yield* waitUntil(599);
   setCue('Act 7', 'Scene 7.2 / Moment: 44.0s — Stable final diagram', 599);
