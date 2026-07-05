@@ -22,10 +22,14 @@ export const c = {
 };
 
 export const timing = {
-  quick: 0.35,
-  normal: 0.75,
-  slow: 1.1,
-  hold: 1.4,
+  quick: 0.3,
+  fade: 0.45,
+  enter: 0.75,
+  intro: 0.7,
+  progress: 0.55,
+  preHold: 0.4,
+  defaultHold: 2.2,
+  outroHold: 0.6,
 };
 
 export const layers = [
