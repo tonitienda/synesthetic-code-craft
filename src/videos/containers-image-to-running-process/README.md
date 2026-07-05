@@ -12,9 +12,23 @@ container = process + filesystem view + namespaces + cgroups
 ## Structure
 
 - `theme.ts` keeps the calm dark palette local to this video.
-- `components.tsx` provides only the diagram primitives used by this first implementation pass.
+- `components.tsx` provides only the diagram primitives used by the first implementation pass.
 - Scene files live in `src/scenes/containersAct*.tsx` and intentionally map one-to-one to the implementation scenes in `06-implementation-plan.md`.
 - Each scene uses a shared reveal/hold/fade rhythm with multiple overlaid diagram states so the rendered video does not become a static slide deck or a vertically stacked set of panels. The current pacing is intentionally around seven minutes before final TTS/audio tuning.
+- `src/scenes/containersAliveStory.tsx` is an alternative implementation that favors more dynamic visual continuity inside each conceptual section instead of mostly static scene cards.
+- Each scene uses small timing constants and a simple reveal/hold/fade rhythm so narration alignment can be tuned without changing the visual model.
+
+## Alternative alive implementation
+
+The alternative project is intentionally more dynamic and aesthetic-first:
+
+```bash
+npm run start:containers:alive
+npm run build:containers:alive
+npm run screenshots:containers:alive
+```
+
+Use it to explore the same approved conceptual chain with more motion, transformation, and visual continuity. Cuts or fresh compositions can make sense at act boundaries; the important constraint is to avoid resetting the entire screen every few seconds while the same concept is still being explained.
 
 ## Project commands
 
