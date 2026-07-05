@@ -10,9 +10,9 @@ depends_on:
 
 ## Purpose
 
-This file turns the ready narration segments in `04-narration.md` into implementation-ready visual scenes.
+This file turns the ready narration segments in `04-narration.md` into implementation-ready acts, scenes, and timed moments.
 
-The timeline should guide Motion Canvas work without inventing a new story structure. It groups the narration beats into a small number of reusable visual scenes, preserving the core model:
+The timeline should guide Motion Canvas work without inventing a new story structure. It keeps the approved act structure from `03-beats.md`, then lets each act group one or more implementation scenes. Those scenes preserve the core model:
 
 ```text
 image -> runtime setup -> process with boundaries
@@ -26,7 +26,9 @@ container = process + filesystem view + namespaces + cgroups
 
 ## Status notes
 
-- Draft status is `in-progress` until a human reviews timing, scene grouping, and component names.
+- Draft status is `in-progress` until a human reviews timing, act/scene grouping, and component names.
+- Acts are story containers from the approved beats; scenes are implementation units inside acts.
+- Timed moment headings are relative to the start of their scene, not the full act or video.
 - Timings are budgets, not frame-perfect edit points.
 - The narration IDs from `04-narration.md` are stable references for future TTS and implementation.
 - The optional `docker commit` loop remains secondary and must not become the final memory.
@@ -59,6 +61,14 @@ These are implementation names, not requirements to over-abstract immediately:
 - `NamespaceView` — frame or split-view showing what the process can see.
 - `CgroupLimit` — budget ring or meters for what the process can use.
 
+## Act, scene, and timing rules
+
+- Use `Act N` for story-level structure inherited from the beats and narration.
+- Use `Scene N.M` for Motion Canvas-sized implementation units inside an act.
+- A short act can contain one scene; a denser act can contain several scenes.
+- Use `Moment:` labels inside scenes for timed animation/narration cues.
+- Do not name an entire act as a scene unless it is deliberately implemented as one continuous scene.
+
 ## Timing rules
 
 - Target video duration: 7–10 minutes.
@@ -71,15 +81,20 @@ These are implementation names, not requirements to over-abstract immediately:
 
 ---
 
-# Scene 1 — The familiar command, corrected
+# Act 1 — The familiar command, corrected
 
-Duration budget: 55–70s
+Act duration budget: 55–70s
 
 Narration: `n001`–`n003`
 
 Beats: `b001`–`b003`
 
-## 0.0s — Command doorway
+## Scene 1.1 — Command doorway and core correction
+
+Scene duration budget: 55–70s
+
+
+### Moment: 0.0s — Command doorway
 
 Animation:
 - Fade in a dark, empty frame.
@@ -96,7 +111,7 @@ Narration: `n001`
 On-screen copy:
 - `docker run nginx`
 
-## 11.0s — What is actually running?
+### Moment: 11.0s — What is actually running?
 
 Animation:
 - Slightly dim `docker` and `nginx`.
@@ -108,7 +123,7 @@ Narration: continuation of `n001`
 On-screen copy:
 - `what runs?`
 
-## 20.0s — Image does not equal process
+### Moment: 20.0s — Image does not equal process
 
 Animation:
 - Transform the command into a split composition:
@@ -128,7 +143,7 @@ On-screen copy:
 - `An image does not run.`
 - `A process runs.`
 
-## 42.0s — Thesis chain
+### Moment: 42.0s — Thesis chain
 
 Animation:
 - Replace the split with a left-to-right chain:
@@ -152,15 +167,20 @@ Transition:
 
 ---
 
-# Scene 2 — Four nouns, four roles
+# Act 2 — Four nouns, four roles
 
-Duration budget: 75–95s
+Act duration budget: 75–95s
 
 Narration: `n004`–`n008`
 
 Beats: `b004`–`b008`
 
-## 0.0s — Vocabulary map
+## Scene 2.1 — Vocabulary map
+
+Scene duration budget: 45–55s
+
+
+### Moment: 0.0s — Vocabulary map
 
 Animation:
 - Fade in four `VocabularyCard`s arranged as a clean map:
@@ -178,7 +198,7 @@ On-screen copy:
 - `Runtime — prepares and starts`
 - `Container — running instance`
 
-## 18.0s — Image definition
+### Moment: 18.0s — Image definition
 
 Animation:
 - Enlarge `Image` card.
@@ -194,7 +214,7 @@ On-screen copy:
 - `default command`
 - `environment`
 
-## 34.0s — Registry definition
+### Moment: 34.0s — Registry definition
 
 Animation:
 - Move the `ImageBox` toward the `RegistryBox` shelf.
@@ -207,7 +227,11 @@ On-screen copy:
 - `registry = image storage + distribution`
 - `not where containers run`
 
-## 50.0s — Workflow verbs
+## Scene 2.2 — Workflow verbs and Docker doorway
+
+Scene duration budget: 30–40s
+
+### Moment: 0.0s — Workflow verbs
 
 Animation:
 - Re-arrange the vocabulary into a left-to-right pipeline:
@@ -227,7 +251,7 @@ On-screen copy:
 - `push / pull move images`
 - `run creates a container`
 
-## 78.0s — Docker doorway, OCI note
+### Moment: 28.0s — Docker doorway, OCI note
 
 Animation:
 - Add a small side label near the pipeline:
@@ -247,15 +271,20 @@ Transition:
 
 ---
 
-# Scene 3 — Open the image
+# Act 3 — Open the image
 
-Duration budget: 80–105s
+Act duration budget: 80–105s
 
 Narration: `n009`–`n011`
 
 Beats: `b009`–`b011`
 
-## 0.0s — Image is not a blob
+## Scene 3.1 — Image internals as layers plus config
+
+Scene duration budget: 80–105s
+
+
+### Moment: 0.0s — Image is not a blob
 
 Animation:
 - Center the `ImageBox`.
@@ -267,7 +296,7 @@ On-screen copy:
 - `image = layers + config`
 - `not one mysterious blob`
 
-## 22.0s — Ordered filesystem changes
+### Moment: 22.0s — Ordered filesystem changes
 
 Animation:
 - Separate the `LayerStack` into transparent sheets.
@@ -285,7 +314,7 @@ On-screen copy:
 - `stacked in order`
 - `filesystem view`
 
-## 58.0s — Shared and read-only
+### Moment: 58.0s — Shared and read-only
 
 Animation:
 - Add a subtle lock/fixed-frame treatment to each image layer.
@@ -304,15 +333,20 @@ Transition:
 
 ---
 
-# Scene 4 — What run prepares
+# Act 4 — What run prepares
 
-Duration budget: 95–120s
+Act duration budget: 95–120s
 
 Narration: `n012`–`n016`
 
 Beats: `b012`–`b016`
 
-## 0.0s — Runtime inputs
+## Scene 4.1 — Runtime preparation pipeline
+
+Scene duration budget: 60–75s
+
+
+### Moment: 0.0s — Runtime inputs
 
 Animation:
 - Show the `RuntimeBox` receiving three inputs:
@@ -329,7 +363,7 @@ On-screen copy:
 - `run options`
 - `runtime prepares an environment`
 
-## 24.0s — Filesystem view
+### Moment: 24.0s — Filesystem view
 
 Animation:
 - The `LayerStack` aligns into a single panel labeled `filesystem view`.
@@ -340,7 +374,7 @@ Narration: `n013`
 On-screen copy:
 - `one filesystem view`
 
-## 44.0s — Private writable layer
+### Moment: 44.0s — Private writable layer
 
 Animation:
 - Add a distinct `WritableLayer` above the shared read-only layers.
@@ -352,7 +386,11 @@ On-screen copy:
 - `private writable layer`
 - `image layers stay read-only`
 
-## 64.0s — Startup configuration
+## Scene 4.2 — Startup configuration and boundaries
+
+Scene duration budget: 35–45s
+
+### Moment: 0.0s — Startup configuration
 
 Animation:
 - Bring in small config cards that attach to a waiting `ProcessBox`:
@@ -370,7 +408,7 @@ On-screen copy:
 - `working directory`
 - `user`
 
-## 86.0s — Process starts inside boundaries
+### Moment: 22.0s — Process starts inside boundaries
 
 Animation:
 - Start the `ProcessBox` with a gentle pulse.
@@ -393,15 +431,20 @@ Transition:
 
 ---
 
-# Scene 5 — Same image, two containers
+# Act 5 — Same image, two containers
 
-Duration budget: 125–155s
+Act duration budget: 125–155s
 
 Narration: `n017`–`n022`
 
 Beats: `b017`–`b022`
 
-## 0.0s — Two runs from one image
+## Scene 5.1 — Shared read-only layers and private writable layers
+
+Scene duration budget: 65–80s
+
+
+### Moment: 0.0s — Two runs from one image
 
 Animation:
 - Place one shared `LayerStack` at the bottom center.
@@ -415,7 +458,7 @@ On-screen copy:
 - `Container A`
 - `Container B`
 
-## 24.0s — Shared part stays shared
+### Moment: 24.0s — Shared part stays shared
 
 Animation:
 - Draw read arrows from both containers to the same shared read-only layers.
@@ -428,7 +471,7 @@ On-screen copy:
 - `shared read-only layers`
 - `neither container changes the image`
 
-## 48.0s — Private writable layers
+### Moment: 48.0s — Private writable layers
 
 Animation:
 - Add `Writable A` above Container A's view.
@@ -442,7 +485,11 @@ On-screen copy:
 - `Writable B`
 - `runtime changes are private`
 
-## 72.0s — Read from shared original
+## Scene 5.2 — Copy-on-write file trace
+
+Scene duration budget: 60–75s
+
+### Moment: 0.0s — Read from shared original
 
 Animation:
 - Introduce a small file token in the shared layer: `/etc/app.conf`.
@@ -456,7 +503,7 @@ On-screen copy:
 - `/etc/app.conf`
 - `read: shared original`
 
-## 94.0s — Write records a private change
+### Moment: 22.0s — Write records a private change
 
 Animation:
 - Container A edits `/etc/app.conf`.
@@ -471,7 +518,7 @@ On-screen copy:
 - `shared original unchanged`
 - `copy-on-write mental model`
 
-## 122.0s — Different views, independent containers
+### Moment: 50.0s — Different views, independent containers
 
 Animation:
 - Split the upper frame into two filesystem views:
@@ -492,15 +539,20 @@ Transition:
 
 ---
 
-# Scene 6 — The host sees a process with boundaries
+# Act 6 — The host sees a process with boundaries
 
-Duration budget: 100–125s
+Act duration budget: 100–125s
 
 Narration: `n023`–`n027`
 
 Beats: `b023`–`b027`
 
-## 0.0s — Host kernel foundation
+## Scene 6.1 — Host process and boundary frames
+
+Scene duration budget: 45–55s
+
+
+### Moment: 0.0s — Host kernel foundation
 
 Animation:
 - Add a broad `KernelLayer` beneath a `ContainerInstance`.
@@ -514,7 +566,7 @@ On-screen copy:
 - `process / process group`
 - `not a tiny machine booting from scratch`
 
-## 28.0s — Not just a casual process
+### Moment: 28.0s — Not just a casual process
 
 Animation:
 - Start from a plain `ProcessBox`.
@@ -528,7 +580,11 @@ Narration: `n024`
 On-screen copy:
 - `container = process with prepared boundaries`
 
-## 50.0s — Namespaces shape the view
+## Scene 6.2 — Namespaces and cgroups
+
+Scene duration budget: 55–70s
+
+### Moment: 0.0s — Namespaces shape the view
 
 Animation:
 - Zoom into the `namespace views` frame.
@@ -547,7 +603,7 @@ On-screen copy:
 - `network`
 - `hostname`
 
-## 78.0s — Cgroups shape the budget
+### Moment: 28.0s — Cgroups shape the budget
 
 Animation:
 - Transition to a `CgroupLimit` ring around the `ProcessBox`.
@@ -563,7 +619,7 @@ On-screen copy:
 - `memory`
 - `I/O`
 
-## 100.0s — View plus budget
+### Moment: 50.0s — View plus budget
 
 Animation:
 - Show the process above the host kernel inside two clear frames:
@@ -582,15 +638,20 @@ Transition:
 
 ---
 
-# Scene 7 — Reassemble the model
+# Act 7 — Reassemble the model
 
-Duration budget: 80–105s
+Act duration budget: 80–105s
 
 Narration: `n028`–`n031`
 
 Beats: `b028`–`b031`
 
-## 0.0s — Workflow returns with sharper words
+## Scene 7.1 — Final workflow and compact model
+
+Scene duration budget: 25–35s
+
+
+### Moment: 0.0s — Workflow returns with sharper words
 
 Animation:
 - Bring back the Act 2 pipeline:
@@ -612,7 +673,11 @@ On-screen copy:
 - `pull retrieves it`
 - `run creates a container process`
 
-## 26.0s — Final formula
+## Scene 7.2 — Final formula and optional commit loop
+
+Scene duration budget: 55–70s
+
+### Moment: 0.0s — Final formula
 
 Animation:
 - Condense the right side into a final equation:
@@ -630,7 +695,7 @@ On-screen copy:
 - `the process is real`
 - `the boundaries make it a container`
 
-## 52.0s — Optional commit loop
+### Moment: 26.0s — Optional commit loop
 
 Animation:
 - If duration allows, show a small secondary loop off to the side:
@@ -648,7 +713,7 @@ On-screen copy:
 - `optional loop: commit`
 - `usually rebuild from source + Dockerfile`
 
-## 70.0s — Stable final diagram
+### Moment: 44.0s — Stable final diagram
 
 Animation:
 - Settle into the final diagram:

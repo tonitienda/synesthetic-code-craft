@@ -22,4 +22,4 @@ This folder contains the Markdown-first content phases for the video explaining 
 - Preserve the final memory: `container = process + filesystem view + namespaces + cgroups`.
 - Treat `docker commit` as optional and secondary; do not make it the final memory or imply it is the normal image-building workflow.
 - When writing or revising narration, reference beat IDs from `03-beats.md` and preserve stable narration IDs from `04-narration.md` once downstream files reference them.
-- When revising the scene timeline, keep scene groupings tied to narration IDs and avoid introducing Motion Canvas-only story structure.
+- When revising the scene timeline, keep acts as story-level containers and scenes as implementation units inside acts; scene groupings should remain tied to narration IDs and avoid Motion Canvas-only story structure.
