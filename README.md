@@ -8,7 +8,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
 - `containers-image-to-running-process` — explains how container images become bounded running processes. The implementation is paced as a multi-act animated explainer rather than a short static slide deck.
-- `containers-image-to-running-process-alive` — alternative containers implementation focused on more dynamic, visually continuous container explanations.
+- `containers-image-to-running-process-alive` — alternative containers implementation focused on more dynamic, visually continuous container explanations while respecting the approved scene-timeline duration.
 
 ## Quick start
 
@@ -75,3 +75,9 @@ Educational videos should feel alive, not like static slide decks. Prefer visual
 Avoid the rhythm where every few seconds a complete new set of elements appears and replaces the previous one. When the same idea continues, evolve the existing elements. When the act changes, a fresh composition is allowed, but it should still feel intentionally staged rather than like a reset caused by implementation convenience.
 
 Clean implementation is not enough. The Motion Canvas code should also protect the aesthetic intent: balanced composition, generous negative space, tasteful color, purposeful motion, and moments of visual delight that make the explanation memorable without becoming noisy.
+
+## Timeline pacing requirements
+
+The approved `05-scene-timeline.md` for a video is a timing contract, not just visual inspiration. `Moment: 20.0s` means the implementation must reserve time so that cue appears around second 20 relative to that scene. Agents must not collapse a 55–70 second scene into a few short transitions because the concepts are visually present.
+
+A Motion Canvas implementation is incomplete if it does not preserve the scene duration budgets from the timeline. Use explicit timing helpers, scene-local clocks, or narration-driven waits so the total duration remains in the approved range. If pacing must change, update the content phase intentionally in a separate review instead of silently compressing the video in code.
