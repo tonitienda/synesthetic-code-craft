@@ -1,6 +1,6 @@
-# Codex Workflow
+# Workflow
 
-This guide explains how Codex should implement videos in this repository.
+This guide explains how agents should implement videos in this repository.
 
 Keep this process lightweight. The priority is to produce usable videos and learn from real implementation feedback.
 
