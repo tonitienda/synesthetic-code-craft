@@ -28,16 +28,31 @@ For the current first test, use:
 content/videos/backpropagation/
 ```
 
+## Phase gates
+
+Follow the gated phase workflow described in:
+
+```text
+docs/phases.md
+```
+
+Each phase must be approved by the human before dependent phases start.
+
+When implementing Motion Canvas, use only approved source artifacts unless the human explicitly asks for an exploratory draft.
+
 ## Source priority
 
-When implementing a scene or act, use sources in this order:
+When implementing a scene or act, use approved sources in this order:
 
-1. `04-animation-spec.md` — source of truth for visuals and timing intent
-2. `05-narration.md` — narration text and conceptual pacing
+1. `05-scene-timeline.md` — source of truth for visuals, components, timing intent, and narration references
+2. `04-narration.md` — parseable narration segments and conceptual pacing
 3. `03-beats.md` — story sequence and transitions
 4. `02-treatment.md` — tone, audience, and conceptual goals
 5. `01-research.md` — factual background
-6. `00-video.md` — overall video scope, if present
+6. `00-specs.md` — overall video scope
+7. `content/language/animation-spec-v0.md` — shared vocabulary for scene timeline components
+
+During migration, some videos may still use older files such as `04-animation-spec.md`, `04-timeline.md`, or `05-narration.md`. If canonical files do not exist yet, use the closest existing approved source and document the mismatch instead of silently renaming files.
 
 ## Implementation scope
 
