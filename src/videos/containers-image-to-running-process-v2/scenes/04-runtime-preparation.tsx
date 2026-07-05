@@ -10,7 +10,7 @@ export default makeContainersV2Scene({
     {
       label: 'n012 runtime inputs',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout gap={28} alignItems={'center'}>
           <Layout layout direction={'column'} gap={16} alignItems={'center'}>
             <ConceptBox title={'image layers'} tone={'image'} width={260} height={105} />
@@ -25,7 +25,7 @@ export default makeContainersV2Scene({
     {
       label: 'n013 filesystem view',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={28} alignItems={'center'}>
           <LayerStack writable={'private writable layer'} shared />
           <Caption text={'one filesystem view: private top, shared read-only foundation'} tone={'strong'} />
@@ -35,7 +35,7 @@ export default makeContainersV2Scene({
     {
       label: 'n015 startup configuration',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout gap={34} alignItems={'center'}>
           <Layout layout direction={'column'} gap={15} alignItems={'center'}>
             <ConceptBox title={'command'} tone={'runtime'} width={230} height={90} />
@@ -51,7 +51,7 @@ export default makeContainersV2Scene({
     {
       label: 'n016 boundaries make the container',
       hold: 3.8,
-      element: (
+      render: () => (
         <Layout layout gap={32} alignItems={'center'}>
           <BoundaryFrame label={'filesystem view'} tone={'filesystem'}>
             <BoundaryFrame label={'namespace views'} tone={'namespace'}>
@@ -67,7 +67,7 @@ export default makeContainersV2Scene({
     {
       label: 'container instance',
       hold: 2.6,
-      element: <ContainerInstance label={'container instance'} />,
+      render: () => <ContainerInstance label={'container instance'} />,
     },
   ],
 });
