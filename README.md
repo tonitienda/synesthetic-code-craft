@@ -8,7 +8,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
 - `containers-image-to-running-process` — explains how container images become bounded running processes.
-- `containers-image-to-running-process-alive` — alternative containers implementation focused on one evolving, dynamic visual system.
+- `containers-image-to-running-process-alive` — alternative containers implementation focused on more dynamic, visually continuous container explanations.
 
 ## Quick start
 
@@ -70,6 +70,8 @@ Each substantial video should include a dedicated folder under `src/videos/<slug
 
 ## Motion design direction
 
-Educational videos should feel alive, not like static slide decks. Prefer persistent visual systems whose components enter, move, unfold, split, merge, pulse, and change state as the idea develops. Hard cuts are acceptable for major act breaks, but when the same concept continues, evolve the existing component instead of replacing the whole screen.
+Educational videos should feel alive, not like static slide decks. Prefer visual continuity inside a conceptual section: components should enter, move, unfold, split, merge, pulse, and change state as the idea develops. Hard cuts are welcome when they clarify a new act, chapter, metaphor, or spatial setup.
+
+Avoid the rhythm where every few seconds a complete new set of elements appears and replaces the previous one. When the same idea continues, evolve the existing elements. When the act changes, a fresh composition is allowed, but it should still feel intentionally staged rather than like a reset caused by implementation convenience.
 
 Clean implementation is not enough. The Motion Canvas code should also protect the aesthetic intent: balanced composition, generous negative space, tasteful color, purposeful motion, and moments of visual delight that make the explanation memorable without becoming noisy.
