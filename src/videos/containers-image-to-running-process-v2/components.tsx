@@ -55,15 +55,19 @@ export function Arrow({width = 105, color = c.stroke, label}: {width?: number; c
 }
 
 export function CommandCallout({command = 'docker run nginx', focus = 'run'}: {command?: string; focus?: string}) {
-  const before = command.split(focus)[0] ?? '';
-  const after = command.split(focus)[1] ?? '';
+  const index = focus.length > 0 ? command.indexOf(focus) : -1;
+  const hasFocus = index !== -1;
+  const before = hasFocus ? command.slice(0, index) : command;
+  const after = hasFocus ? command.slice(index + focus.length) : '';
 
   return (
     <Rect layout gap={8} alignItems={'center'} justifyContent={'center'} width={780} height={138} radius={28} fill={'#020617'} stroke={c.stroke} lineWidth={4}>
       <Txt text={before} fontFamily={'monospace'} fontSize={58} fill={c.text} />
-      <Rect radius={12} padding={[8, 16]} fill={c.amberSoft} stroke={c.amber} lineWidth={3}>
-        <Txt text={focus} fontFamily={'monospace'} fontSize={58} fill={c.amber} fontWeight={800} />
-      </Rect>
+      {hasFocus && (
+        <Rect radius={12} padding={[8, 16]} fill={c.amberSoft} stroke={c.amber} lineWidth={3}>
+          <Txt text={focus} fontFamily={'monospace'} fontSize={58} fill={c.amber} fontWeight={800} />
+        </Rect>
+      )}
       <Txt text={after} fontFamily={'monospace'} fontSize={58} fill={c.text} />
     </Rect>
   );
