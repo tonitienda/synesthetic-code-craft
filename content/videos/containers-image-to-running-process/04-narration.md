@@ -25,7 +25,7 @@ segments:
     text: |
       You have probably typed a command like this before.
 
-      Docker run nginx.
+      docker run nginx.
 
       It feels like we are running the image.
 
