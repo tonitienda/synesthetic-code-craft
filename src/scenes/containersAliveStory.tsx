@@ -242,7 +242,8 @@ export default makeScene2D(function* (view) {
     containerA().scale(0.98, 0.65),
   );
   yield* all(runtimePulse().scale(2.2, 0.5), runtimePulse().opacity(0.08, 0.5));
-  yield* all(processA().scale(1.18, 0.35), processA().scale(1, 0.35));
+  yield* processA().scale(1.18, 0.2);
+  yield* processA().scale(1, 0.2);
   yield* waitFor(0.65);
 
   // Act 5: one image branches into two containers; copy-on-write stays visible.
