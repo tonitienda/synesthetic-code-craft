@@ -37,13 +37,37 @@ Use ready sources in this order:
 
 Do not invent new scenes, story beats, jokes, or technical detours in Motion Canvas.
 
+## Timing contract
+
+The scene timeline is a timing contract, not just visual inspiration.
+
+A heading such as `Moment: 20.0s — Image does not equal process` means that the cue must happen around 20 seconds after the start of that implementation scene. Moment times are relative to the scene where they appear.
+
+A scene with a `55–70s` duration budget must not be compressed into a 10–20 second summary. The complete video should remain in the approved 7–10 minute range, with small drift allowed for transition polish and narration alignment.
+
+Use explicit timing helpers, scene-local clocks, or narration-driven waits. Do not rely only on arbitrary short `hold` values. If a generated implementation is dramatically shorter than the timeline, it is incomplete even if all concepts appear on screen.
+
+Recommended helper shape:
+
+```ts
+let clock = 0;
+function* waitUntil(target: number) {
+  if (target > clock) {
+    yield* waitFor(target - clock);
+    clock = target;
+  }
+}
+```
+
+If pacing must change, update the content phase intentionally in a separate review instead of silently compressing the video in code.
+
 ## Implementation scope
 
 Implement the full seven-act video described by `05-scene-timeline.md`.
 
 Expected total duration budget: **7–10 minutes**.
 
-The coding pass may be split into smaller PRs, but each split must keep scene boundaries intact. If the first coding pass needs to be reduced, the safest incremental scope is:
+The coding pass may be split into smaller PRs, but each split must keep scene boundaries and timing budgets intact. If the first coding pass needs to be reduced, the safest incremental scope is:
 
 1. project scaffolding and reusable components,
 2. Act 1,
@@ -55,20 +79,23 @@ Do not implement scenes from any other video folder as part of this work.
 
 ## Files to create or update
 
-### Project entry point
-
-Create:
+Baseline project entry point:
 
 ```text
 src/projects/containers-image-to-running-process.ts
 src/projects/containers-image-to-running-process.meta
 ```
 
-The project should register the scenes for Acts 1–7 in timeline order.
+Dynamic alternative entry point:
 
-### Scene files
+```text
+src/projects/containers-image-to-running-process-alive.ts
+src/scenes/containersAliveTimelinePaced.tsx
+```
 
-Create one Motion Canvas scene file per implementation scene from the timeline:
+The `containers:alive` version may use act-level cuts or a smaller number of implementation scenes, but it must still honor the timeline cues and duration budgets. It must not collapse the full story into a short demo.
+
+Preferred baseline implementation: one Motion Canvas scene file per implementation scene from the timeline:
 
 ```text
 src/scenes/containersAct1CommandDoorway.tsx
@@ -85,30 +112,14 @@ src/scenes/containersAct7WorkflowReturn.tsx
 src/scenes/containersAct7FinalFormula.tsx
 ```
 
-Create matching `.meta` files only if required by Motion Canvas conventions in the existing project.
+## Reusable visual components
 
-### Video implementation folder
-
-Create:
-
-```text
-src/videos/containers-image-to-running-process/README.md
-src/videos/containers-image-to-running-process/script.md
-src/videos/containers-image-to-running-process/screenshots/README.md
-```
-
-Use this folder for implementation notes, narration exports, and screenshot guidance. Do not duplicate the content-phase Markdown into `src/`.
-
-### Reusable components
-
-Create a focused component module for this video first:
+Create or maintain a focused component module for this video first:
 
 ```text
 src/videos/containers-image-to-running-process/components.tsx
 src/videos/containers-image-to-running-process/theme.ts
 ```
-
-Move components to a shared folder only after another video needs them.
 
 Suggested components:
 
@@ -129,147 +140,49 @@ Suggested components:
 
 Avoid a large generic framework. A simple video-local component file is enough for the first pass.
 
-### Documentation and scripts
-
-Update:
-
-```text
-package.json
-README.md
-content/videos/containers-image-to-running-process/README.md
-```
-
-Add scripts:
-
-```json
-{
-  "start:containers": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite",
-  "build:containers": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite build",
-  "screenshots:containers": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process",
-  "narration:containers": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt",
-  "narration:containers:audio": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt --audio artifacts/narration/containers-image-to-running-process.aiff",
-  "narration:containers:speak": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt --speak"
-}
-```
-
-`scripts/timeline-to-say.mjs` supports the fenced `narration-yaml` shape used by `04-narration.md`; use these scripts to generate temporary `.say.txt` and macOS `say` audio outputs under `artifacts/narration/`.
-
 ## Scene implementation checklist
 
 ### Act 1 — The familiar command, corrected
 
-Scene: `containersAct1CommandDoorway.tsx`
-
-Must show:
-
-- `docker run nginx` as the doorway.
-- `run` highlighted with the question `what runs?`.
-- `IMAGE ≠ RUNNING PROCESS` with an `ImageBox` and pulsing `ProcessBox`.
-- Thesis chain: `image -> runtime -> container process`.
-
 Timing references: `n001`–`n003`, `b001`–`b003`, 55–70s.
+
+Must show `docker run nginx`, the question `what runs?`, `IMAGE ≠ RUNNING PROCESS`, and the thesis chain `image -> runtime -> container process` at the approved moment times.
 
 ### Act 2 — Four nouns, four roles
 
-Scenes:
-
-- `containersAct2VocabularyMap.tsx`
-- `containersAct2WorkflowVerbs.tsx`
-
-Must show:
-
-- Cards for `Image`, `Registry`, `Runtime`, and `Container` with their roles.
-- Image internals as `filesystem layers` plus `config / metadata`.
-- Registry as storage/distribution only, with no running-process styling.
-- Workflow chain: `build -> image -> push -> registry -> pull -> local image -> run -> container`.
-- `run` as the only verb that creates a container.
-- Small secondary Docker/OCI note.
-
 Timing references: `n004`–`n008`, `b004`–`b008`, 75–95s.
+
+Must show Image, Registry, Runtime, and Container roles; image layers plus config; registry as storage only; workflow verbs; `run` as the only verb that creates a container; and the small Docker/OCI note.
 
 ### Act 3 — Open the image
 
-Scene: `containersAct3ImageInternals.tsx`
-
-Must show:
-
-- `image = layers + config`.
-- Ordered transparent layers: base filesystem, packages, runtime dependencies, application files.
-- Layers restacking into one filesystem view.
-- Shared read-only treatment with faint future container outlines.
-
 Timing references: `n009`–`n011`, `b009`–`b011`, 80–105s.
+
+Must show `image = layers + config`, ordered transparent layers, restacking into one filesystem view, and shared read-only treatment.
 
 ### Act 4 — What run prepares
 
-Scenes:
-
-- `containersAct4RuntimePreparation.tsx`
-- `containersAct4StartupBoundaries.tsx`
-
-Must show:
-
-- Runtime receiving image layers, image config, and run options.
-- A single filesystem view with layer seams faintly preserved.
-- A private writable layer above read-only image layers.
-- Startup configuration cards: command, environment, working directory, user.
-- Process starting inside filesystem, namespace, and cgroup frames.
-
 Timing references: `n012`–`n016`, `b012`–`b016`, 95–120s.
+
+Must show runtime inputs, one filesystem view, a private writable layer, startup configuration cards, and the process starting inside filesystem, namespace, and cgroup frames.
 
 ### Act 5 — Same image, two containers
 
-Scenes:
-
-- `containersAct5SharedLayers.tsx`
-- `containersAct5CopyOnWrite.tsx`
-
-Must show:
-
-- One shared lower `LayerStack` branching into Container A and Container B.
-- Both containers reading from the same shared read-only layers.
-- Distinct `Writable A` and `Writable B` layers.
-- `/etc/app.conf` read from the shared original.
-- Container A writing a private changed copy while Container B still sees the original.
-
 Timing references: `n017`–`n022`, `b017`–`b022`, 125–155s.
 
-This is the longest visual section and should not be rushed.
+Must show one shared lower layer stack, Container A and Container B, shared reads, `Writable A`, `Writable B`, and the `/etc/app.conf` copy-on-write mental model. This is the longest visual section and must not be rushed.
 
 ### Act 6 — The host sees a process with boundaries
 
-Scenes:
-
-- `containersAct6HostBoundaries.tsx`
-- `containersAct6NamespacesCgroups.tsx`
-
-Must show:
-
-- Host kernel foundation under a real process or process group.
-- No VM-shaped boot sequence.
-- Filesystem, namespace, and cgroup frames around the process.
-- Namespace split-view for what the process can see.
-- Cgroup budget ring/meters for CPU, memory, and I/O.
-- The hold line: `Namespaces shape the view. Cgroups shape the budget.`
-
 Timing references: `n023`–`n027`, `b023`–`b027`, 100–125s.
+
+Must show the host kernel, a real process or process group, filesystem/namespace/cgroup frames, namespace views, cgroup budget, and the hold line `Namespaces shape the view. Cgroups shape the budget.`
 
 ### Act 7 — Reassemble the model
 
-Scenes:
-
-- `containersAct7WorkflowReturn.tsx`
-- `containersAct7FinalFormula.tsx`
-
-Must show:
-
-- Return of the workflow chain with sharper labels.
-- Final equation: `container = process + filesystem view + namespaces + cgroups`.
-- Optional small commit loop only if timing allows.
-- Final stable diagram: `Registry -> Image = layers + config -> Runtime -> Container = process + writable layer + namespaces + cgroups`.
-- Final correction: `An image does not run. A process runs.`
-
 Timing references: `n028`–`n031`, `b028`–`b031`, 80–105s.
+
+Must show the returned workflow chain, the final equation, the optional small commit loop only if timing allows, the stable final diagram, and the final correction `An image does not run. A process runs.`
 
 ## Visual and technical conventions
 
@@ -282,26 +195,10 @@ Timing references: `n028`–`n031`, `b028`–`b031`, 80–105s.
 - Avoid neon excess, crowded screens, and hype aesthetics.
 - Use restrained on-screen copy from the timeline.
 - Prefer diagram transformations over hard cuts when the same concept evolves.
+- Act-level cuts and fresh compositions are allowed when they improve clarity.
 - Do not show the registry as a place where containers run.
 - Do not show containers as tiny virtual machines.
 - Do not turn the video into a Docker command tutorial.
-
-## Timing implementation notes
-
-Use named timing constants per scene, for example:
-
-```ts
-const timings = {
-  commandDoorway: 0,
-  question: 11,
-  correction: 20,
-  thesis: 42,
-};
-```
-
-The values can guide animation ordering without requiring frame-perfect sync.
-
-If recorded narration is slower than expected, extend holds rather than crowding diagrams. Prioritize readability over exact scene budgets.
 
 ## Narration handling
 
@@ -309,7 +206,7 @@ Initial implementation can use unobtrusive text markers or comments keyed to nar
 
 Do not paste full narration text into scene files unless needed for temporary timing review. Prefer IDs such as `n017` in comments or helper labels.
 
-If adding narration tooling, generate output under:
+Generated narration output belongs under:
 
 ```text
 artifacts/narration/
@@ -323,27 +220,24 @@ Before committing implementation changes, run:
 
 ```bash
 npm run build
-```
-
-When the project entry point exists, also run:
-
-```bash
 npm run build:containers
+npm run build:containers:alive
 ```
 
 When practical for preview changes, run:
 
 ```bash
 npm run screenshots:containers
+npm run screenshots:containers:alive
 ```
 
 Generated screenshots must stay under `artifacts/screenshots/` and must not be committed.
 
 ## Risks and simplifications
 
-- **Duration risk:** The full timeline is long. If Motion Canvas implementation becomes too large for one pass, split by act ranges while preserving source scene boundaries.
+- **Duration risk:** The full timeline is long. Split by act ranges if needed, while preserving source scene boundaries and duration budgets.
+- **Compression risk:** Agents may create a visually complete but far-too-short demo. Reject this unless it is explicitly labeled as a timing prototype, not an implementation.
 - **Component risk:** The component list is intentionally video-local. Do not generalize into a shared framework until reuse is proven.
-- **Narration parser risk:** Existing narration tooling may expect a different Markdown shape. Update the parser only if adding narration scripts in the implementation PR.
 - **Accuracy risk:** Keep copy-on-write conceptual. Do not explain storage-driver internals unless the ready source files are updated first.
 - **Visual metaphor risk:** Container boundary frames must not imply virtual machines. Keep the host kernel visible in Act 6.
 - **Optional commit risk:** The commit loop must remain secondary and must not replace the final mental model.
@@ -361,11 +255,12 @@ A viewer should understand, visually and without final TTS, that:
 7. Namespaces shape what the process can see.
 8. Cgroups shape what the process can use.
 9. The final model is `container = process + filesystem view + namespaces + cgroups`.
+10. The implementation duration respects the approved timeline instead of collapsing it into a short concept demo.
 
 ## Must not change
 
 - Do not change ready narration IDs from `04-narration.md`.
 - Do not change ready beat IDs from `03-beats.md`.
 - Do not rewrite `05-scene-timeline.md` as part of implementation unless a clear defect is found and explicitly documented.
-- Do not add future technical topics such as Kubernetes, Docker networking deep dives, image signing, containerd internals, or OCI spec details beyond the small approved note.
+- Do not add future technical topics such as Kubernetes, image signing, containerd internals, or OCI spec details beyond the small approved note.
 - Do not commit rendered videos, screenshots, or generated audio.
