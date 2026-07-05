@@ -1,6 +1,6 @@
 ---
 type: motion-components
-status: in-progress
+status: ready
 depends_on:
   - 06-motion-design.md
 ---
@@ -30,7 +30,6 @@ It does not change the story, narration, or motion design.
 
 ## Status notes
 
-- Status is `in-progress` because this is the first component handoff draft.
 - The user has approved the direction of `05` and `06` in conversation, but agents should not transition documents to `ready`. The human should update statuses directly when reviewing.
 - There is already Motion Canvas code under `src`; this phase should extend that codebase rather than invent a separate project shape.
 - There is not yet a stable component library. This video should create the first useful shared components, with the expectation that later videos about containers, packages, filesystems, bounded contexts, and related topics will reuse and refine them.
