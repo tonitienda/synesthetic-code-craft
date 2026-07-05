@@ -1,6 +1,6 @@
 ---
 type: specs
-status: in-progress
+status: ready
 depends_on: []
 ---
 
@@ -189,13 +189,6 @@ This video should test whether the framework can handle:
 - `docker commit` can be mentioned as a nice-to-have closing loop if it fits naturally.
 - The video may be closer to 10 minutes if clarity requires it.
 
-## Ready checklist
+## Gate status
 
-Before marking this specs file `ready`, decide:
-
-- Is the working title strong enough with “Docker containers”, or should it use “Docker / OCI containers”?
-- Which Docker commands should appear visually: `build`, `run`, `pull`, `push`, and maybe `commit`?
-- Which namespace examples are necessary for clarity: process, mount/filesystem, network?
-- Should cgroups be explained with CPU/memory only, or also with accounting/limits language?
-- Does `docker commit` belong in the main explanation or only as a final note?
-- Is the duration acceptable if the video lands around 8–10 minutes?
+This specs file is `ready` for the research phase.
