@@ -12,13 +12,13 @@ content/videos/<video-slug>/
 
 Each phase is gated separately. The human approves a phase by marking it `ready`.
 
-## Core rule
+## Core rules
 
-Agents refine the video one phase at a time.
-
-They may suggest improvements to earlier phases, but they must not silently change the intent of a ready phase while working on a later one.
-
-A phase may start only when all dependencies are `ready`.
+- Agents refine the video one phase at a time.
+- A phase may start only when all dependencies are `ready`.
+- Agents may suggest improvements to earlier phases, but they must not silently change the intent of a ready phase while working on a later one.
+- Agents must not mark documents as `ready`; humans transition documents from `in-progress` to `ready`.
+- Stable IDs should be preserved once downstream files reference them.
 
 ## Statuses
 
@@ -70,8 +70,6 @@ Rules:
 - `depends_on` uses file names.
 - The video slug is not needed because the file already lives under `content/videos/<video-slug>/`.
 - No approver field is needed; the human reviewing the phase is the approver.
-- Agents should preserve stable IDs once downstream files reference them.
-- Agents must not mark documents as `ready`; humans transition documents from `in-progress` to `ready`.
 
 ## Canonical phase order
 
@@ -138,6 +136,12 @@ A concise project brief with:
 - visual direction
 - constraints
 - open questions
+
+## Agent rules
+
+- Do not research deeply here.
+- Do not write the story yet.
+- Keep the contract short enough for a human to approve confidently.
 
 ## Gate
 
@@ -281,20 +285,14 @@ A beat is a small explanatory unit: one idea, one shift, one question, or one vi
 
 ## Output
 
-Each beat should have a stable ID.
+Each beat should have a stable ID and should include:
 
-Example shape:
-
-```yaml
-beats:
-  - id: b001
-    act: act-1
-    title: "The story starts smaller"
-    purpose: "Move from deep networks to one artificial neuron."
-    key_idea: "Backpropagation starts with understanding a single learning unit."
-    visual_hint: "A large network fades away, leaving one neuron."
-    transition_to_next: "Name the perceptron."
-```
+- act reference
+- title
+- purpose
+- key idea
+- optional visual hint
+- transition to the next beat
 
 ## Agent rules
 
@@ -351,55 +349,20 @@ Use YAML front matter with `type: narration`, followed by a fenced parseable nar
 
 Markdown outside the fenced block is allowed for human notes. Tooling should be able to ignore it.
 
-````markdown
----
-type: narration
-status: in-progress
-depends_on:
-  - 03-beats.md
----
-
-# Narration
-
-```narration-yaml
-segments:
-  - id: n001
-    act: act-1
-    beat: b001
-    speaker: narrator
-    text: |
-      Backpropagation.
-    pause_after: 0.6
-    delivery: calm
-    notes: "Title line. Let it breathe."
-
-  - id: n002
-    act: act-1
-    beat: b001
-    speaker: narrator
-    text: |
-      How neural networks learn from mistakes.
-    pause_after: 0.8
-    delivery: calm
-```
-````
-
 ## Narration schema
 
 Each segment should include:
 
-```yaml
-id: "Stable narration segment ID, for example n001"
-act: "Act ID"
-beat: "Beat ID from 03-beats.md"
-speaker: "Usually narrator"
-text: "Spoken text"
-pause_after: "Pause after the segment, in seconds"
-delivery: "Optional voice direction"
-notes: "Optional human or agent notes"
-```
+- `id`: stable narration segment ID, for example `n001`
+- `act`: act ID
+- `beat`: beat ID from `03-beats.md`
+- `speaker`: usually `narrator`
+- `text`: spoken text only
+- `pause_after`: pause after the segment, in seconds
+- `delivery`: optional voice direction
+- `notes`: optional human or agent notes
 
-Rules:
+## Agent rules
 
 - `id` must be stable once referenced by downstream phases.
 - `text` contains only spoken words.
@@ -461,39 +424,6 @@ Each scene should include:
 - required conceptual moments
 - required on-screen terms
 - transition intent
-
-Example shape:
-
-```markdown
-## Scene 5.2 — Copy-on-write file trace
-
-Scene duration budget: 60–75s
-
-Narration: `n020`–`n022`
-
-Beats: `b020`–`b022`
-
-Teaching job:
-Make the copy-on-write mental model visible: reads can use the shared original, while a write records a private changed version for only the writing container.
-
-Required conceptual moments:
-- Container A reads the shared original.
-- Container B reads the same shared original.
-- Container A writes a change.
-- The shared original remains unchanged.
-- Container A sees its modified version.
-- Container B still sees the original.
-
-Required on-screen terms:
-- `/etc/app.conf`
-- `read: shared original`
-- `write: record change in Writable A`
-- `A sees: modified`
-- `B sees: original`
-
-Transition intent:
-Pull back from the filesystem view and introduce the host/kernel point of view.
-```
 
 ## Agent rules
 
@@ -565,49 +495,6 @@ The motion design should include:
 - things to avoid
 - component candidates
 - scene quality gate
-
-Example shape:
-
-```markdown
-## Scene 5.2 — Copy-on-write file trace
-
-Source:
-- Timeline scene: `Scene 5.2`
-- Narration: `n020`–`n022`
-- Beats: `b020`–`b022`
-
-Scene promise:
-The viewer understands that writes do not mutate the shared image; they create a private changed version for the writing container's view.
-
-Visual metaphor:
-A shared file token is read by both containers. A write from Container A cannot alter the locked original, so the changed token rises into Writable A.
-
-Key frames:
-
-```text
-    [ Writable A ]       [ Writable B ]
-    { Container A }      { Container B }
-          ⇢                  ⇠
-              /etc/app.conf
-              shared original 🔒
-```
-
-```text
-    [ Writable A: /etc/app.conf* ]    [ Writable B ]
-    { A sees: modified }              { B sees: original }
-              \\                        //
-               shared original 🔒
-```
-
-Choreography:
-- Show A and B reading the same token.
-- Keep the shared original locked and fixed when A writes.
-- Lift a modified copy into `Writable A`.
-- Split the view so A resolves to the modified copy and B resolves to the original.
-
-Quality gate:
-The scene fails if the viewer only understands copy-on-write from the narration. The token movement itself must explain it.
-```
 
 ## Agent rules
 
