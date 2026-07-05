@@ -330,4 +330,4 @@ For scene timeline:
 
 ## Gate status
 
-This beats file is `in-progress` for human review before narration.
+This beats file is `ready` and can be used for narration.
