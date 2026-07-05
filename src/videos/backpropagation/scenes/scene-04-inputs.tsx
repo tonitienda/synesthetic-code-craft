@@ -38,15 +38,15 @@ export default makeScene2D(function* (view) {
 
   // 0.0s — set up the concrete example.
   yield* title().opacity(1, 1.2);
-  yield* waitFor(1.5);
+  yield* waitFor(2.8);
 
   // 4.0s — first input grows in and is named.
   yield* all(line1().end(1, 1.4), label1().opacity(1, 1.0));
-  yield* waitFor(1.6);
+  yield* waitFor(2.1);
 
   // 7.5s — second input grows in and is named.
   yield* all(line2().end(1, 1.4), label2().opacity(1, 1.0));
-  yield* waitFor(1.6);
+  yield* waitFor(2.1);
 
   // 11.0s — a signal travels down each input toward the neuron.
   yield* sequence(
@@ -55,6 +55,8 @@ export default makeScene2D(function* (view) {
     flow(sig2(), wires.in2Start, wires.in2End),
   );
 
+  yield* waitFor(1.9);
+
   // 15.0s — hold the complete input diagram.
-  yield* waitFor(1.2);
+  yield* waitFor(2.0);
 });

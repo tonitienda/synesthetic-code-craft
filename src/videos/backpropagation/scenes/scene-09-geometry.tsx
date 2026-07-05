@@ -59,7 +59,7 @@ export default makeScene2D(function* (view) {
     ghostOut().opacity(0, 1.2),
     intro().opacity(1, 1.2),
   );
-  yield* waitFor(1.1);
+  yield* waitFor(1.8);
 
   // 3.0s — draw the axes; the transition line steps aside.
   yield* all(
@@ -69,12 +69,12 @@ export default makeScene2D(function* (view) {
     xLabel().opacity(1, 1.2),
     yLabel().opacity(1, 1.2),
   );
-  yield* waitFor(1.1);
+  yield* waitFor(1.6);
 
   // 6.0s — emphasise the vertical axis.
   yield* yLabel().scale(1.2, 0.7);
   yield* yLabel().scale(1, 0.7);
-  yield* waitFor(1.0);
+  yield* waitFor(1.1);
 
   // 8.5s — every student becomes a point.
   yield* sequence(
@@ -84,12 +84,12 @@ export default makeScene2D(function* (view) {
     failPts[0]().opacity(1, 0.6),
     failPts[1]().opacity(1, 0.6),
   );
-  yield* waitFor(1.2);
+  yield* waitFor(1.85);
 
   // 12.0s — name the two classes.
   yield* all(passLegend().opacity(1, 1.2), failLegend().opacity(1, 1.2));
-  yield* waitFor(1.2);
+  yield* waitFor(1.8);
 
   // 15.0s — hold the graph.
-  yield* waitFor(0.9);
+  yield* waitFor(3.0);
 });

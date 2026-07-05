@@ -21,8 +21,11 @@ npm run build:backprop      # type-check + production build
 ## Act I structure
 
 Act I introduces the perceptron and ends by posing the question Act II answers:
-**"What if one line is not enough?"** Total runtime is ~120 seconds (the
-90–120s target from the timeline).
+**"What if one line is not enough?"** The scenes are paced to the timeline's
+per-beat timestamps so each concept has room to be narrated and understood;
+total runtime lands at ~150 seconds. The timeline's 90–120s figure is a guide
+for the content — clear narration and comprehension take priority over fitting a
+hard time boundary.
 
 | # | Scene file | Beat | Budget |
 |---|------------|------|--------|
@@ -38,9 +41,9 @@ Act I introduces the perceptron and ends by posing the question Act II answers:
 | 1.10 | `scene-10-decision-boundary` | The perceptron draws a decision boundary | 17s |
 | 1.11 | `scene-11-limitation` | One line cannot separate an XOR pattern | 16s |
 
-Scene budgets above are the timeline's timing intent; the implementation
-holds are trimmed slightly so the whole act lands at ~120s while keeping the
-calm, unrushed pacing the reviews asked for.
+Scene budgets above are the timeline's timing intent, and the implementation
+follows them: beats fire at the timeline's relative timestamps and the total
+runs ~150s. This favours calm, unrushed narration over compressing the act.
 
 ## Shared building blocks
 

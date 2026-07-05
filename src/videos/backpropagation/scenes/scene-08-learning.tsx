@@ -47,7 +47,7 @@ export default makeScene2D(function* (view) {
 
   // 2.5s — the weight grows: this connection now matters more.
   yield* all(line1().lineWidth(18, 1.4), w1().scale(1.7, 1.4));
-  yield* waitFor(1.3);
+  yield* waitFor(2.6);
 
   // 6.5s — replay the signal; a stronger weight drives the output.
   inSig().position(wires.in1Start);
@@ -62,5 +62,5 @@ export default makeScene2D(function* (view) {
   yield* outLabel().scale(1, 0.4);
 
   // 10.0s — hold the changed connection and output.
-  yield* waitFor(1.0);
+  yield* waitFor(2.5);
 });

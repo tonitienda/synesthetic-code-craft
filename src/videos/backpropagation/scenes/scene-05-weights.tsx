@@ -37,9 +37,9 @@ export default makeScene2D(function* (view) {
 
   // 6.0s — the first weight is emphasised; its connection thickens.
   yield* all(line1().lineWidth(11, 1.2), w1().scale(1.35, 1.2));
-  yield* waitFor(1.5);
+  yield* waitFor(2.8);
 
   // 10.0s — the second weight is emphasised too, then hold.
   yield* all(line2().lineWidth(11, 1.2), w2().scale(1.35, 1.2));
-  yield* waitFor(1.0);
+  yield* waitFor(2.8);
 });

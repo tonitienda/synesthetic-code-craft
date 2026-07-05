@@ -61,7 +61,8 @@ export default makeScene2D(function* (view) {
   );
   yield* sigma().scale(1.3, 0.35);
   yield* sigma().scale(1, 0.35);
+  yield* waitFor(1.85);
 
   // 11.0s — hold the equation and neuron.
-  yield* waitFor(1.0);
+  yield* waitFor(3.0);
 });

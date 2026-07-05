@@ -25,7 +25,7 @@ export default makeScene2D(function* (view) {
 
   // 0.0s — make room on the left for the historical figure.
   yield* all(neuron().x(320, 1.4), portrait().opacity(1, 1.4));
-  yield* waitFor(2.4);
+  yield* waitFor(3.1);
 
   // 4.5s — name and date.
   yield* all(name().opacity(1, 1.0), date().opacity(1, 1.0));
@@ -33,7 +33,7 @@ export default makeScene2D(function* (view) {
 
   // 6.5s — the word Perceptron rises above the neuron.
   yield* all(perceptron().opacity(1, 1.0), perceptron().y(-260, 1.0));
-  yield* waitFor(1.6);
+  yield* waitFor(2.5);
 
   // 10.0s — clear the history, return the neuron to centre.
   yield* all(
@@ -43,5 +43,5 @@ export default makeScene2D(function* (view) {
     perceptron().opacity(0, 1.2),
     neuron().x(0, 1.4),
   );
-  yield* waitFor(1.0);
+  yield* waitFor(1.6);
 });

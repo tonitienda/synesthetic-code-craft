@@ -41,13 +41,13 @@ export default makeScene2D(function* (view) {
   outSig().opacity(1);
   yield* outSig().position(wires.outEnd, 1.4);
   yield* outSig().opacity(0, 0.25);
-  yield* waitFor(1.1);
+  yield* waitFor(0.85);
 
   // 7.0s — emphasise the decision.
   yield* outLabel().scale(1.25, 0.6);
   yield* outLabel().scale(1, 0.6);
-  yield* waitFor(1.1);
+  yield* waitFor(1.8);
 
   // 10.0s — hold the full perceptron.
-  yield* waitFor(1.2);
+  yield* waitFor(2.0);
 });

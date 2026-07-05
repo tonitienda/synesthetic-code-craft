@@ -44,13 +44,13 @@ export default makeScene2D(function* (view) {
     neuron().opacity(1, 1.4),
     neuron().scale(1, 1.4),
   );
-  yield* waitFor(1.4);
+  yield* waitFor(1.9);
 
   // 6.5s — name the neuron and hold.
   yield* label().opacity(1, 1.0);
-  yield* waitFor(1.1);
+  yield* waitFor(1.5);
 
   // 9.0s — clear the words, keep the neuron.
   yield* all(intro().opacity(0, 1.2), label().opacity(0, 1.2));
-  yield* waitFor(0.6);
+  yield* waitFor(0.8);
 });

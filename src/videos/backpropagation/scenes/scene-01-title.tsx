@@ -33,13 +33,13 @@ export default makeScene2D(function* (view) {
 
   // 0.0s — fade in the title, drifting gently upward.
   yield* all(title().opacity(1, 1.3), title().y(0, 1.6));
-  yield* waitFor(0.6);
+  yield* waitFor(0.4);
 
   // 2.0s — reveal the subtitle below the title.
   yield* subtitle().opacity(1, 1.2);
 
   // 5.5s — hold, then fade everything out.
-  yield* waitFor(1.6);
+  yield* waitFor(2.3);
   yield* all(title().opacity(0, 1.2), subtitle().opacity(0, 1.2));
-  yield* waitFor(0.5);
+  yield* waitFor(1.3);
 });

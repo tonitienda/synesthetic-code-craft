@@ -50,20 +50,20 @@ export default makeScene2D(function* (view) {
 
   // 0.0s — draw a line that separates the two groups.
   yield* boundary().end(1, 1.6);
-  yield* waitFor(1.8);
+  yield* waitFor(3.4);
 
   // 5.0s — name it.
   yield* label().opacity(1, 1.2);
-  yield* waitFor(1.4);
+  yield* waitFor(1.8);
 
   // 8.0s — changing the weights rotates the line.
   yield* boundary().rotation(9, 1.5);
-  yield* waitFor(1.3);
+  yield* waitFor(2.5);
 
   // 12.0s — shift it back toward the cleanest separation.
   yield* all(boundary().rotation(0, 1.5), boundary().position([12, 0], 1.5));
-  yield* waitFor(1.2);
+  yield* waitFor(2.0);
 
   // 15.5s — hold the clean separation.
-  yield* waitFor(0.9);
+  yield* waitFor(1.5);
 });

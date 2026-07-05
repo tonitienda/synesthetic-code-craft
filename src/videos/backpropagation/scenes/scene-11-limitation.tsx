@@ -62,11 +62,11 @@ export default makeScene2D(function* (view) {
       xorFail[1]().opacity(1, 0.6),
     ),
   );
-  yield* waitFor(1.6);
+  yield* waitFor(1.35);
 
   // 3.0s — try rotating the line once.
   yield* boundary().rotation(16, 1.4);
-  yield* waitFor(0.8);
+  yield* waitFor(1.6);
 
   // 6.0s — try several positions; none of them work.
   yield* boundary().rotation(-18, 1.0);
@@ -80,7 +80,8 @@ export default makeScene2D(function* (view) {
   }
 
   // 10.0s — hold the failed separation.
-  yield* waitFor(2.0);
+  yield* waitFor(1.0);
+  yield* waitFor(3.0);
 
   // 13.0s — pose the question that Act II will answer.
   yield* question().opacity(1, 1.2);
