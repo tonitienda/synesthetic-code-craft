@@ -1,6 +1,6 @@
 ---
 type: narration
-status: in-progress
+status: ready
 depends_on:
   - 00-specs.md
   - 02-treatment.md
