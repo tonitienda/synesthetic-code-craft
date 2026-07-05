@@ -381,6 +381,10 @@ Push in on the image as it opens. Shift slightly down the stack to make ordering
 Allowed copy:
 - `image = layers + config`
 - `not one mysterious blob`
+- `base filesystem`
+- `packages`
+- `runtime dependencies`
+- `application files`
 - `ordered filesystem changes`
 - `stacked in order`
 - `filesystem view`
