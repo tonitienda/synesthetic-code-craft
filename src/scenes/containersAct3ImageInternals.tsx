@@ -1,37 +1,62 @@
-import {Layout, makeScene2D} from '@motion-canvas/2d';
-import {all, createRef, waitFor} from '@motion-canvas/core';
-import {Card, ImageBox, LayerStack, Title} from '../videos/containers-image-to-running-process/components';
-import {containerTheme as c} from '../videos/containers-image-to-running-process/theme';
+import { Layout, Txt } from '@motion-canvas/2d';
+import {
+  Card,
+  ImageBox,
+  LayerStack,
+} from '../videos/containers-image-to-running-process/components';
+import { makeContainersScene } from '../videos/containers-image-to-running-process/sceneFactory';
+import { containerTheme as c } from '../videos/containers-image-to-running-process/theme';
 
-const timings = {
-  title: 0,
-  diagram: 0.8,
-  hold: 1.8,
-};
-
-export default makeScene2D(function* (view) {
-  view.fill(c.bg);
-
-  const heading = createRef<Layout>();
-  const diagram = createRef<Layout>();
-
-  view.add(
-    <Layout layout direction={'column'} gap={44} alignItems={'center'} justifyContent={'center'} width={'100%'} height={'100%'} padding={70}>
-      <Layout ref={heading} opacity={0}>
-        <Title text={'Open the image'} sub={'image = layers + config, not a mysterious blob'} />
-      </Layout>
-      <Layout ref={diagram} opacity={0}>
+export default makeContainersScene({
+  title: 'Open the image',
+  sub: 'image = layers + config, not a mysterious blob',
+  panels: [
+    {
+      hold: 11,
+      element: (
         <Layout layout gap={80} alignItems={'center'}>
           <ImageBox />
+          <Txt text={'='} fontSize={64} fill={c.muted} />
           <LayerStack />
-          <Card title={'config / metadata'} body={'default command · environment'} color={c.amber} />
+          <Txt text={'+'} fontSize={64} fill={c.muted} />
+          <Card
+            title={'config'}
+            body={'command · environment'}
+            color={c.amber}
+          />
         </Layout>
-      </Layout>
-    </Layout>,
-  );
-
-  yield* heading().opacity(1, timings.diagram);
-  yield* diagram().opacity(1, timings.diagram);
-  yield* waitFor(timings.hold);
-  yield* all(heading().opacity(0, 0.35), diagram().opacity(0, 0.35));
+      ),
+    },
+    {
+      hold: 16,
+      element: (
+        <LayerStack
+          labels={[
+            'base filesystem',
+            'packages',
+            'runtime dependencies',
+            'application files',
+          ]}
+        />
+      ),
+    },
+    {
+      hold: 12,
+      element: (
+        <Layout layout direction={'column'} gap={24} alignItems={'center'}>
+          <Card
+            title={'one filesystem view'}
+            body={'layers restack into a readable tree'}
+            color={c.green}
+            width={520}
+          />
+          <Txt
+            text={'read-only layers can be shared by future containers'}
+            fontSize={30}
+            fill={c.muted}
+          />
+        </Layout>
+      ),
+    },
+  ],
 });
