@@ -7,6 +7,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-intro`
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
+- `backpropagation` — Act I of the Markdown-driven backpropagation video, implemented from `content/videos/backpropagation/04-timeline.md` (introduces the perceptron; ends on "What if one line is not enough?").
 
 ## Quick start
 
@@ -21,6 +22,7 @@ npm run start:intro
 npm run start:intro
 npm run start:deep-dive
 npm run start:backpropagation
+npm run start:backprop        # Act I, Markdown-driven backpropagation video
 ```
 
 ## Build
@@ -30,6 +32,7 @@ npm run build
 npm run build:intro
 npm run build:deep-dive
 npm run build:backpropagation
+npm run build:backprop
 ```
 
 ## Preview screenshots
@@ -40,6 +43,7 @@ To generate the same previews locally for the backpropagation video:
 
 ```bash
 npm run screenshots:backpropagation
+npm run screenshots:backprop
 ```
 
 Generated files are written to `artifacts/screenshots/`, which is ignored by Git.
