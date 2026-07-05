@@ -78,6 +78,14 @@ beats:
     transition_to_next: "Add names that point into the graph."
 
   - id: b009
+    act: act-4
+    title: "The working tree prepares the next checkpoint"
+    purpose: "Connect editable files to the local commit graph without diving into index internals."
+    key_idea: "You edit in the working tree, choose what is staged, and commit that prepared snapshot into local history."
+    visual_hint: "Beside the local graph, show three calm zones: working files, staged snapshot, then a new commit node. Untracked files remain outside the staged snapshot."
+    transition_to_next: "Once commits are local graph nodes, show the names that move through that graph."
+
+  - id: b010
     act: act-5
     title: "A branch is a movable name"
     purpose: "Correct the common misconception that branches are whole project copies."
@@ -85,7 +93,7 @@ beats:
     visual_hint: "A `main` label points at commit C; a `feature` label appears pointing at the same commit without copying nodes."
     transition_to_next: "Show how Git knows which pointer you are using."
 
-  - id: b010
+  - id: b011
     act: act-5
     title: "HEAD says you are here"
     purpose: "Introduce `HEAD` as the viewer's location marker in the graph."
@@ -93,7 +101,7 @@ beats:
     visual_hint: "A small `HEAD` marker attaches to `feature`, which points at commit C."
     transition_to_next: "Make a new commit and let the current branch move."
 
-  - id: b011
+  - id: b012
     act: act-5
     title: "Committing moves the current branch locally"
     purpose: "Show why local commits and branches feel cheap."
@@ -101,7 +109,7 @@ beats:
     visual_hint: "A new commit D appears after C; `feature` moves to D while `main` stays on C."
     transition_to_next: "Let the two pointers diverge enough to require integration."
 
-  - id: b012
+  - id: b013
     act: act-6
     title: "Histories diverge"
     purpose: "Set up merge and rebase as answers to the same graph problem."
@@ -109,7 +117,7 @@ beats:
     visual_hint: "`main` advances to C while `feature` contains D and E from an earlier base."
     transition_to_next: "First show the integration that preserves both roads."
 
-  - id: b013
+  - id: b014
     act: act-6
     title: "Merge builds a bridge"
     purpose: "Explain merge as graph integration that preserves parallel history."
@@ -117,7 +125,7 @@ beats:
     visual_hint: "A merge node M appears where `main` joins C with feature commit E; parent edges highlight both inputs."
     transition_to_next: "Reset to the same divergence and show the alternate graph shape."
 
-  - id: b014
+  - id: b015
     act: act-6
     title: "Rebase replays the road"
     purpose: "Explain rebase as replaying commits on a new base."
@@ -125,7 +133,7 @@ beats:
     visual_hint: "D and E fade into D' and E' after C, while the original branch line becomes ghosted."
     transition_to_next: "Step back from local graph operations and bring in another repository."
 
-  - id: b015
+  - id: b016
     act: act-7
     title: "A remote is another repository"
     purpose: "Return to the central thesis after local graph operations are clear."
@@ -133,7 +141,7 @@ beats:
     visual_hint: "Local and remote repository frames sit side by side, each with a similar commit graph."
     transition_to_next: "Name the usual default remote and the local memory of its branch."
 
-  - id: b016
+  - id: b017
     act: act-7
     title: "origin is a nickname, origin/main is local knowledge"
     purpose: "Prepare the fetch explanation without platform-specific workflows."
@@ -141,7 +149,7 @@ beats:
     visual_hint: "The remote repository is labeled `origin`; inside the local repo, an `origin/main` pointer marks the last known remote `main`."
     transition_to_next: "Let the remote move ahead, then update local knowledge."
 
-  - id: b017
+  - id: b018
     act: act-8
     title: "Fetch asks what happened over there"
     purpose: "Separate synchronization from integration."
@@ -149,7 +157,7 @@ beats:
     visual_hint: "A new commit arrives into the local repository and `origin/main` moves to it; `main` remains behind."
     transition_to_next: "Now show the command that also integrates."
 
-  - id: b018
+  - id: b019
     act: act-8
     title: "Pull is fetch plus integration"
     purpose: "Resolve the common fetch-versus-pull confusion."
@@ -157,7 +165,7 @@ beats:
     visual_hint: "A two-step callout: fetch moves `origin/main`; integration then moves or reshapes local `main`."
     transition_to_next: "Complete the synchronization loop by sending local commits outward."
 
-  - id: b019
+  - id: b020
     act: act-8
     title: "Push sends local history outward"
     purpose: "Explain push as synchronization from local to remote."
@@ -165,7 +173,7 @@ beats:
     visual_hint: "Local-only commits flow to the remote graph, then the remote `main` pointer advances if allowed."
     transition_to_next: "Summarize the whole architecture in one coherent model."
 
-  - id: b020
+  - id: b021
     act: act-9
     title: "The model snaps into place"
     purpose: "Close with the local-first mental model and no new concepts."
