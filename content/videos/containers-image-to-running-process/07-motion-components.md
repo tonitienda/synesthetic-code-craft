@@ -14,7 +14,7 @@ This file turns the approved motion direction into a concrete Motion Canvas impl
 It defines:
 
 - the component model
-- proposed file structure
+- how to grow the reusable component library from the existing `src` Motion Canvas code
 - scene-to-component mapping
 - component responsibilities
 - props and actions
@@ -35,82 +35,123 @@ It does **not** change the story, narration, or motion design.
 
 - Status is `in-progress` because this is the first component handoff draft.
 - The user has approved the direction of `05` and `06` in conversation, but agents should not transition documents to `ready`. The human should update statuses directly when reviewing.
-- This plan assumes the implementation will produce a first real rendered video quickly, so the design can be judged in motion rather than endlessly refined in Markdown.
+- There is already Motion Canvas code under `src`; this phase should extend that codebase rather than invent a separate project shape.
+- There is not yet a stable component library. This video should create the first useful shared components, with the expectation that later videos about containers, packages, filesystems, bounded contexts, and related topics will reuse and refine them.
+- This plan prioritizes getting a first real rendered video quickly, so the design can be judged in motion rather than endlessly refined in Markdown.
 
 ## Implementation strategy
 
 Do not try to build a complete visual framework before the first render.
 
-Build a **thin reusable component layer** that is just enough to implement this video with good motion:
+Build a **thin reusable component layer** inside the existing Motion Canvas `src` structure:
 
 ```text
-core primitives
+existing Motion Canvas code
   ↓
-containers domain components
+small shared primitives extracted only when needed
   ↓
-scene assemblies
+containers/filesystems domain components
   ↓
-video project entry
+scene assemblies for this video
+  ↓
+rendered video for review
 ```
 
 The goal is not a compiler yet. The goal is a hand-authored Motion Canvas video whose components are clean enough to reuse and iterate.
 
-## Proposed file structure
+## Existing-code rule
 
-Verify the repository's actual Motion Canvas layout before implementation. If no Motion Canvas project structure exists yet, use this as the target layout.
+Before coding, inspect the existing `src` layout and follow its conventions for:
+
+- project entry point
+- scene registration
+- component location
+- theme/style utilities
+- asset imports
+- render/preview scripts
+- naming style
+
+Do not move or rename existing code unless it is necessary for this video and called out explicitly.
+
+If the existing layout conflicts with any path below, preserve the existing layout and treat the paths as conceptual names.
+
+## Proposed component organization
+
+The exact directories should match the current `src` conventions, but the conceptual split should be:
+
+```text
+shared primitives
+  VideoShell
+  Label
+  ConceptBox
+  FlowArrow
+  TraceLine
+  FocusFrame
+  PulseDot
+
+containers/filesystems domain components
+  CommandCallout
+  ImageArtifact
+  RegistryShelf
+  WorkflowRail
+  RuntimeSetup
+  LayerStack
+  WritableLayer
+  FileToken
+  ProcessPulse
+  BoundaryFrame
+  ContainerInstance
+  ContainerPair
+  KernelLayer
+  NamespaceSplitView
+  ResourceBudgetRing
+  FormulaAssembler
+  SecondaryLoop
+
+containers video scenes
+  01-command-correction
+  02-vocabulary-and-workflow
+  03-open-the-image
+  04-runtime-preparation
+  05-two-containers-copy-on-write
+  06-host-boundaries
+  07-final-model
+```
+
+Preferred placement, if compatible with the existing repo:
 
 ```text
 src/
   components/
-    core/
-      VideoShell.tsx
-      Label.tsx
-      ConceptBox.tsx
-      FlowArrow.tsx
-      TraceLine.tsx
-      FocusFrame.tsx
-      PulseDot.tsx
-      SectionTitle.tsx
+    shared/
     containers/
-      CommandCallout.tsx
-      ImageArtifact.tsx
-      RegistryShelf.tsx
-      WorkflowRail.tsx
-      RuntimeSetup.tsx
-      LayerStack.tsx
-      WritableLayer.tsx
-      FileToken.tsx
-      ProcessPulse.tsx
-      BoundaryFrame.tsx
-      ContainerInstance.tsx
-      ContainerPair.tsx
-      KernelLayer.tsx
-      NamespaceSplitView.tsx
-      ResourceBudgetRing.tsx
-      FormulaAssembler.tsx
-      SecondaryLoop.tsx
   videos/
     containers-image-to-running-process/
-      project.ts
       scenes/
-        01-command-correction.tsx
-        02-vocabulary-and-workflow.tsx
-        03-open-the-image.tsx
-        04-runtime-preparation.tsx
-        05-two-containers-copy-on-write.tsx
-        06-host-boundaries.tsx
-        07-final-model.tsx
       data/
-        narration-ids.ts
-        copy.ts
-        timings.ts
 ```
 
-If the project uses a different convention, preserve the existing convention and map these names into it.
+Alternative placement is acceptable if the existing codebase already uses another convention.
+
+## Component-library growth rule
+
+Create a reusable component only when at least one of these is true:
+
+- the concept appears in multiple scenes in this video
+- the concept is likely to recur in future videos
+- the component protects an important visual rule
+- the component prevents copy/paste animation logic
+
+Examples:
+
+- `LayerStack` is worth extracting because it appears in image internals, runtime setup, and copy-on-write.
+- `ProcessPulse` is worth extracting because it protects the rule that only running processes look alive.
+- `RegistryShelf` can be simple, but should still protect the rule that a registry is inert storage.
+- `FormulaAssembler` may start as scene-local if extracting it slows the first render.
 
 ## Global visual constants
 
-Define these once and import them everywhere.
+Define these once and import them everywhere, either by extending an existing theme file or by adding a small new one near the existing style utilities.
 
 ```text
 background: dark technical gradient or solid near-black
@@ -123,21 +164,33 @@ process: soft pulse, always visually alive
 host kernel: broad stable base
 ```
 
-Required design tokens:
+Recommended design tokens:
 
 ```ts
-Theme = {
+type Theme = {
   spacing: {
-    xs, sm, md, lg, xl
+    xs: number
+    sm: number
+    md: number
+    lg: number
+    xl: number
   }
   typography: {
-    mono, title, label, small
+    mono: string
+    title: string
+    label: string
+    small: string
   }
   durations: {
-    quick, normal, slow, hold
+    quick: number
+    normal: number
+    slow: number
+    hold: number
   }
   emphasis: {
-    dimOpacity, focusOpacity, glowStrength
+    dimOpacity: number
+    focusOpacity: number
+    glowStrength: number
   }
 }
 ```
@@ -148,9 +201,9 @@ Do not hardcode timing and styling inside every scene. The first implementation 
 
 # Component layers
 
-## Layer 0 — Core primitives
+## Layer 0 — Shared primitives
 
-These components are not specific to containers.
+These components are not specific to containers and should be reused by later videos when useful.
 
 ### `VideoShell`
 
@@ -245,8 +298,8 @@ Props:
 
 ```ts
 type FlowArrowProps = {
-  from: NodeRef
-  to: NodeRef
+  from: unknown
+  to: unknown
   label?: string
   style?: 'artifact-flow' | 'runtime-flow' | 'recap-flow'
 }
@@ -274,8 +327,8 @@ Props:
 
 ```ts
 type TraceLineProps = {
-  from: NodeRef
-  to: NodeRef
+  from: unknown
+  to: unknown
   label?: string
   style?: 'read' | 'write' | 'resolve'
 }
@@ -329,7 +382,7 @@ Props:
 
 ```ts
 type FocusFrameProps = {
-  target?: NodeRef
+  target?: unknown
   label?: string
   mode?: 'spotlight' | 'outline' | 'dim-others'
 }
@@ -348,7 +401,9 @@ Use sparingly. The video should not become a sequence of highlighted boxes.
 
 ---
 
-## Layer 1 — Containers domain components
+## Layer 1 — Containers and filesystems domain components
+
+These are the first domain-specific reusable components. Some are container-specific, but several should also help future videos about packages, filesystems, processes, and bounded contexts.
 
 ### `CommandCallout`
 
@@ -543,6 +598,9 @@ exit
 Acceptance:
 The same layer stack object should persist from Act 3 into Acts 4 and 5.
 
+Future reuse:
+This should become one of the most important components for future packages/filesystems videos.
+
 ### `WritableLayer`
 
 Used in:
@@ -647,6 +705,9 @@ exit
 
 Acceptance:
 The process pulse is the only recurring alive object.
+
+Future reuse:
+This should become a shared process/execution component for future systems videos, not just containers.
 
 ### `ContainerInstance`
 
@@ -755,6 +816,9 @@ resolveFor(containerId)
 
 Acceptance:
 The shared original must remain visibly unchanged when the modified token appears in `Writable A`.
+
+Future reuse:
+This should be useful for packages/filesystems videos where files move, resolve, shadow, or override one another.
 
 ### `KernelLayer`
 
@@ -914,7 +978,7 @@ The commit loop must never become the final memory.
 
 # Scene assembly plan
 
-## Scene file 01 — `01-command-correction.tsx`
+## Scene file 01 — `01-command-correction`
 
 Timeline scenes:
 - `Scene 1.1`
@@ -942,7 +1006,7 @@ ContainerInstance.enterFromRuntime
 Acceptance:
 The image remains inert; the process becomes alive.
 
-## Scene file 02 — `02-vocabulary-and-workflow.tsx`
+## Scene file 02 — `02-vocabulary-and-workflow`
 
 Timeline scenes:
 - `Scene 2.1`
@@ -953,7 +1017,6 @@ Primary components:
 - `ImageArtifact`
 - `RegistryShelf`
 - `WorkflowRail`
-- `SecondaryNote`
 
 Main sequence:
 
@@ -972,7 +1035,7 @@ WorkflowRail.runCreatesContainer
 Acceptance:
 The viewer can identify each noun and each verb's job.
 
-## Scene file 03 — `03-open-the-image.tsx`
+## Scene file 03 — `03-open-the-image`
 
 Timeline scenes:
 - `Scene 3.1`
@@ -980,8 +1043,8 @@ Timeline scenes:
 Primary components:
 - `ImageArtifact`
 - `LayerStack`
-- `ConfigCard`
-- `ReadOnlyBadge`
+- `ConfigCard` or simple `ConceptBox`
+- `ReadOnlyBadge` or simple `Label`
 
 Main sequence:
 
@@ -998,7 +1061,7 @@ LayerStack.highlightShared
 Acceptance:
 The layer stack becomes the persistent shared object for later scenes.
 
-## Scene file 04 — `04-runtime-preparation.tsx`
+## Scene file 04 — `04-runtime-preparation`
 
 Timeline scenes:
 - `Scene 4.1`
@@ -1031,7 +1094,7 @@ ContainerInstance.addBoundary('cgroup-budget')
 Acceptance:
 The process starts inside prepared boundaries, not before setup.
 
-## Scene file 05 — `05-two-containers-copy-on-write.tsx`
+## Scene file 05 — `05-two-containers-copy-on-write`
 
 Timeline scenes:
 - `Scene 5.1`
@@ -1065,7 +1128,7 @@ FileToken.resolveFor('B')
 Acceptance:
 The token movement must explain copy-on-write without relying entirely on narration.
 
-## Scene file 06 — `06-host-boundaries.tsx`
+## Scene file 06 — `06-host-boundaries`
 
 Timeline scenes:
 - `Scene 6.1`
@@ -1084,7 +1147,7 @@ Main sequence:
 ```text
 KernelLayer.enterBelowProcess
 ProcessPulse.connectToKernel
-MisconceptionCrossout.briefMiniVmRejection
+brief mini-VM rejection if implementation cost is low
 ContainerInstance.showAsBoundedProcess
 NamespaceSplitView.enterHostView
 NamespaceSplitView.shapeIntoContainerView
@@ -1096,7 +1159,7 @@ BoundarySummary.show('view + budget')
 Acceptance:
 The viewer understands “view versus budget.”
 
-## Scene file 07 — `07-final-model.tsx`
+## Scene file 07 — `07-final-model`
 
 Timeline scenes:
 - `Scene 7.1`
@@ -1104,11 +1167,9 @@ Timeline scenes:
 
 Primary components:
 - `WorkflowRail`
-- `ConceptAnnotation`
 - `FormulaAssembler`
 - `SecondaryLoop`
 - `CommandCallout`
-- `FinalModelHold`
 
 Main sequence:
 
@@ -1136,6 +1197,23 @@ The final formula feels assembled from the video, not placed on top of it.
 
 Build in this order to get an early visible video while reducing throwaway work.
 
+## Pass 0 — Inspect existing `src`
+
+Goal:
+Avoid fighting the current Motion Canvas project structure.
+
+Tasks:
+
+- identify the existing project entry point
+- identify how scenes are currently registered
+- identify existing theme/style helpers
+- identify render/preview npm scripts
+- identify any existing components worth reusing
+- choose where the new shared/domain components belong
+
+Acceptance:
+The implementation plan is mapped to real paths in the current repo before creating files.
+
 ## Pass 1 — Visual skeleton
 
 Goal:
@@ -1143,7 +1221,7 @@ Render the full video with all scenes present, using rough but persistent compon
 
 Implement:
 
-1. `VideoShell`
+1. `VideoShell` or equivalent existing wrapper
 2. `Label`
 3. `ConceptBox`
 4. `FlowArrow`
@@ -1252,7 +1330,7 @@ For first render, rough timing is acceptable. Prefer slightly long holds over ru
 Use simple data files so copy and IDs are not scattered across components.
 
 ```text
-data/copy.ts
+copy
 ```
 
 Contains:
@@ -1267,7 +1345,7 @@ file paths
 ```
 
 ```text
-data/timings.ts
+timings
 ```
 
 Contains:
@@ -1279,7 +1357,7 @@ common animation speeds
 ```
 
 ```text
-data/narration-ids.ts
+narration IDs
 ```
 
 Contains scene-to-narration mapping:
@@ -1290,6 +1368,8 @@ scene02: ['n004', 'n005', 'n006', 'n007', 'n008']
 ...
 ```
 
+Use the existing repo convention for whether these are `.ts`, `.json`, or inline scene constants.
+
 ---
 
 # Acceptance checks before rendering review
@@ -1298,6 +1378,7 @@ The first generated video should be considered reviewable when:
 
 - All scenes render without errors.
 - The video uses the same visual language throughout.
+- The new shared components live inside the existing `src` structure instead of creating a parallel architecture.
 - The image artifact never pulses like a process.
 - The registry never looks like runtime.
 - The layer stack persists from image internals into runtime/copy-on-write scenes.
@@ -1329,6 +1410,7 @@ These are acceptable for the first render:
 - simple text labels instead of final typography polish
 - manual timing rather than parsed narration timing
 - no automated DSL/compiler
+- component APIs that are useful but not yet perfect
 
 These are not acceptable simplifications:
 
@@ -1339,6 +1421,33 @@ These are not acceptable simplifications:
 - ending on `docker commit`
 
 ---
+
+# Future reuse candidates
+
+These components are likely to survive beyond this video:
+
+```text
+VideoShell
+Label
+ConceptBox
+FlowArrow
+TraceLine
+PulseDot
+LayerStack
+FileToken
+ProcessPulse
+BoundaryFrame
+WorkflowRail
+```
+
+Likely future uses:
+
+- packages video: package artifact, dependency graph, installed files, version movement
+- filesystems video: layer stacks, file tokens, path resolution, overlays
+- bounded contexts video: boundary frames, context maps, translation/adapters
+- containers follow-up: image build, registry distribution, volumes, networking, orchestration
+
+Keep this reuse pressure in mind, but do not generalize prematurely. Let repeated videos harden the API.
 
 # Open implementation questions
 
