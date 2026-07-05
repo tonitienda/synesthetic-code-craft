@@ -13,7 +13,10 @@
     "start:backpropagation": "MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite",
     "build:backpropagation": "tsc && MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite build",
     "screenshots": "node scripts/generate-video-screenshots.mjs",
-    "screenshots:backpropagation": "node scripts/generate-video-screenshots.mjs backpropagation-basics"
+    "screenshots:backpropagation": "node scripts/generate-video-screenshots.mjs backpropagation-basics",
+    "narration:backpropagation": "node scripts/timeline-to-say.mjs content/videos/backpropagation/04-timeline.md --out artifacts/narration/backpropagation.say.txt",
+    "narration:backpropagation:audio": "node scripts/timeline-to-say.mjs content/videos/backpropagation/04-timeline.md --out artifacts/narration/backpropagation.say.txt --audio artifacts/narration/backpropagation.aiff",
+    "narration:backpropagation:speak": "node scripts/timeline-to-say.mjs content/videos/backpropagation/04-timeline.md --out artifacts/narration/backpropagation.say.txt --speak"
   },
   "dependencies": {
     "@motion-canvas/2d": "^3.17.2",
