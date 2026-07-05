@@ -9,7 +9,7 @@ export default makeContainersV2Scene({
     {
       label: 'n004 vocabulary map',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={34} alignItems={'center'}>
           <Layout layout gap={34} alignItems={'center'}>
             <ConceptBox title={'Image'} body={'packaged starting point'} tone={'image'} />
@@ -25,7 +25,7 @@ export default makeContainersV2Scene({
     {
       label: 'n005 image internals preview',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={26} alignItems={'center'}>
           <ImageArtifact label={'image'} open />
           <Caption text={'filesystem layers + config / metadata + default command + environment'} />
@@ -35,7 +35,7 @@ export default makeContainersV2Scene({
     {
       label: 'n006 registry is storage',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout gap={52} alignItems={'center'}>
           <ImageArtifact label={'image artifact'} />
           <RegistryShelf />
@@ -45,7 +45,7 @@ export default makeContainersV2Scene({
     {
       label: 'n007 n008 workflow verbs',
       hold: 4,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={32} alignItems={'center'}>
           <WorkflowRail />
           <Caption text={'push and pull move images; run creates the container process'} tone={'strong'} />
