@@ -49,8 +49,6 @@ content/
         └── 06-implementation-plan.md
 ```
 
-Existing videos may still contain older file names during migration.
-
 ## Philosophy
 
 The scene timeline is intentionally human-readable.
