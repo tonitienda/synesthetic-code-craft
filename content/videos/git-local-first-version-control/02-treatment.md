@@ -725,4 +725,4 @@ A likely beat sequence:
 
 ## Gate status
 
-This treatment file is `in-progress` and ready for human review.
+This treatment file is `ready` for the beats phase.

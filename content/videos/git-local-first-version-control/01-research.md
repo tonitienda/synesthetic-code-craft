@@ -597,4 +597,4 @@ Contextual sources:
 
 ## Gate status
 
-This research file is `in-progress` and ready for human review.
+This research file is `ready` for the treatment phase.
