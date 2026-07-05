@@ -247,6 +247,8 @@ Allowed copy:
 - `Container — running instance`
 - `filesystem layers`
 - `config / metadata`
+- `default command`
+- `environment`
 - `registry = image storage + distribution`
 - `not where containers run`
 
