@@ -1,4 +1,4 @@
-import {Circle, Layout, Line, Rect, Txt, makeScene2D} from '@motion-canvas/2d';
+import {Circle, Layout, Rect, Txt, makeScene2D} from '@motion-canvas/2d';
 import {all, createRef, waitFor} from '@motion-canvas/core';
 
 const c = {
@@ -14,38 +14,6 @@ const c = {
   blue: '#60a5fa',
   rose: '#fb7185',
 };
-
-function Card({
-  label,
-  sub,
-  color = c.cyan,
-  width = 260,
-}: {
-  label: string;
-  sub?: string;
-  color?: string;
-  width?: number;
-}) {
-  return (
-    <Rect
-      layout
-      direction={'column'}
-      gap={8}
-      alignItems={'center'}
-      justifyContent={'center'}
-      width={width}
-      height={126}
-      radius={26}
-      padding={18}
-      fill={c.panel}
-      stroke={color}
-      lineWidth={4}
-    >
-      <Txt text={label} fontSize={32} fontWeight={800} fill={c.ink} />
-      {sub ? <Txt text={sub} fontSize={20} fill={c.muted} /> : null}
-    </Rect>
-  );
-}
 
 function Pill({label, color = c.dim}: {label: string; color?: string}) {
   return (
@@ -264,12 +232,12 @@ export default makeScene2D(function* (view) {
   yield* run(0.8, pipeline().opacity(1, 0.8), pipeline().position([0, -270], 0.8), registry().scale(1, 0.8));
   yield* waitUntil(128);
   setCue('Act 2', 'Scene 2.2 / Moment: 28.0s — Docker doorway, OCI note', 128);
-  yield* run(0.7, ociNote().opacity(1, 0.7), ociNote().position([520, -150], 0.7));
+  yield* run(0.7, cue().fill(c.violet, 0.7), ociNote().opacity(1, 0.7), ociNote().position([520, -150], 0.7));
   yield* waitUntil(130);
 
   // Act 3 — Open the image. Scene budget: 80s.
   setCue('Act 3', 'Scene 3.1 / Moment: 0.0s — Image is not a blob', 130);
-  yield* run(0.9, registry().opacity(0.25, 0.9), runtime().opacity(0.25, 0.9), containerA().opacity(0.25, 0.9), ociNote().opacity(0, 0.9), image().position([0, -40], 0.9), image().scale(1.2, 0.9), layers().position([0, 230], 0.9), config().position([410, 230], 0.9), layers().opacity(1, 0.9), config().opacity(1, 0.9));
+  yield* run(0.9, registry().opacity(0.25, 0.9), runtime().opacity(0.25, 0.9), containerA().opacity(0.25, 0.9), image().position([0, -40], 0.9), image().scale(1.2, 0.9), layers().position([0, 230], 0.9), config().position([410, 230], 0.9), layers().opacity(1, 0.9), config().opacity(1, 0.9), ociNote().opacity(0, 0.9), cue().fill(c.amber, 0.9));
   yield* waitUntil(152);
   setCue('Act 3', 'Scene 3.1 / Moment: 22.0s — Ordered filesystem changes', 152);
   yield* run(1.1, layers().scale(1.14, 1.1), image().opacity(0.45, 1.1));
@@ -325,12 +293,13 @@ export default makeScene2D(function* (view) {
     image().opacity(0.18, 0.9),
     registry().opacity(0.18, 0.9),
     runtime().opacity(0.18, 0.9),
+    containerB().opacity(0, 0.9),
+    processB().opacity(0, 0.9),
+    writableB().opacity(0, 0.9),
     containerA().position([420, 80], 0.9),
     process().position([420, 65], 0.9),
     writableA().position([420, -35], 0.9),
-    fileA().position([420, 160], 0.9),
-    containerB().opacity(0.12, 0.9),
-    processB().opacity(0.12, 0.9),
+    fileA().opacity(0, 0.9),
     namespaceFrame().position([420, 80], 0.9),
     cgroupFrame().position([420, 80], 0.9),
   );
