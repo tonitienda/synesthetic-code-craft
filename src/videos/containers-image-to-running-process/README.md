@@ -14,7 +14,7 @@ container = process + filesystem view + namespaces + cgroups
 - `theme.ts` keeps the calm dark palette local to this video.
 - `components.tsx` provides only the diagram primitives used by the first implementation pass.
 - Scene files live in `src/scenes/containersAct*.tsx` and intentionally map one-to-one to the implementation scenes in `06-implementation-plan.md`.
-- `src/scenes/containersAliveStory.tsx` is an alternative implementation that treats the video as one evolving visual machine rather than a sequence of mostly static scene cards.
+- `src/scenes/containersAliveStory.tsx` is an alternative implementation that favors more dynamic visual continuity inside each conceptual section instead of mostly static scene cards.
 - Each scene uses small timing constants and a simple reveal/hold/fade rhythm so narration alignment can be tuned without changing the visual model.
 
 ## Alternative alive implementation
@@ -27,7 +27,7 @@ npm run build:containers:alive
 npm run screenshots:containers:alive
 ```
 
-Use it to explore the same approved conceptual chain with more visual continuity. The image, registry, runtime, container processes, kernel, namespace frame, and cgroup frame remain on the canvas and evolve across acts so viewers can track identity over time.
+Use it to explore the same approved conceptual chain with more motion, transformation, and visual continuity. Cuts or fresh compositions can make sense at act boundaries; the important constraint is to avoid resetting the entire screen every few seconds while the same concept is still being explained.
 
 ## Project commands
 
