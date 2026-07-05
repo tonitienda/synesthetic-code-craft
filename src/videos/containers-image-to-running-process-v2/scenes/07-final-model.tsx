@@ -9,7 +9,7 @@ export default makeContainersV2Scene({
     {
       label: 'n028 corrected workflow',
       hold: 3.8,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={30} alignItems={'center'}>
           <WorkflowRail compact />
           <Caption text={'build produces, push stores, pull retrieves, run creates a container process'} tone={'strong'} />
@@ -19,12 +19,12 @@ export default makeContainersV2Scene({
     {
       label: 'n029 final formula',
       hold: 4,
-      element: <Formula />,
+      render: () => <Formula />,
     },
     {
       label: 'n030 optional commit loop',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={34} alignItems={'center'}>
           <SecondaryLoop />
           <Caption text={'useful sometimes, but not the main model; usually rebuild from source plus Dockerfile'} />
@@ -34,7 +34,7 @@ export default makeContainersV2Scene({
     {
       label: 'n031 final memory',
       hold: 4.2,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={34} alignItems={'center'}>
           <WorkflowRail compact />
           <CommandCallout />
