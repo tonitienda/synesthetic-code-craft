@@ -7,19 +7,29 @@ The goal is to keep the creative structure separate from Motion Canvas implement
 ## Pipeline
 
 ```text
+Specs
+  ↓
 Research
   ↓
 Treatment
   ↓
-Beat Sheet
-  ↓
-Animation Specification
+Beats
   ↓
 Narration
+  ↓
+Scene Timeline
+  ↓
+Implementation Plan
   ↓
 Motion Canvas Implementation
   ↓
 Rendered Video
+```
+
+Each content phase is gated by human approval. See:
+
+```text
+docs/phases.md
 ```
 
 ## Folder structure
@@ -29,19 +39,20 @@ content/
 ├── language/
 │   └── animation-spec-v0.md
 └── videos/
-    └── backpropagation/
-        ├── 00-video.md
-        ├── README.md
+    └── <video-slug>/
+        ├── 00-specs.md
         ├── 01-research.md
         ├── 02-treatment.md
         ├── 03-beats.md
-        ├── 04-animation-spec.md
-        ├── 05-narration.md
-        └── 06-codex-implementation.md
+        ├── 04-narration.md
+        ├── 05-scene-timeline.md
+        └── 06-implementation-plan.md
 ```
 
 ## Philosophy
 
-The animation specification is intentionally human-readable.
+The scene timeline is intentionally human-readable.
 
 It should be detailed enough for an LLM or developer to translate into Motion Canvas, but not so rigid that writing it feels like programming.
+
+The shared animation language should prefer reusable high-level components such as `SplashScreen`, `TitleCard`, `Perceptron`, `NeuralNet`, and `Graph2D` before falling back to low-level shape commands.
