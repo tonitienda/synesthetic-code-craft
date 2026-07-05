@@ -1,11 +1,11 @@
 import {Layout, Rect, Txt, makeScene2D} from '@motion-canvas/2d';
 import {all, createRef, waitFor} from '@motion-canvas/core';
 import {TitleBlock} from './components';
-import {c} from './theme';
+import {c, timing} from './theme';
 
 export interface Moment {
   label: string;
-  element: any;
+  render: () => any;
   hold?: number;
 }
 
@@ -39,7 +39,7 @@ export function makeContainersV2Scene({title, subtitle, moments}: SceneConfig) {
           <Layout ref={content} width={'100%'} height={610} alignItems={'center'} justifyContent={'center'}>
             {moments.map((moment, index) => (
               <Layout key={`moment-${index}`} ref={momentRefs[index]} opacity={0} scale={0.97} y={18}>
-                {moment.element}
+                {moment.render()}
               </Layout>
             ))}
           </Layout>
@@ -54,38 +54,40 @@ export function makeContainersV2Scene({title, subtitle, moments}: SceneConfig) {
       </Layout>,
     );
 
-    yield* all(heading().opacity(1, 0.7), heading().y(0, 0.7));
-    yield* waitFor(0.4);
+    yield* all(heading().opacity(1, timing.intro), heading().y(0, timing.intro));
+    yield* waitFor(timing.preHold);
 
     for (let index = 0; index < moments.length; index++) {
       footer().text(moments[index].label);
       const nextWidth = 920 * ((index + 1) / moments.length);
       yield* all(
-        footer().opacity(1, 0.3),
-        progress().width(nextWidth, 0.55),
+        footer().opacity(1, timing.quick),
+        progress().width(nextWidth, timing.progress),
       );
 
+      const transitions = [
+        momentRefs[index]().opacity(1, timing.enter),
+        momentRefs[index]().scale(1, timing.enter),
+        momentRefs[index]().y(0, timing.enter),
+      ];
+
       if (index > 0) {
-        yield* all(
-          momentRefs[index - 1]().opacity(0, 0.45),
-          momentRefs[index - 1]().scale(0.985, 0.45),
-          momentRefs[index - 1]().y(-18, 0.45),
+        transitions.push(
+          momentRefs[index - 1]().opacity(0, timing.fade),
+          momentRefs[index - 1]().scale(0.985, timing.fade),
+          momentRefs[index - 1]().y(-18, timing.fade),
         );
       }
 
-      yield* all(
-        momentRefs[index]().opacity(1, 0.75),
-        momentRefs[index]().scale(1, 0.75),
-        momentRefs[index]().y(0, 0.75),
-      );
-      yield* waitFor(moments[index].hold ?? 2.2);
+      yield* all(...transitions);
+      yield* waitFor(moments[index].hold ?? timing.defaultHold);
     }
 
-    yield* waitFor(0.6);
+    yield* waitFor(timing.outroHold);
     yield* all(
-      heading().opacity(0, 0.45),
-      footer().opacity(0, 0.45),
-      content().opacity(0, 0.45),
+      heading().opacity(0, timing.fade),
+      footer().opacity(0, timing.fade),
+      content().opacity(0, timing.fade),
     );
   });
 }
