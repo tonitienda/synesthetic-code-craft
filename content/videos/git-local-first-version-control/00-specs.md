@@ -1,6 +1,6 @@
 ---
 type: specs
-status: in-progress
+status: ready
 depends_on: []
 ---
 
@@ -30,6 +30,8 @@ Git works offline because the repository history lives locally.
 
 Commits, branches, diffs, merges, and rebases are mostly local graph operations. Remotes are other repositories that we synchronize with, not the only place where version control happens.
 
+The video is mainly a Git mental model video, with local-first as the unifying idea.
+
 ## Audience
 
 Primary audience:
@@ -50,18 +52,20 @@ The wording should remain simple enough to translate or rewrite in Spanish later
 
 ## Target duration
 
-Target: 4–6 minutes.
+Target: around 6 minutes.
 
-Acceptable range: 3–7 minutes.
+Acceptable range: 5–7 minutes.
 
-This should be longer than a tiny short, but still focused enough to finish and upload soon.
+The final duration should depend on the narration needed to make the concepts clear. Do not compress the video so much that the graph operations become confusing.
 
 ## Scope
 
 The video should explain, at a high level:
 
-- centralized version control as contrast
+- centralized version control as opening contrast
+- what drawbacks centralized systems had for local work and offline work
 - local repository vs remote repository
+- working tree, tracked files, untracked files, and staged changes as much as needed to make commits understandable
 - commit as a point in project history
 - commit parent links and commit graph
 - branch as a movable name/pointer
@@ -70,7 +74,6 @@ The video should explain, at a high level:
 - rebase as replaying commits on a new base
 - fetch as updating local knowledge of a remote
 - pull as fetch plus integration
-- apply as applying a patch to the working tree
 - why many Git operations work offline
 
 ## Non-goals
@@ -82,11 +85,12 @@ Do not explain:
 - object storage, hashing, packfiles, refs layout, reflog, or index internals beyond what is needed
 - detailed conflict resolution workflows
 - GitHub/GitLab-specific collaboration features
+- `git apply` or patch workflows; save those for a later patch-oriented video
 - submodules
 - hooks
 - advanced branching models such as Git Flow
 
-The video may mention older centralized systems such as SourceSafe or Subversion only as contrast, not as a full historical lesson.
+The video may mention older centralized systems such as SourceSafe or Subversion as the opening contrast: where we came from, what the drawbacks were, and why Git being offline/distributed matters.
 
 ## Tone
 
@@ -99,6 +103,7 @@ Preferred feeling:
 - “Ah, Git is a graph I have locally.”
 - “Fetch and pull are different for a reason.”
 - “Merge and rebase are different ways to integrate histories.”
+- “Centralized version control explains why Git’s local-first model was such a shift.”
 
 Avoid:
 
@@ -117,21 +122,23 @@ Likely reusable visual components:
 - `CommitNode`
 - `BranchPointer`
 - `HeadPointer`
+- `LocalRepository`
 - `RemoteRepository`
 - `WorkingTree`
-- `PatchCard`
+- `StagingArea`
 - `CommandCallout`
 - `ComparisonFrame`
 
 Useful visual contrasts:
 
 - centralized server model vs local repository model
+- local repository as full history, not only a working copy
+- working tree vs staged changes vs commit graph
 - branch pointer moving as commits are added
 - merge creating a join commit
 - rebase replaying commits as new commits
 - fetch moving `origin/main` without moving local `main`
 - pull as fetch plus merge/rebase
-- apply as patch into working tree, not necessarily history
 
 ## Framework goals
 
@@ -142,14 +149,17 @@ This video should test whether the framework can handle:
 - before/after transformations
 - command callouts synchronized with narration
 - local vs remote copies of similar objects
+- a small staged/unstaged/tracked-files model without overloading the video
 - reusable technical diagram components
 
-## Ready checklist
+## Decisions already taken
 
-Before marking this specs file `ready`, decide:
+- The video is a Git mental model video, with local-first as the unifying idea.
+- Include staging/index concepts only as much as needed to explain commits.
+- Exclude `git apply` from this first Git video.
+- Aim for around 6 minutes, but let narration needs decide.
+- Use SourceSafe/Subversion-style centralized systems as an opening contrast, not a recurring full comparison.
 
-- Is the video mainly “Git works offline” or “Git mental model with local-first as the unifying idea”?
-- Should staging/index be included, or avoided to keep the video focused?
-- Should `apply` be included in this first Git video, or saved for a later patch-oriented video?
-- Is the target duration closer to 4 minutes or 6 minutes?
-- Should the comparison to SourceSafe/Subversion be a short opening contrast or a recurring comparison?
+## Gate status
+
+This specs file is `ready` for the research phase.
