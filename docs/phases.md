@@ -1,6 +1,6 @@
 # Phases for each video project
 
-This document defines the Markdown-first content workflow for each video project.
+This document defines the Markdown-first workflow for each video project.
 
 The goal is to move from broad intent to implementation-ready scenes without asking the implementation agent to invent the video structure directly in Motion Canvas.
 
@@ -10,37 +10,31 @@ Each phase produces one Markdown artifact under:
 content/videos/<video-slug>/
 ```
 
-Each phase is gated separately. A human must approve the current phase before agents proceed to the next phase.
+Each phase is gated separately. The human approves a phase by marking it `ready`.
 
 ## Core rule
 
 Agents refine the video one phase at a time.
 
-They may suggest improvements to a previous phase, but they must not silently change the approved intent of an earlier phase while working on a later one.
+They may suggest improvements to earlier phases, but they must not silently change the intent of a ready phase while working on a later one.
 
-A phase may start only when all dependencies are marked `approved`.
+A phase may start only when all dependencies are `ready`.
 
-## Status lifecycle
+## Statuses
 
-Use these statuses in front matter:
+Use only these statuses:
 
 ```text
-draft
-ready-for-review
-changes-requested
-approved
-superseded
+in-progress
+ready
 ```
 
 Meaning:
 
-- `draft`: the agent or human is still shaping the artifact.
-- `ready-for-review`: the artifact is complete enough for human review.
-- `changes-requested`: the human reviewed it and wants changes before approval.
-- `approved`: the human approved this phase as input for the next phase.
-- `superseded`: this artifact has been replaced by a newer approved version.
+- `in-progress`: the phase is still being written, reviewed, or changed.
+- `ready`: the human has accepted this phase as input for the next phase.
 
-Only `approved` unblocks dependent phases.
+Only `ready` unblocks dependent phases.
 
 ## Common front matter
 
@@ -49,13 +43,8 @@ Every phase artifact should start with YAML front matter.
 ```yaml
 ---
 type: specs
-phase: "00-specs"
-video: "<video-slug>"
-status: draft
+status: in-progress
 depends_on: []
-version: 1
-approved_by:
-approved_at:
 ---
 ```
 
@@ -72,39 +61,14 @@ implementation-plan
 review
 ```
 
-Allowed `status` values:
-
-```text
-draft
-ready-for-review
-changes-requested
-approved
-superseded
-```
-
 Rules:
 
-- `type` describes the artifact shape.
-- `phase` keeps the phase order explicit.
-- `depends_on` uses file names or phase IDs.
-- `approved_by` and `approved_at` remain empty until human approval.
+- `type` describes the phase.
+- `status` is either `in-progress` or `ready`.
+- `depends_on` uses file names.
+- The video slug is not needed because the file already lives under `content/videos/<video-slug>/`.
+- No approver field is needed; the human reviewing the phase is the approver.
 - Agents should preserve stable IDs once downstream files reference them.
-
-## Standard sections
-
-Each phase may have its own structure, but agent-facing artifacts should include these sections when useful:
-
-```text
-## Purpose
-## Inputs
-## Output
-## Decisions
-## Open questions
-## Human approval checklist
-## Agent handoff
-```
-
-The `Agent handoff` section is important. It should explain what the next agent should read, preserve, and avoid changing.
 
 ## Canonical phase order
 
@@ -118,8 +82,6 @@ The `Agent handoff` section is important. It should explain what the next agent 
 06-implementation-plan.md
 ```
 
-Existing videos may still have older names such as `04-animation-spec.md`, `04-timeline.md`, or `05-narration.md` during migration. When touching those videos, prefer moving toward the canonical order above, but do not bulk rename files without human approval.
-
 ---
 
 # 00 — Specs
@@ -130,9 +92,15 @@ Existing videos may still have older names such as `04-animation-spec.md`, `04-t
 00-specs.md
 ```
 
-## Depends on
+## Front matter
 
-Nothing.
+```yaml
+---
+type: specs
+status: in-progress
+depends_on: []
+---
+```
 
 ## Purpose
 
@@ -145,14 +113,12 @@ This phase answers:
 - What should the viewer understand by the end?
 - What is the desired tone?
 - What is the expected format and duration?
-- What should be explicitly out of scope?
+- What is explicitly out of scope?
 - What visual style hints are already known?
 
 ## Output
 
-A concise project brief.
-
-It should include:
+A concise project brief with:
 
 - title or working title
 - topic
@@ -167,11 +133,9 @@ It should include:
 - constraints
 - open questions
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the scope, audience, tone, and depth are clear enough for research.
-
-Research must not begin if the topic or explanation depth is still ambiguous.
+Mark this phase `ready` when the scope, audience, tone, and depth are clear enough for research.
 
 ---
 
@@ -183,10 +147,15 @@ Research must not begin if the topic or explanation depth is still ambiguous.
 01-research.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-00-specs.md
+```yaml
+---
+type: research
+status: in-progress
+depends_on:
+  - 00-specs.md
+---
 ```
 
 ## Purpose
@@ -218,9 +187,9 @@ Research should clarify:
 - Mark uncertain claims clearly.
 - Prefer useful understanding over exhaustive research.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the topic is understood deeply enough to design the video structure.
+Mark this phase `ready` when the topic is understood deeply enough to design the video structure.
 
 ---
 
@@ -232,11 +201,16 @@ The human approves this phase when the topic is understood deeply enough to desi
 02-treatment.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-00-specs.md
-01-research.md
+```yaml
+---
+type: treatment
+status: in-progress
+depends_on:
+  - 00-specs.md
+  - 01-research.md
+---
 ```
 
 ## Purpose
@@ -266,9 +240,9 @@ Treatment should include:
 - Do not specify detailed animation timing yet.
 - Make the structure clear enough that beats can be written next.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the act structure and explanatory arc feel right.
+Mark this phase `ready` when the act structure and explanatory arc feel right.
 
 ---
 
@@ -280,12 +254,17 @@ The human approves this phase when the act structure and explanatory arc feel ri
 03-beats.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-00-specs.md
-01-research.md
-02-treatment.md
+```yaml
+---
+type: beats
+status: in-progress
+depends_on:
+  - 00-specs.md
+  - 01-research.md
+  - 02-treatment.md
+---
 ```
 
 ## Purpose
@@ -318,9 +297,9 @@ beats:
 - Avoid implementation details.
 - Visual hints are allowed, but they are not final animation specs.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the sequence of ideas is clear and complete enough to write narration.
+Mark this phase `ready` when the sequence of ideas is clear and complete enough to write narration.
 
 ---
 
@@ -332,12 +311,17 @@ The human approves this phase when the sequence of ideas is clear and complete e
 04-narration.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-00-specs.md
-02-treatment.md
-03-beats.md
+```yaml
+---
+type: narration
+status: in-progress
+depends_on:
+  - 00-specs.md
+  - 02-treatment.md
+  - 03-beats.md
+---
 ```
 
 ## Purpose
@@ -359,19 +343,14 @@ Possible generated outputs include:
 
 Use YAML front matter with `type: narration`, followed by a fenced parseable narration block.
 
-Markdown outside the fenced block is allowed for human notes, but tooling should be able to ignore it.
+Markdown outside the fenced block is allowed for human notes. Tooling should be able to ignore it.
 
 ````markdown
 ---
 type: narration
-phase: "04-narration"
-video: "<video-slug>"
-status: draft
-depends_on: ["03-beats.md"]
-language: en
-version: 1
-approved_by:
-approved_at:
+status: in-progress
+depends_on:
+  - 03-beats.md
 ---
 
 # Narration
@@ -424,9 +403,9 @@ Rules:
 - Tools may concatenate `text` fields to generate a script for `say`.
 - Future tools may transform the same segments into subtitles or TTS requests.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the spoken script has the right tone, rhythm, and conceptual clarity.
+Mark this phase `ready` when the spoken script has the right tone, rhythm, and conceptual clarity.
 
 ---
 
@@ -438,12 +417,16 @@ The human approves this phase when the spoken script has the right tone, rhythm,
 05-scene-timeline.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-03-beats.md
-04-narration.md
-content/language/animation-spec-v0.md
+```yaml
+---
+type: scene-timeline
+status: in-progress
+depends_on:
+  - 03-beats.md
+  - 04-narration.md
+---
 ```
 
 ## Purpose
@@ -492,12 +475,15 @@ scenes:
     events:
       - at: 0.0
         narration: n001
-        action: "title-card.show_title"
+        target: title-card
+        action: show_title
       - at: 2.0
         narration: n002
-        action: "title-card.show_subtitle"
+        target: title-card
+        action: show_subtitle
       - at: 5.5
-        action: "title-card.fade_out"
+        target: title-card
+        action: fade_out
 ```
 
 ## Agent rules
@@ -506,13 +492,13 @@ scenes:
 - Use components such as `SplashScreen`, `TitleCard`, `Perceptron`, `NeuralNet`, and `Graph2D` when possible.
 - Low-level commands are allowed only when no existing component describes the intent.
 - Do not write Motion Canvas code here.
-- Do not rewrite approved narration here.
+- Do not rewrite ready narration here.
 - Reference narration segments by ID instead of duplicating the script.
 - If a reusable component is missing, propose it in the scene timeline or implementation plan.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when an implementation agent can build the scenes without inventing the structure, pacing, or visual metaphor.
+Mark this phase `ready` when an implementation agent can build the scenes without inventing the structure, pacing, or visual metaphor.
 
 ---
 
@@ -524,15 +510,20 @@ The human approves this phase when an implementation agent can build the scenes 
 06-implementation-plan.md
 ```
 
-## Depends on
+## Front matter
 
-```text
-05-scene-timeline.md
+```yaml
+---
+type: implementation-plan
+status: in-progress
+depends_on:
+  - 05-scene-timeline.md
+---
 ```
 
 ## Purpose
 
-Translate the approved scene timeline into a concrete Motion Canvas implementation plan.
+Translate the ready scene timeline into a concrete Motion Canvas implementation plan.
 
 This phase is still documentation, not the final implementation.
 
@@ -552,14 +543,14 @@ The implementation plan should include:
 
 ## Agent rules
 
-- Keep implementation scoped to approved scenes.
+- Keep implementation scoped to ready scenes.
 - Do not add new story beats.
 - Do not add new narration.
 - Prefer reusable Motion Canvas components when they simplify future videos.
-- Avoid premature framework work that is not needed by the approved scene timeline.
+- Avoid premature framework work that is not needed by the ready scene timeline.
 
-## Human approval gate
+## Gate
 
-The human approves this phase when the implementation task is clear, bounded, and safe for a coding agent.
+Mark this phase `ready` when the implementation task is clear, bounded, and safe for a coding agent.
 
-After this approval, a coding agent may implement the requested scope in Motion Canvas.
+After this, a coding agent may implement the requested scope in Motion Canvas.
