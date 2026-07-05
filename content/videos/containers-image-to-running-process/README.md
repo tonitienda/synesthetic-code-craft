@@ -11,8 +11,8 @@ This folder contains the Markdown-first content phases for the video explaining 
 | Treatment | `02-treatment.md` | `ready` | Defines the seven-act explanatory arc. |
 | Beats | `03-beats.md` | `ready` | Breaks the treatment into stable beat IDs for narration and scene-timeline references. |
 | Narration | `04-narration.md` | `ready` | Parseable narration segments based on the ready beats. |
-| Scene timeline | `05-scene-timeline.md` | `in-progress` | Draft visual timeline based on ready beats and narration. |
-| Implementation plan | `06-implementation-plan.md` | not started | Depends on a ready scene timeline. |
+| Scene timeline | `05-scene-timeline.md` | `ready` | Visual timeline based on ready beats and narration. |
+| Implementation plan | `06-implementation-plan.md` | `in-progress` | Draft Motion Canvas implementation plan based on the ready scene timeline. |
 
 ## Working notes for humans and agents
 

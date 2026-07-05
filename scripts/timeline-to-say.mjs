@@ -10,7 +10,7 @@ const DEFAULT_OUT = 'artifacts/narration/backpropagation.say.txt';
 function usage() {
   console.log(`Usage: node scripts/timeline-to-say.mjs [timeline.md] [options]
 
-Converts Markdown timeline narration cues into a macOS say-compatible file.
+Converts Markdown timeline cues or narration-yaml segments into a macOS say-compatible file.
 
 Options:
   --out <path>            Output say text file. Default: ${DEFAULT_OUT}
@@ -18,7 +18,7 @@ Options:
   --voice <name>          macOS voice name. Default: Samantha
   --rate <number>         Speech rate for macOS say. Default: 160
   --speak                 Play the generated narration with macOS say.
-  --no-timeline-pauses    Do not infer pauses from timeline cue spacing.
+  --no-timeline-pauses    Do not infer pauses from timeline cue spacing. Narration files use pause_after.
   --help                  Show this help.
 
 Examples:
@@ -109,6 +109,108 @@ function stripNarrationSyntax(raw) {
     .trim();
 
   return text || null;
+}
+
+function unquote(value) {
+  return value.trim().replace(/^["'](.*)["']$/s, '$1');
+}
+
+function parseScalar(value) {
+  const trimmed = unquote(value);
+  const number = Number.parseFloat(trimmed);
+  if (/^-?\d+(?:\.\d+)?$/.test(trimmed) && Number.isFinite(number)) {
+    return number;
+  }
+
+  return trimmed;
+}
+
+function getIndent(line) {
+  return line.match(/^\s*/)?.[0].length ?? 0;
+}
+
+function extractNarrationYaml(markdown) {
+  const match = markdown.match(/```narration-yaml\s*\n([\s\S]*?)\n```/);
+  return match?.[1] ?? null;
+}
+
+function parseNarrationYamlBlock(block) {
+  const lines = block.split(/\r?\n/);
+  const segments = [];
+  let current = null;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed === 'segments:') {
+      continue;
+    }
+
+    const segmentMatch = line.match(/^\s*-\s+id:\s*(.+)$/);
+    if (segmentMatch) {
+      current = {id: unquote(segmentMatch[1]), text: '', pause_after: 0};
+      segments.push(current);
+      continue;
+    }
+
+    if (!current) {
+      continue;
+    }
+
+    const fieldMatch = line.match(/^\s{4}([A-Za-z_][\w-]*):\s*(.*)$/);
+    if (!fieldMatch) {
+      continue;
+    }
+
+    const [, key, rawValue] = fieldMatch;
+
+    if (rawValue.trim() === '|') {
+      const blockIndent = getIndent(line) + 2;
+      const blockLines = [];
+
+      for (let j = i + 1; j < lines.length; j += 1) {
+        const next = lines[j];
+        const nextTrimmed = next.trim();
+
+        if (nextTrimmed && getIndent(next) < blockIndent) {
+          break;
+        }
+
+        blockLines.push(next.slice(Math.min(blockIndent, getIndent(next))));
+        i = j;
+      }
+
+      current[key] = blockLines.join('\n').trim();
+      continue;
+    }
+
+    current[key] = parseScalar(rawValue);
+  }
+
+  return segments.filter(segment => stripNarrationSyntax(segment.text));
+}
+
+function parseNarrationMarkdown(markdown) {
+  const block = extractNarrationYaml(markdown);
+  if (!block) {
+    return [];
+  }
+
+  const segments = parseNarrationYamlBlock(block);
+
+  return [
+    {
+      title: 'Narration segments',
+      duration: null,
+      cues: segments.map((segment, index) => ({
+        at: index,
+        id: segment.id,
+        narration: stripNarrationSyntax(segment.text),
+        pauseAfter: Number.isFinite(Number(segment.pause_after)) ? Number(segment.pause_after) : 0,
+      })),
+    },
+  ];
 }
 
 function parseTimeline(markdown) {
@@ -233,6 +335,11 @@ function buildSayText(scenes, {timelinePauses}) {
         pushText(escapeForSay(cue.narration));
       }
 
+      if (typeof cue.pauseAfter === 'number') {
+        pushSilence(cue.pauseAfter * 1000);
+        continue;
+      }
+
       if (!timelinePauses) {
         continue;
       }
@@ -253,7 +360,7 @@ function buildSayText(scenes, {timelinePauses}) {
 function runSay(args) {
   if (process.platform !== 'darwin') {
     console.warn('Skipping macOS say command: this command is only available on macOS.');
-    return;
+    return false;
   }
 
   const sayArgs = ['-v', args.voice, '-r', args.rate, '-f', args.out];
@@ -267,6 +374,8 @@ function runSay(args) {
   if (result.status !== 0) {
     throw new Error(`say failed with exit code ${result.status}`);
   }
+
+  return true;
 }
 
 function main() {
@@ -276,11 +385,12 @@ function main() {
     throw new Error(`Timeline file not found: ${args.timeline}`);
   }
 
-  const timeline = readFileSync(args.timeline, 'utf8');
-  const scenes = parseTimeline(timeline);
+  const markdown = readFileSync(args.timeline, 'utf8');
+  const narrationScenes = parseNarrationMarkdown(markdown).filter(scene => scene.cues.length > 0);
+  const scenes = narrationScenes.length > 0 ? narrationScenes : parseTimeline(markdown);
 
   if (scenes.length === 0) {
-    throw new Error(`No timeline narration cues found in ${args.timeline}`);
+    throw new Error(`No narration cues found in ${args.timeline}`);
   }
 
   const sayText = buildSayText(scenes, args);
@@ -294,11 +404,11 @@ function main() {
   );
 
   console.log(`Wrote ${args.out}`);
-  console.log(`Extracted ${spokenCueCount} spoken narration cues from ${scenes.length} scenes.`);
+  console.log(`Extracted ${spokenCueCount} spoken narration cues from ${scenes.length} source group${scenes.length === 1 ? '' : 's'}.`);
 
   if (args.audio || args.speak) {
-    runSay(args);
-    if (args.audio) {
+    const generatedAudio = runSay(args);
+    if (args.audio && generatedAudio) {
       console.log(`Wrote ${args.audio}`);
     }
   }
