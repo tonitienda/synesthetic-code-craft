@@ -146,11 +146,13 @@ Add scripts:
   "start:containers": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite",
   "build:containers": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite build",
   "screenshots:containers": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process",
-  "narration:containers": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt"
+  "narration:containers": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt",
+  "narration:containers:audio": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt --audio artifacts/narration/containers-image-to-running-process.aiff",
+  "narration:containers:speak": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt --speak"
 }
 ```
 
-If `scripts/timeline-to-say.mjs` cannot parse the narration-file shape yet, either update the tool in the same coding pass or omit the narration script until the parser supports `04-narration.md`.
+`scripts/timeline-to-say.mjs` supports the fenced `narration-yaml` shape used by `04-narration.md`; use these scripts to generate temporary `.say.txt` and macOS `say` audio outputs under `artifacts/narration/`.
 
 ## Scene implementation checklist
 

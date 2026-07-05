@@ -32,6 +32,18 @@ npm run build:deep-dive
 npm run build:backpropagation
 ```
 
+## Narration exports
+
+Narration text and temporary audio exports are generated under `artifacts/narration/` and are not committed. The narration helper accepts both legacy timeline files and the fenced `narration-yaml` segments used by newer content phases.
+
+```bash
+npm run narration:backpropagation
+npm run narration:containers
+npm run narration:containers:audio
+```
+
+The `:audio` scripts call the macOS `say` command when available. On non-macOS environments, the helper still writes the `.say.txt` file and skips audio generation with a warning.
+
 ## Preview screenshots
 
 Binary screenshots are not committed. Pull requests that touch Motion Canvas projects, scenes, or video folders run the `Motion Canvas previews` workflow, which builds the project, generates PNG preview frames for changed video folders, and uploads them as the `motion-canvas-screenshots` artifact.
