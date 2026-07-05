@@ -10,10 +10,12 @@
     "build": "tsc && vite build",
     "build:intro": "tsc && MOTION_CANVAS_PROJECT=./src/projects/youtube-intro.ts vite build",
     "build:deep-dive": "tsc && MOTION_CANVAS_PROJECT=./src/projects/youtube-deep-dive.ts vite build",
-    "start:backpropagation": "MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite",
-    "build:backpropagation": "tsc && MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite build",
+    "start:backpropagation": "MOTION_CANVAS_PROJECT=./src/projects/backpropagation.ts vite",
+    "build:backpropagation": "tsc && MOTION_CANVAS_PROJECT=./src/projects/backpropagation.ts vite build",
     "screenshots": "node scripts/generate-video-screenshots.mjs",
-    "screenshots:backpropagation": "node scripts/generate-video-screenshots.mjs backpropagation-basics"
+    "screenshots:backpropagation": "node scripts/generate-video-screenshots.mjs backpropagation",
+    "start:backpropagation-basics": "MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite",
+    "build:backpropagation-basics": "tsc && MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite build"
   },
   "dependencies": {
     "@motion-canvas/2d": "^3.17.2",
