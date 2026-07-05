@@ -1,6 +1,6 @@
 ---
 type: implementation-plan
-status: in-progress
+status: ready
 depends_on:
   - 05-scene-timeline.md
 ---
