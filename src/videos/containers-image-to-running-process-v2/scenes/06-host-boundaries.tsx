@@ -9,7 +9,7 @@ export default makeContainersV2Scene({
     {
       label: 'n023 host process',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={34} alignItems={'center'}>
           <ContainerInstance label={'container'} />
           <KernelLayer />
@@ -19,7 +19,7 @@ export default makeContainersV2Scene({
     {
       label: 'n024 process with boundaries',
       hold: 3,
-      element: (
+      render: () => (
         <Layout layout gap={80} alignItems={'center'}>
           <BoundaryFrame label={'process'} tone={'container'}>
             <ProcessPulse label={'real process'} />
@@ -33,7 +33,7 @@ export default makeContainersV2Scene({
     {
       label: 'n025 namespaces shape view',
       hold: 3.8,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={26} alignItems={'center'}>
           <NamespaceSplitView />
           <Caption text={'namespaces shape what the process can see'} tone={'strong'} />
@@ -43,7 +43,7 @@ export default makeContainersV2Scene({
     {
       label: 'n026 cgroups shape budget',
       hold: 3.5,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={26} alignItems={'center'}>
           <ResourceBudgetRing />
           <Caption text={'cgroups shape what the process can use'} tone={'warning'} />
@@ -53,7 +53,7 @@ export default makeContainersV2Scene({
     {
       label: 'n027 view plus budget',
       hold: 3.2,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={24} alignItems={'center'}>
           <BoundaryFrame label={'view: namespaces'} tone={'namespace'}>
             <BoundaryFrame label={'budget: cgroups'} tone={'cgroup'}>
