@@ -1,6 +1,6 @@
 ---
 type: beats
-status: in-progress
+status: ready
 depends_on:
   - 00-specs.md
   - 01-research.md
