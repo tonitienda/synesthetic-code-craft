@@ -226,8 +226,9 @@ export default makeScene2D(function* (view) {
     image().scale(1.35, 0.8),
     imageLayers().opacity(1, 0.7),
   );
-  yield* all(image().rotation(2, 0.3), image().rotation(-2, 0.3));
-  yield* image().rotation(0, 0.2);
+  yield* image().rotation(2, 0.15);
+  yield* image().rotation(-2, 0.3);
+  yield* image().rotation(0, 0.15);
   yield* waitFor(0.8);
 
   // Act 4: run prepares a filesystem view, options, and a process.
