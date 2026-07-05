@@ -32,6 +32,47 @@ The goal is to validate the workflow before expanding the full video.
 06-codex-implementation.md
 ```
 
+## Narration prototype
+
+Use the timeline as a cheap content-debugging layer before generating or revising Motion Canvas animation.
+
+```bash
+npm run narration:backpropagation
+```
+
+This extracts `Narration:` cues from `04-timeline.md` and writes a macOS `say`-compatible file:
+
+```text
+artifacts/narration/backpropagation.say.txt
+```
+
+To listen immediately on macOS:
+
+```bash
+npm run narration:backpropagation:speak
+```
+
+To export an AIFF file for video editing or timing checks:
+
+```bash
+npm run narration:backpropagation:audio
+```
+
+Generated narration artifacts are written under `artifacts/`, which is ignored by Git.
+
+The converter preserves the existing timeline style:
+
+```md
+Narration:
+"A perceptron is a very simple artificial neuron."
+```
+
+and turns pauses into macOS `say` silence commands:
+
+```text
+[[slnc 2000]]
+```
+
 ## Act I
 
 Act I explains the perceptron:
