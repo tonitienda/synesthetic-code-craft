@@ -1,6 +1,6 @@
 ---
 type: motion-design
-status: in-progress
+status: ready
 depends_on:
   - 05-scene-timeline.md
 ---
@@ -39,7 +39,6 @@ The viewer should feel that a container is not a little machine. It is a real ho
 
 ## Status notes
 
-- Status is `in-progress` because this is the first motion-design pass and needs human review.
 - ASCII key frames are communication sketches, not final layouts.
 - Component candidates are design vocabulary only; the approved component/API plan belongs in `07-motion-components.md`.
 - The motion itself must teach. A scene fails if the narration carries the whole explanation while the visuals merely decorate it.
