@@ -7,7 +7,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-intro`
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
-- `containers-image-to-running-process` — explains how container images become bounded running processes.
+- `containers-image-to-running-process` — explains how container images become bounded running processes. The implementation is paced as a multi-act animated explainer rather than a short static slide deck.
 
 ## Quick start
 

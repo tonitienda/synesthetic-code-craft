@@ -98,6 +98,13 @@ Do not add major new scenes, concepts, jokes, visual metaphors, or stylistic cha
 - no hype aesthetics
 - motion should explain the concept
 
+## Motion implementation quality bar
+
+- Do not collapse a ready scene timeline into static slide/title-card summaries.
+- Preserve the approved duration budget unless the user explicitly asks for a shorter cut. A 7–10 minute timeline should remain in that range through scene holds, transitions, and readable diagram evolution.
+- Each Motion Canvas scene should contain multiple visible states or transformations tied to the source moments, not just one fully composed diagram.
+- Prefer paced reveals, diagram transformations, moving traces/tokens, and intentional holds over hard cuts between static compositions.
+
 ## Code style
 
 - Use TypeScript and TSX scenes.
