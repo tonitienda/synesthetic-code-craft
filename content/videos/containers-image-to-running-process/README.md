@@ -10,8 +10,8 @@ This folder contains the Markdown-first content phases for the video explaining 
 | Research | `01-research.md` | `ready` | Collects source-backed concepts and accuracy guardrails. |
 | Treatment | `02-treatment.md` | `ready` | Defines the seven-act explanatory arc. |
 | Beats | `03-beats.md` | `ready` | Breaks the treatment into stable beat IDs for narration and scene-timeline references. |
-| Narration | `04-narration.md` | `in-progress` | Draft parseable narration segments based on the ready beats. |
-| Scene timeline | `05-scene-timeline.md` | not started | Depends on ready beats and narration. |
+| Narration | `04-narration.md` | `ready` | Parseable narration segments based on the ready beats. |
+| Scene timeline | `05-scene-timeline.md` | `in-progress` | Draft visual timeline based on ready beats and narration. |
 | Implementation plan | `06-implementation-plan.md` | not started | Depends on a ready scene timeline. |
 
 ## Working notes for humans and agents
@@ -22,3 +22,4 @@ This folder contains the Markdown-first content phases for the video explaining 
 - Preserve the final memory: `container = process + filesystem view + namespaces + cgroups`.
 - Treat `docker commit` as optional and secondary; do not make it the final memory or imply it is the normal image-building workflow.
 - When writing or revising narration, reference beat IDs from `03-beats.md` and preserve stable narration IDs from `04-narration.md` once downstream files reference them.
+- When revising the scene timeline, keep scene groupings tied to narration IDs and avoid introducing Motion Canvas-only story structure.
