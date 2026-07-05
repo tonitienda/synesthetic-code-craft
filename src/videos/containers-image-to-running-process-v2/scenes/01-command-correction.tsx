@@ -17,7 +17,7 @@ export default makeContainersV2Scene({
     {
       label: 'n001 — familiar doorway',
       hold: 2.4,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={30} alignItems={'center'}>
           <CommandCallout />
           <Caption text={'A familiar command hides a precise chain of events.'} />
@@ -27,7 +27,7 @@ export default makeContainersV2Scene({
     {
       label: 'n002 — what runs?',
       hold: 2.5,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={28} alignItems={'center'}>
           <CommandCallout />
           <Txt text={'what actually runs?'} fontSize={44} fontWeight={800} fill={c.amber} />
@@ -37,7 +37,7 @@ export default makeContainersV2Scene({
     {
       label: 'n003 — image is inert, process is alive',
       hold: 3.2,
-      element: (
+      render: () => (
         <Layout layout gap={64} alignItems={'center'}>
           <ImageArtifact label={'nginx image'} />
           <Txt text={'≠'} fontSize={80} fill={c.amber} />
@@ -48,7 +48,7 @@ export default makeContainersV2Scene({
     {
       label: 'thesis chain',
       hold: 3.4,
-      element: (
+      render: () => (
         <Layout layout direction={'column'} gap={30} alignItems={'center'}>
           <Caption text={'An image does not run. A process runs.'} tone={'warning'} />
           <Layout layout gap={30} alignItems={'center'}>
