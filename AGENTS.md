@@ -36,23 +36,27 @@ Follow the gated phase workflow described in:
 docs/phases.md
 ```
 
-Each phase must be approved by the human before dependent phases start.
+Each phase has one of two statuses:
 
-When implementing Motion Canvas, use only approved source artifacts unless the human explicitly asks for an exploratory draft.
+```text
+in-progress
+ready
+```
+
+Only `ready` phases can be used as dependencies for later phases.
 
 ## Source priority
 
-When implementing a scene or act, use approved sources in this order:
+When implementing a scene or act, use ready sources in this order:
 
-1. `05-scene-timeline.md` — source of truth for visuals, components, timing intent, and narration references
-2. `04-narration.md` — parseable narration segments and conceptual pacing
-3. `03-beats.md` — story sequence and transitions
-4. `02-treatment.md` — tone, audience, and conceptual goals
-5. `01-research.md` — factual background
-6. `00-specs.md` — overall video scope
-7. `content/language/animation-spec-v0.md` — shared vocabulary for scene timeline components
-
-During migration, some videos may still use older files such as `04-animation-spec.md`, `04-timeline.md`, or `05-narration.md`. If canonical files do not exist yet, use the closest existing approved source and document the mismatch instead of silently renaming files.
+1. `06-implementation-plan.md` — concrete implementation plan, files to create/update, and components to reuse
+2. `05-scene-timeline.md` — source of truth for visuals, components, timing intent, and narration references
+3. `04-narration.md` — parseable narration segments and conceptual pacing
+4. `03-beats.md` — story sequence and transitions
+5. `02-treatment.md` — tone, audience, and conceptual goals
+6. `01-research.md` — factual background
+7. `00-specs.md` — overall video scope
+8. `content/language/animation-spec-v0.md` — shared vocabulary for scene timeline components
 
 ## Implementation scope
 
