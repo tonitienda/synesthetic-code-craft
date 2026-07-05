@@ -7,6 +7,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `youtube-intro`
 - `youtube-deep-dive`
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
+- `containers-image-to-running-process` — explains how container images become bounded running processes.
 
 ## Quick start
 
@@ -21,6 +22,7 @@ npm run start:intro
 npm run start:intro
 npm run start:deep-dive
 npm run start:backpropagation
+npm run start:containers
 ```
 
 ## Build
@@ -30,6 +32,7 @@ npm run build
 npm run build:intro
 npm run build:deep-dive
 npm run build:backpropagation
+npm run build:containers
 ```
 
 ## Narration exports
@@ -52,10 +55,11 @@ To generate the same previews locally for the backpropagation video:
 
 ```bash
 npm run screenshots:backpropagation
+npm run screenshots:containers
 ```
 
 Generated files are written to `artifacts/screenshots/`, which is ignored by Git.
 
 ## Video folders
 
-Each substantial video should include a dedicated folder under `src/videos/<slug>/` with timestamped narration, production notes, and representative screenshots. For example, see `src/videos/backpropagation-basics/`.
+Each substantial video should include a dedicated folder under `src/videos/<slug>/` with timestamped narration, production notes, and representative screenshots. For examples, see `src/videos/backpropagation-basics/` and `src/videos/containers-image-to-running-process/`.
