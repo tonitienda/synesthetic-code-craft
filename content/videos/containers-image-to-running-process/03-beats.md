@@ -25,6 +25,28 @@ And the final memory:
 container = process + filesystem view + namespaces + cgroups
 ```
 
+
+## Act map
+
+These beats are intentionally granular for downstream reference IDs, but the scene timeline does not need one scene per beat. Later phases should group nearby beats into fewer visual scenes when the same diagram can carry multiple ideas.
+
+| Act | Beat range | Purpose | Pacing intent |
+| --- | --- | --- | --- |
+| Act 1 | `b001`–`b003` | Open with `docker run nginx` and correct the image-vs-process misconception. | 45–60s |
+| Act 2 | `b004`–`b008` | Separate image, registry, runtime, container, and workflow verbs. | 60–90s |
+| Act 3 | `b009`–`b011` | Open the image into layers plus config. | 90–120s |
+| Act 4 | `b012`–`b016` | Explain `run` as conceptual environment preparation plus process start. | 90–120s |
+| Act 5 | `b017`–`b022` | Deliver the shared-layers and private-writable-layer payoff. | 120–150s |
+| Act 6 | `b023`–`b027` | Ground the container as a host process with filesystem, namespace, and cgroup boundaries. | 90–120s |
+| Act 7 | `b028`–`b031` | Reassemble the complete model and end on the final diagram. | 45–75s |
+
+## Reviewer alignment notes
+
+- The beat count is higher than the recommended beat groups in the treatment because several groups need stable sub-beat IDs for narration and scene-timeline references.
+- The runtime beats describe a conceptual model, not a required chronological implementation path for every Docker, OCI, platform, or storage-driver combination.
+- The copy-on-write beats use a visual mental model and should not be narrated as a guarantee that every implementation literally copies an entire file on every write.
+- The optional `docker commit` loop stays secondary so the final memory remains the running-container model, not an implied recommended workflow.
+
 ## Beat list
 
 ```yaml
@@ -121,7 +143,7 @@ beats:
     act: act-4
     title: "Run is preparation, not magic"
     purpose: "Turn the `run` verb into a concrete but high-level runtime moment."
-    key_idea: "The runtime uses the image and run options to prepare an environment before starting the process."
+    key_idea: "Conceptually, the runtime uses the image and run options to prepare an environment before starting the process."
     visual_hint: "RuntimeBox receives `image layers`, `image config`, and `run options` as inputs."
     transition_to_next: "Show outputs emerging from the RuntimeBox one by one."
 
@@ -129,7 +151,7 @@ beats:
     act: act-4
     title: "The runtime assembles a filesystem view"
     purpose: "Connect image layers to the filesystem seen by the container."
-    key_idea: "The runtime presents the read-only image layers as one filesystem view."
+    key_idea: "Conceptually, the runtime presents the read-only image layers as one filesystem view."
     visual_hint: "The LayerStack visually aligns into a single combined filesystem panel labeled `filesystem view`."
     transition_to_next: "Place a new private layer on top of that view."
 
@@ -193,8 +215,8 @@ beats:
     act: act-5
     title: "Writing records the change privately"
     purpose: "Explain copy-on-write as the payoff mechanism."
-    key_idea: "When Container A changes the file, the changed version appears in Writable A instead of modifying the shared image layer."
-    visual_hint: "The file icon rises from the shared layer into Writable A and becomes a modified version, while the shared original remains in place."
+    key_idea: "When Container A changes the file, the changed version is recorded in Writable A instead of modifying the shared image layer."
+    visual_hint: "The modified file appears in Writable A, while the shared original remains in place."
     transition_to_next: "Compare Container A's view with Container B's view."
 
   - id: b022
