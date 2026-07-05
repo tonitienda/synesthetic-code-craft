@@ -2,7 +2,7 @@
 
 This document defines the Markdown-first workflow for each video project.
 
-The goal is to move from broad intent to implementation-ready scenes without asking the implementation agent to invent the video structure directly in Motion Canvas.
+The goal is to move from broad intent to approved story structure, then approved visual explanation, then Motion Canvas implementation without asking a coding agent to invent the video directly in code.
 
 Each phase produces one Markdown artifact under:
 
@@ -57,6 +57,8 @@ treatment
 beats
 narration
 scene-timeline
+motion-design
+motion-components
 implementation-plan
 review
 ```
@@ -69,6 +71,7 @@ Rules:
 - The video slug is not needed because the file already lives under `content/videos/<video-slug>/`.
 - No approver field is needed; the human reviewing the phase is the approver.
 - Agents should preserve stable IDs once downstream files reference them.
+- Agents must not mark documents as `ready`; humans transition documents from `in-progress` to `ready`.
 
 ## Canonical phase order
 
@@ -79,8 +82,11 @@ Rules:
 03-beats.md
 04-narration.md
 05-scene-timeline.md
-06-implementation-plan.md
+06-motion-design.md
+07-motion-components.md
 ```
+
+An `implementation-plan` document may still be used for legacy videos or for unusually complex implementation work, but the preferred post-design handoff is `07-motion-components.md`.
 
 ---
 
@@ -292,7 +298,7 @@ beats:
 
 ## Agent rules
 
-- Use stable beat IDs, because narration and scene timeline will reference them.
+- Use stable beat IDs, because narration, scene timeline, motion design, and components will reference them.
 - Keep each beat focused.
 - Avoid implementation details.
 - Visual hints are allowed, but they are not final animation specs.
@@ -337,7 +343,7 @@ Possible generated outputs include:
 - future TTS provider inputs
 - timing estimates
 - subtitles
-- references from the scene timeline
+- references from the scene timeline and motion design
 
 ## Required format
 
@@ -395,7 +401,7 @@ notes: "Optional human or agent notes"
 
 Rules:
 
-- `id` must be stable once referenced by the scene timeline.
+- `id` must be stable once referenced by downstream phases.
 - `text` contains only spoken words.
 - Do not place stage directions inside `text`.
 - Use `pause_after` instead of writing artificial filler.
@@ -431,90 +437,95 @@ depends_on:
 
 ## Purpose
 
-Describe the visual timeline aligned with narration.
+Map the ready narration to acts, scenes, timing budgets, teaching jobs, and required conceptual moments.
 
-This phase is the main handoff from writing to Motion Canvas implementation.
+This phase is the edit map. It answers:
 
-The scene timeline should use the high-level components and vocabulary defined in:
+- what happens
+- in what order
+- which narration and beat IDs are involved
+- roughly how much time each section should receive
+- what idea each scene must land
 
-```text
-content/language/animation-spec-v0.md
-```
+It does **not** define the final animation language.
 
 ## Output
 
 Each scene should include:
 
-- scene ID
-- title
+- scene title
 - duration budget
 - beat references
 - narration segment references
-- high-level components used
-- component props
-- timeline events
-- transitions
-- open implementation notes
+- teaching job
+- required conceptual moments
+- required on-screen terms
+- transition intent
 
 Example shape:
 
-```yaml
-scenes:
-  - id: s001
-    title: "Title"
-    duration: 8
-    beats: [b001]
-    narration: [n001, n002]
-    components:
-      - id: title-card
-        type: TitleCard
-        props:
-          title: "Backpropagation"
-          subtitle: "How neural networks learn from mistakes"
-          animation: "fade-in-hold-fade-out"
-    events:
-      - at: 0.0
-        narration: n001
-        target: title-card
-        action: show_title
-      - at: 2.0
-        narration: n002
-        target: title-card
-        action: show_subtitle
-      - at: 5.5
-        target: title-card
-        action: fade_out
+```markdown
+## Scene 5.2 — Copy-on-write file trace
+
+Scene duration budget: 60–75s
+
+Narration: `n020`–`n022`
+
+Beats: `b020`–`b022`
+
+Teaching job:
+Make the copy-on-write mental model visible: reads can use the shared original, while a write records a private changed version for only the writing container.
+
+Required conceptual moments:
+- Container A reads the shared original.
+- Container B reads the same shared original.
+- Container A writes a change.
+- The shared original remains unchanged.
+- Container A sees its modified version.
+- Container B still sees the original.
+
+Required on-screen terms:
+- `/etc/app.conf`
+- `read: shared original`
+- `write: record change in Writable A`
+- `A sees: modified`
+- `B sees: original`
+
+Transition intent:
+Pull back from the filesystem view and introduce the host/kernel point of view.
 ```
 
 ## Agent rules
 
-- Prefer high-level components over low-level shape commands.
-- Use components such as `SplashScreen`, `TitleCard`, `Perceptron`, `NeuralNet`, and `Graph2D` when possible.
-- Low-level commands are allowed only when no existing component describes the intent.
 - Do not write Motion Canvas code here.
 - Do not rewrite ready narration here.
 - Reference narration segments by ID instead of duplicating the script.
-- If a reusable component is missing, propose it in the scene timeline or implementation plan.
+- Do not define final screen layouts.
+- Do not define camera movement.
+- Do not define detailed choreography.
+- Do not define reusable component APIs.
+- Do not include ASCII key frames here.
+- If a visual idea seems important, express it as a conceptual requirement; the concrete motion design belongs in `06-motion-design.md`.
 
 ## Gate
 
-Mark this phase `ready` when an implementation agent can build the scenes without inventing the structure, pacing, or visual metaphor.
+Mark this phase `ready` when the story sequence, pacing, and required ideas are clear enough to design the motion.
 
 ---
 
-# 06 — Implementation plan
+# 06 — Motion design
 
 ## File
 
 ```text
-06-implementation-plan.md
+06-motion-design.md
 ```
 
 ## Front matter
 
 ```yaml
 ---
-type: implementation-plan
+type: motion-design
 status: in-progress
 depends_on:
   - 05-scene-timeline.md
@@ -523,34 +534,161 @@ depends_on:
 
 ## Purpose
 
-Translate the ready scene timeline into a concrete Motion Canvas implementation plan.
+Translate the ready scene timeline into visual explanation.
 
-This phase is still documentation, not the final implementation.
+This phase answers:
+
+- what the viewer sees
+- what persists between scenes
+- what transforms into what
+- where attention goes
+- what the camera or composition does
+- which visual metaphor carries each idea
+- what text is allowed on screen
+- how reviewers should judge whether the motion teaches
 
 ## Output
 
-The implementation plan should include:
+The motion design should include:
 
-- files to create or update
-- project entry point
-- scenes to implement
-- reusable components to create or reuse
-- props needed by each component
-- npm scripts to add or update
-- preview or screenshot commands
-- risks and simplifications
-- what must not be changed
+- global motion language
+- visual grammar and recurring motifs
+- persistence rules for objects across scenes
+- text policy
+- scene promise
+- visual metaphor
+- starting frame and ending frame
+- ASCII key frames where useful
+- choreography
+- camera / attention direction
+- allowed on-screen copy
+- things to avoid
+- component candidates
+- scene quality gate
+
+Example shape:
+
+```markdown
+## Scene 5.2 — Copy-on-write file trace
+
+Source:
+- Timeline scene: `Scene 5.2`
+- Narration: `n020`–`n022`
+- Beats: `b020`–`b022`
+
+Scene promise:
+The viewer understands that writes do not mutate the shared image; they create a private changed version for the writing container's view.
+
+Visual metaphor:
+A shared file token is read by both containers. A write from Container A cannot alter the locked original, so the changed token rises into Writable A.
+
+Key frames:
+
+```text
+    [ Writable A ]       [ Writable B ]
+    { Container A }      { Container B }
+          ⇢                  ⇠
+              /etc/app.conf
+              shared original 🔒
+```
+
+```text
+    [ Writable A: /etc/app.conf* ]    [ Writable B ]
+    { A sees: modified }              { B sees: original }
+              \\                        //
+               shared original 🔒
+```
+
+Choreography:
+- Show A and B reading the same token.
+- Keep the shared original locked and fixed when A writes.
+- Lift a modified copy into `Writable A`.
+- Split the view so A resolves to the modified copy and B resolves to the original.
+
+Quality gate:
+The scene fails if the viewer only understands copy-on-write from the narration. The token movement itself must explain it.
+```
 
 ## Agent rules
 
-- Keep implementation scoped to ready scenes.
 - Do not add new story beats.
-- Do not add new narration.
-- Prefer reusable Motion Canvas components when they simplify future videos.
-- Avoid premature framework work that is not needed by the ready scene timeline.
+- Do not add or rewrite narration.
+- Do not write Motion Canvas code here.
+- Do not define final component APIs here.
+- Use ASCII key frames as review sketches, not final layouts.
+- Prefer transformations, reveals, persistence, and cause/effect over slide-like replacement.
+- The motion itself must teach. Avoid visuals that merely decorate the narration.
 
 ## Gate
 
-Mark this phase `ready` when the implementation task is clear, bounded, and safe for a coding agent.
+Mark this phase `ready` when the visual explanation can be reviewed and approved before implementation.
+
+A reviewer should be able to understand:
+
+- why each scene exists
+- what the viewer sees
+- what the central visual metaphor is
+- what movement teaches the idea
+- what must not be shown
+- what candidate components are needed later
+
+---
+
+# 07 — Motion components
+
+## File
+
+```text
+07-motion-components.md
+```
+
+## Front matter
+
+```yaml
+---
+type: motion-components
+status: in-progress
+depends_on:
+  - 06-motion-design.md
+---
+```
+
+## Purpose
+
+Turn the ready motion design into a concrete Motion Canvas component and implementation handoff.
+
+This phase should make the coding task clear without changing the approved story or visual design.
+
+## Output
+
+The motion components document should include:
+
+- files to create or update
+- project entry point
+- scene-to-file mapping
+- reusable Motion Canvas components to create or reuse
+- component responsibilities
+- component props / inputs
+- component state or animation phases, if needed
+- scene assembly plan
+- implementation order
+- preview or screenshot commands
+- acceptance checks
+- risks and simplifications
+- what must not be changed from earlier ready phases
+
+## Agent rules
+
+- Keep implementation scoped to ready motion-design scenes.
+- Do not add new story beats.
+- Do not add new narration.
+- Do not redesign scenes.
+- Prefer reusable Motion Canvas components when they simplify future videos.
+- Avoid premature framework work that is not needed by the approved motion design.
+- Keep component APIs human-readable and stable enough for review before code.
+
+## Gate
+
+Mark this phase `ready` when a coding agent can implement the requested video scope without inventing the structure, motion design, or component model.
 
 After this, a coding agent may implement the requested scope in Motion Canvas.
