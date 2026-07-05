@@ -14,7 +14,7 @@ container = process + filesystem view + namespaces + cgroups
 - `theme.ts` keeps the calm dark palette local to this video.
 - `components.tsx` provides only the diagram primitives used by this first implementation pass.
 - Scene files live in `src/scenes/containersAct*.tsx` and intentionally map one-to-one to the implementation scenes in `06-implementation-plan.md`.
-- Each scene uses a shared reveal/hold/fade rhythm with multiple diagram states so the rendered video does not become a static slide deck. The current pacing is intentionally around seven minutes before final TTS/audio tuning.
+- Each scene uses a shared reveal/hold/fade rhythm with multiple overlaid diagram states so the rendered video does not become a static slide deck or a vertically stacked set of panels. The current pacing is intentionally around seven minutes before final TTS/audio tuning.
 
 ## Project commands
 
