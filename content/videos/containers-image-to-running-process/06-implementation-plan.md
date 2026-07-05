@@ -1,6 +1,6 @@
 ---
 type: implementation-plan
-status: ready
+status: deprecated
 depends_on:
   - 05-scene-timeline.md
 ---
