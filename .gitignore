@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Generated preview artifacts
 artifacts/
+
+# Compiled TypeScript output (Motion Canvas sources are .ts/.tsx; keep .meta)
+src/**/*.js
