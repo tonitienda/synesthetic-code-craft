@@ -1,6 +1,5 @@
 import {Layout} from '@motion-canvas/2d';
 import {all} from '@motion-canvas/core';
-import type {ThreadGenerator} from '@motion-canvas/core';
 import {CommandPhrase, createCommandPhrase} from '../components/commandPhrase';
 import type {
   CommandPhraseOptions,
@@ -9,7 +8,7 @@ import type {
 } from '../components/commandPhrase';
 
 export type LiftPoint = [number, number] | {x: number | (() => number); y: number | (() => number)};
-export type LiftAnimation = ThreadGenerator;
+export type LiftAnimation = Generator<any, void, any>;
 
 export interface LiftableCommandPhrase {
   node: Layout;
