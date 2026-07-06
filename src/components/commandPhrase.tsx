@@ -1,7 +1,8 @@
 import {Layout, Txt} from '@motion-canvas/2d';
-import {all, createRef, Reference, waitFor} from '@motion-canvas/core';
+import {all, createRef, waitFor} from '@motion-canvas/core';
+import type {Reference, ThreadGenerator} from '@motion-canvas/core';
 
-export type CommandPhraseAnimation = Generator<unknown, void, unknown>;
+export type CommandPhraseAnimation = ThreadGenerator;
 
 export type CommandPhraseTokenKind =
   | 'command'
