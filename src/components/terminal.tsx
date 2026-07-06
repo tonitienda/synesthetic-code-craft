@@ -165,7 +165,7 @@ export class Terminal {
             direction={'row'}
             gap={10}
             alignItems={'center'}
-            justifyContent={'flex-start'}
+            justifyContent={'start'}
             width={this.width}
             height={this.headerHeight}
             paddingLeft={22}
@@ -188,7 +188,7 @@ export class Terminal {
             direction={'column'}
             gap={this.lineGap}
             alignItems={'stretch'}
-            justifyContent={'flex-start'}
+            justifyContent={'start'}
             width={this.width}
             height={this.height - this.headerHeight}
             padding={this.padding}
@@ -396,7 +396,7 @@ export class Terminal {
         direction={'row'}
         gap={12}
         alignItems={'center'}
-        justifyContent={'flex-start'}
+        justifyContent={'start'}
         width={this.width - this.padding * 2}
         opacity={0}
       >
@@ -461,7 +461,7 @@ export class Terminal {
         direction={'row'}
         gap={12}
         alignItems={'center'}
-        justifyContent={'flex-start'}
+        justifyContent={'start'}
         width={this.width - this.padding * 2}
         opacity={0}
       >
@@ -494,7 +494,7 @@ export class Terminal {
         tokens: line.tokens.map((token, index) => ({
           text: token.text,
           kind: token.kind,
-          fill: line.tokenRefs[index]().fill() as string,
+          fill: line.tokenRefs[index]().fill(),
         })),
       }),
       token: (tokenText: string, occurrence = 0) => {

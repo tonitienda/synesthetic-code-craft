@@ -1,4 +1,5 @@
 import {Layout, Txt} from '@motion-canvas/2d';
+import type {PossibleCanvasStyle} from '@motion-canvas/2d';
 import {all, createRef, waitFor} from '@motion-canvas/core';
 import type {Reference, ThreadGenerator} from '@motion-canvas/core';
 
@@ -15,7 +16,7 @@ export type CommandPhraseTokenKind =
 export interface CommandPhraseToken {
   text: string;
   kind: CommandPhraseTokenKind;
-  fill?: string;
+  fill?: PossibleCanvasStyle;
 }
 
 export interface CommandPhraseSnapshot {
@@ -55,7 +56,7 @@ export interface CommandPhraseHighlightOptions {
 export interface CommandPhraseRestyleOptions {
   fontSize?: number;
   gap?: number;
-  fill?: string;
+  fill?: PossibleCanvasStyle;
 }
 
 export const defaultCommandPhraseTheme: CommandPhraseTheme = {
@@ -81,7 +82,7 @@ export class CommandPhrase {
   private readonly text: string;
   private readonly tokens: CommandPhraseToken[];
   private readonly tokenRefs: Reference<Txt>[] = [];
-  private readonly originalFill: string[] = [];
+  private readonly originalFill: PossibleCanvasStyle[] = [];
   private readonly theme: CommandPhraseTheme;
   private readonly fontFamily: string;
 
@@ -133,7 +134,7 @@ export class CommandPhrase {
       fontFamily: this.fontFamily,
       tokens: this.tokens.map((token, index) => ({
         ...token,
-        fill: this.tokenRefs[index]().fill() as string,
+        fill: this.tokenRefs[index]().fill(),
       })),
     };
   }
