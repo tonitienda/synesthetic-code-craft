@@ -1,15 +1,13 @@
 import {Circle, Layout, Rect, Txt} from '@motion-canvas/2d';
-import {all, createRef, Reference, waitFor} from '@motion-canvas/core';
+import {all, createRef, waitFor} from '@motion-canvas/core';
+import type {Reference, ThreadGenerator} from '@motion-canvas/core';
+import type {
+  CommandPhraseSnapshot,
+  CommandPhraseTokenKind,
+} from './commandPhrase';
 
 export type TerminalPrintKind = 'normal' | 'muted' | 'success' | 'warning' | 'error';
-
-export type TerminalTokenKind =
-  | 'command'
-  | 'arg'
-  | 'flag'
-  | 'path'
-  | 'pipe'
-  | 'operator';
+export type TerminalTokenKind = CommandPhraseTokenKind;
 
 export interface TerminalTheme {
   background: string;
@@ -67,6 +65,17 @@ export interface TerminalHighlightOptions {
 export interface TerminalToken {
   text: string;
   kind: TerminalTokenKind;
+}
+
+export type TerminalThread = ThreadGenerator;
+
+export interface TerminalCommandHandle {
+  command: string;
+  node: Layout;
+  snapshot(): CommandPhraseSnapshot;
+  token(tokenText: string, occurrence?: number): Txt | undefined;
+  hide(duration?: number): TerminalThread;
+  show(duration?: number): TerminalThread;
 }
 
 interface TerminalCommandLine {
@@ -156,7 +165,7 @@ export class Terminal {
             direction={'row'}
             gap={10}
             alignItems={'center'}
-            justifyContent={'flex-start'}
+            justifyContent={'start'}
             width={this.width}
             height={this.headerHeight}
             paddingLeft={22}
@@ -179,7 +188,7 @@ export class Terminal {
             direction={'column'}
             gap={this.lineGap}
             alignItems={'stretch'}
-            justifyContent={'flex-start'}
+            justifyContent={'start'}
             width={this.width}
             height={this.height - this.headerHeight}
             padding={this.padding}
@@ -341,6 +350,28 @@ export class Terminal {
     return target.tokenRefs[match]();
   }
 
+  command(command: string, occurrenceFromEnd = 0): TerminalCommandHandle | undefined {
+    const line = this.findCommandLine(command, occurrenceFromEnd);
+
+    if (!line) {
+      return undefined;
+    }
+
+    return this.toCommandHandle(line);
+  }
+
+  lastCommand(): TerminalCommandHandle | undefined {
+    for (let index = this.lines.length - 1; index >= 0; index--) {
+      const line = this.lines[index];
+
+      if (line.kind === 'command') {
+        return this.toCommandHandle(line);
+      }
+    }
+
+    return undefined;
+  }
+
   private addCommandLine(command: string): TerminalCommandLine {
     const rowRef = createRef<Layout>();
     const promptRef = createRef<Txt>();
@@ -365,7 +396,7 @@ export class Terminal {
         direction={'row'}
         gap={12}
         alignItems={'center'}
-        justifyContent={'flex-start'}
+        justifyContent={'start'}
         width={this.width - this.padding * 2}
         opacity={0}
       >
@@ -430,7 +461,7 @@ export class Terminal {
         direction={'row'}
         gap={12}
         alignItems={'center'}
-        justifyContent={'flex-start'}
+        justifyContent={'start'}
         width={this.width - this.padding * 2}
         opacity={0}
       >
@@ -451,16 +482,55 @@ export class Terminal {
     return line;
   }
 
-  private findCommandLine(command?: string) {
+  private toCommandHandle(line: TerminalCommandLine): TerminalCommandHandle {
+    return {
+      command: line.command,
+      node: line.rowRef(),
+      snapshot: () => ({
+        text: line.command,
+        fontFamily: 'monospace',
+        fontSize: this.fontSize,
+        gap: 8,
+        tokens: line.tokens.map((token, index) => ({
+          text: token.text,
+          kind: token.kind,
+          fill: line.tokenRefs[index]().fill(),
+        })),
+      }),
+      token: (tokenText: string, occurrence = 0) => {
+        const match = this.matchingTokenIndexes(line, tokenText)[occurrence];
+
+        if (match === undefined) {
+          return undefined;
+        }
+
+        return line.tokenRefs[match]();
+      },
+      hide: function* (duration = 0.15) {
+        yield* line.rowRef().opacity(0, duration);
+      },
+      show: function* (duration = 0.15) {
+        yield* line.rowRef().opacity(1, duration);
+      },
+    };
+  }
+
+  private findCommandLine(command?: string, occurrenceFromEnd = 0) {
     if (!command) {
       return undefined;
     }
+
+    let matchCount = 0;
 
     for (let index = this.lines.length - 1; index >= 0; index--) {
       const line = this.lines[index];
 
       if (line.kind === 'command' && line.command === command) {
-        return line;
+        if (matchCount === occurrenceFromEnd) {
+          return line;
+        }
+
+        matchCount++;
       }
     }
 
