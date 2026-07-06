@@ -130,7 +130,7 @@ export class CommandPhrase {
       fontFamily: this.fontFamily,
       tokens: this.tokens.map((token, index) => ({
         ...token,
-        fill: this.tokenRefs[index]?.().fill() as string,
+        fill: this.tokenRefs[index]().fill() as string,
       })),
     };
   }
@@ -194,7 +194,7 @@ export class CommandPhrase {
   }
 
   *restyle(style: CommandPhraseRestyleOptions, duration = 0.35) {
-    const animations = [];
+    const animations: any[] = [];
 
     if (style.fontSize !== undefined) {
       animations.push(
