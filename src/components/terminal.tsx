@@ -1,5 +1,6 @@
 import {Circle, Layout, Rect, Txt} from '@motion-canvas/2d';
-import {all, createRef, Reference, waitFor} from '@motion-canvas/core';
+import {all, createRef, waitFor} from '@motion-canvas/core';
+import type {Reference, ThreadGenerator} from '@motion-canvas/core';
 import type {
   CommandPhraseSnapshot,
   CommandPhraseTokenKind,
@@ -66,7 +67,7 @@ export interface TerminalToken {
   kind: TerminalTokenKind;
 }
 
-export type TerminalThread = Generator<unknown, void, unknown>;
+export type TerminalThread = ThreadGenerator;
 
 export interface TerminalCommandHandle {
   command: string;
