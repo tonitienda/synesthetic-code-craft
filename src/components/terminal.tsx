@@ -1,19 +1,12 @@
 import {Circle, Layout, Rect, Txt} from '@motion-canvas/2d';
 import {all, createRef, Reference, waitFor} from '@motion-canvas/core';
-import {
+import type {
   CommandPhraseSnapshot,
   CommandPhraseTokenKind,
 } from './commandPhrase';
 
 export type TerminalPrintKind = 'normal' | 'muted' | 'success' | 'warning' | 'error';
-
-export type TerminalTokenKind =
-  | 'command'
-  | 'arg'
-  | 'flag'
-  | 'path'
-  | 'pipe'
-  | 'operator';
+export type TerminalTokenKind = CommandPhraseTokenKind;
 
 export interface TerminalTheme {
   background: string;
@@ -499,8 +492,8 @@ export class Terminal {
         gap: 8,
         tokens: line.tokens.map((token, index) => ({
           text: token.text,
-          kind: token.kind as CommandPhraseTokenKind,
-          fill: line.tokenRefs[index]?.().fill() as string,
+          kind: token.kind,
+          fill: line.tokenRefs[index]().fill() as string,
         })),
       }),
       token: (tokenText: string, occurrence = 0) => {
