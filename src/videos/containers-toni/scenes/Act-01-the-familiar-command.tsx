@@ -1,4 +1,4 @@
-import { Layout, Txt, makeScene2D } from "@motion-canvas/2d"
+import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
 import { all, createRef, waitFor } from "@motion-canvas/core"
 import { createTerminal } from "../../../components"
 import { liftCommandPhrase } from "../../../choreography"
@@ -9,10 +9,107 @@ const colors = {
   amber: "#facc15",
 }
 
+function scenePointFromAbsolute(point: {
+  x: number
+  y: number
+}): [number, number] {
+  return [point.x - 960, point.y - 540]
+}
+
+function createDockerImageBox(label: string) {
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"center"}
+      justifyContent={"center"}
+      width={220}
+      height={86}
+      radius={18}
+      fill={"#111827"}
+      stroke={"#38bdf8"}
+      lineWidth={4}
+      shadowColor={"#38bdf866"}
+      shadowBlur={18}
+    >
+      <Txt
+        text={label}
+        fontFamily={"monospace"}
+        fontSize={42}
+        fill={"#e0f2fe"}
+      />
+      <Txt text={"Docker Image"} fontSize={20} fill={"#7dd3fc"} marginTop={4} />
+    </Rect>
+  ) as Rect
+
+  return {
+    node,
+  }
+}
+
+function createRegistry() {
+  const slot = createRef<Rect>()
+
+  const node = (
+    <Rect
+      layout
+      direction={"row"}
+      alignItems={"center"}
+      justifyContent={"space-evenly"}
+      width={900}
+      height={200}
+      radius={28}
+      fill={"#0f172a"}
+      stroke={"#64748b"}
+      lineWidth={3}
+      padding={24}
+      gap={22}
+      shadowColor={"#00000066"}
+      shadowBlur={24}
+    >
+      <Layout layout direction={"column"} gap={4} alignItems={"start"}>
+        <Txt
+          text={"Registry"}
+          fontSize={38}
+          fill={"#f8fafc"}
+          fontWeight={700}
+        />
+
+        <Txt text={"remote image store"} fontSize={22} fill={"#94a3b8"} />
+      </Layout>
+
+      <Rect
+        ref={slot}
+        width={230}
+        height={100}
+        radius={20}
+        stroke={"#334155"}
+        lineWidth={3}
+        fill={"#020617"}
+        marginTop={18}
+      />
+    </Rect>
+  ) as Rect
+
+  return {
+    node,
+    imageSlotPosition() {
+      return slot().absolutePosition()
+    },
+  }
+}
+
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
+  const world = createRef<Layout>()
   const overlay = createRef<Layout>()
+  const captions = createRef<Layout>()
+
+  view.add(<Layout ref={world} width={"100%"} height={"100%"} />)
+  view.add(<Layout ref={overlay} width={"100%"} height={"100%"} />)
+  view.add(<Layout ref={captions} width={"100%"} height={"100%"} />)
+
   const caption = createRef<Txt>()
 
   const terminal = createTerminal({
@@ -26,10 +123,7 @@ export default makeScene2D(function* (view) {
   terminal.node.y(110)
   terminal.node.opacity(0)
 
-  view.add(terminal.node)
-
-  // Anything lifted out of components should live here.
-  view.add(<Layout ref={overlay} width={"100%"} height={"100%"} />)
+  world().add(terminal.node)
 
   view.add(
     <Txt
@@ -75,7 +169,7 @@ export default makeScene2D(function* (view) {
   // The original terminal row hides, but the terminal keeps its layout.
   const lifted = liftCommandPhrase(sourceCommand, {
     overlay: overlay(),
-    to: [0, -250],
+    to: [0, -38],
     duration: 0.85,
     restyle: {
       fontSize: 76,
@@ -102,22 +196,88 @@ export default makeScene2D(function* (view) {
 
   yield* waitFor(2)
 
-  yield* lifted.phrase.highlight("nginx", {
-    hold: 1.5,
-    restore: true,
-  })
-  // caption().text("nginx: the image name")
-  // yield* waitFor(0.5)
-
-  yield* lifted.phrase.highlight("run", {
-    hold: 0.5,
-    restore: true,
-  })
-  // caption().text("run: image becomes process")
-  // yield* waitFor(0.7)
-
-  // 5. End with one token isolated.
-  yield* all(lifted.phrase.dimExcept("run"), caption().fill(colors.amber, 0.25))
+  yield* lifted.phrase.restyle({ gap: 200 }, 1)
 
   yield* waitFor(1)
+
+  const nginxToken = lifted.phrase.token("nginx")
+
+  if (!nginxToken) {
+    return
+  }
+
+  // const nginxAnchor = createRef<Rect>()
+
+  // overlay().add(
+  //   <Rect
+  //     ref={nginxAnchor}
+  //     width={4}
+  //     height={4}
+  //     fill={"#ff00ff"}
+  //     opacity={0}
+  //   />,
+  // )
+
+  //nginxAnchor().absolutePosition(nginxToken.absolutePosition())
+
+  // Create the Registry visual on the right.
+  const registry = createRegistry()
+  registry.node.position([60, -400])
+  registry.node.opacity(0)
+  registry.node.scale(0.96)
+
+  world().add(registry.node)
+
+  // Create an overlay Docker-image object from the "nginx" token.
+  const nginxImage = createDockerImageBox("nginx")
+
+  // Start the box exactly over the title token.
+  nginxImage.node.position(
+    scenePointFromAbsolute(nginxToken.absolutePosition()),
+  )
+  nginxImage.node.opacity(0)
+  nginxImage.node.scale(0.9)
+
+  overlay().add(nginxImage.node)
+
+  // Box the word "nginx".
+  // We fade out the original title token while the boxed clone appears,
+  // so visually it feels like the word became the Docker image object.
+  yield* all(
+    nginxToken.opacity(0, 0.25),
+    nginxImage.node.opacity(1, 0.25),
+    nginxImage.node.scale(1, 0.25),
+  )
+
+  caption().text("nginx is an image")
+  yield* waitFor(0.8)
+
+  // Registry appears.
+  yield* all(registry.node.opacity(1, 0.45), registry.node.scale(1, 0.45))
+
+  caption().text("and images are stored in a registry")
+  yield* waitFor(0.3)
+
+  // Move the boxed nginx image into the registry slot.
+  yield* nginxImage.node.absolutePosition(registry.imageSlotPosition(), 0.85)
+
+  yield* waitFor(1)
+  // yield* lifted.phrase.highlight("nginx", {
+  //   hold: 1.5,
+  //   restore: true,
+  // })
+  // // caption().text("nginx: the image name")
+  // // yield* waitFor(0.5)
+
+  // yield* lifted.phrase.highlight("run", {
+  //   hold: 0.5,
+  //   restore: true,
+  // })
+  // // caption().text("run: image becomes process")
+  // // yield* waitFor(0.7)
+
+  // // 5. End with one token isolated.
+  // yield* all(lifted.phrase.dimExcept("run"), caption().fill(colors.amber, 0.25))
+
+  // yield* waitFor(1)
 })
