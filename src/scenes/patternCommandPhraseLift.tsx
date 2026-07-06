@@ -57,6 +57,8 @@ export default makeScene2D(function* (view) {
     return;
   }
 
+  // Pattern: create an overlay phrase from the terminal command, hide the original,
+  // then keep directing the overlay phrase as the new title-like actor.
   const lifted = liftCommandPhrase(sourceCommand, {
     overlay: overlay(),
     to: [0, -260],
