@@ -1414,7 +1414,11 @@ const playClosingScene = function* (world: World): ThreadGenerator {
   yield* all(
     world.stage().opacity(0, 1.4, easeInOutCubic),
     world.overlay().opacity(0, 1.4, easeInOutCubic),
-    narrate(world.narrator, "So — let's pull the whole thing back together.", 4),
+    narrate(
+      world.narrator,
+      "So — let's pull the whole thing back together.",
+      4,
+    ),
   )
 
   // 2) Full circle: the very command we started with.
