@@ -1,14 +1,13 @@
 import {Layout} from '@motion-canvas/2d';
 import {all} from '@motion-canvas/core';
-import {
-  CommandPhrase,
+import {CommandPhrase, createCommandPhrase} from '../components/commandPhrase';
+import type {
   CommandPhraseOptions,
   CommandPhraseRestyleOptions,
   CommandPhraseSnapshot,
-  createCommandPhrase,
 } from '../components/commandPhrase';
 
-export type LiftPoint = [number, number] | {x: number; y: number};
+export type LiftPoint = [number, number] | {x: number | (() => number); y: number | (() => number)};
 
 export interface LiftableCommandPhrase {
   node: Layout;
@@ -56,7 +55,7 @@ export function liftCommandPhrase(
   function* animation() {
     phrase.node.opacity(1);
 
-    const animations = [
+    const animations: any[] = [
       phrase.node.position(to, duration),
       phrase.node.scale(targetScale, duration),
     ];
@@ -95,5 +94,9 @@ function resolvePoint(point: LiftPoint): [number, number] {
     return point;
   }
 
-  return [point.x, point.y];
+  return [resolveAxis(point.x), resolveAxis(point.y)];
+}
+
+function resolveAxis(axis: number | (() => number)) {
+  return typeof axis === 'function' ? axis() : axis;
 }
