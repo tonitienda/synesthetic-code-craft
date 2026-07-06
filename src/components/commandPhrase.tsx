@@ -1,6 +1,8 @@
 import {Layout, Txt} from '@motion-canvas/2d';
 import {all, createRef, Reference, waitFor} from '@motion-canvas/core';
 
+export type CommandPhraseAnimation = Generator<unknown, void, unknown>;
+
 export type CommandPhraseTokenKind =
   | 'command'
   | 'arg'
@@ -194,16 +196,16 @@ export class CommandPhrase {
   }
 
   *restyle(style: CommandPhraseRestyleOptions, duration = 0.35) {
-    const animations: any[] = [];
+    const animations: CommandPhraseAnimation[] = [];
 
     if (style.fontSize !== undefined) {
-      animations.push(
-        ...this.tokenRefs.map(tokenRef => tokenRef().fontSize(style.fontSize!, duration)),
-      );
+      const fontSize = style.fontSize;
+      animations.push(...this.tokenRefs.map(tokenRef => tokenRef().fontSize(fontSize, duration)));
     }
 
     if (style.fill !== undefined) {
-      animations.push(...this.tokenRefs.map(tokenRef => tokenRef().fill(style.fill!, duration)));
+      const fill = style.fill;
+      animations.push(...this.tokenRefs.map(tokenRef => tokenRef().fill(fill, duration)));
     }
 
     if (style.gap !== undefined) {
