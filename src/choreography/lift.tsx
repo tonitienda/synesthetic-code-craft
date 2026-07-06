@@ -8,12 +8,13 @@ import type {
 } from '../components/commandPhrase';
 
 export type LiftPoint = [number, number] | {x: number | (() => number); y: number | (() => number)};
+export type LiftAnimation = Generator<unknown, void, unknown>;
 
 export interface LiftableCommandPhrase {
   node: Layout;
   snapshot(): CommandPhraseSnapshot;
-  hide(duration?: number): Generator<unknown, void, unknown>;
-  show?(duration?: number): Generator<unknown, void, unknown>;
+  hide(duration?: number): LiftAnimation;
+  show?(duration?: number): LiftAnimation;
 }
 
 export interface LiftCommandPhraseOptions {
@@ -31,7 +32,7 @@ export interface LiftCommandPhraseOptions {
 
 export interface LiftedCommandPhrase {
   phrase: CommandPhrase;
-  animation: Generator<unknown, void, unknown>;
+  animation: LiftAnimation;
 }
 
 export function liftCommandPhrase(
@@ -55,7 +56,7 @@ export function liftCommandPhrase(
   function* animation() {
     phrase.node.opacity(1);
 
-    const animations: any[] = [
+    const animations: LiftAnimation[] = [
       phrase.node.position(to, duration),
       phrase.node.scale(targetScale, duration),
     ];
@@ -78,15 +79,7 @@ export function liftCommandPhrase(
 }
 
 function absolutePosition(node: Layout): LiftPoint {
-  const possibleAbsolutePosition = (node as unknown as {
-    absolutePosition?: () => LiftPoint;
-  }).absolutePosition;
-
-  if (possibleAbsolutePosition) {
-    return possibleAbsolutePosition.call(node);
-  }
-
-  return node.position() as unknown as LiftPoint;
+  return node.absolutePosition() as unknown as LiftPoint;
 }
 
 function resolvePoint(point: LiftPoint): [number, number] {
