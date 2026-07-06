@@ -151,7 +151,7 @@ export class Terminal {
         clip
       >
         <Layout layout direction={'column'} width={this.width} height={this.height}>
-          <Layout
+          <Rect
             layout
             direction={'row'}
             gap={10}
@@ -171,7 +171,7 @@ export class Terminal {
               fill={this.theme.muted}
               marginLeft={16}
             />
-          </Layout>
+          </Rect>
 
           <Layout
             ref={this.bodyRef}
