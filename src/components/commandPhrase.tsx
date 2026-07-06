@@ -115,7 +115,6 @@ export class CommandPhrase {
 
           return (
             <Txt
-              key={`${token.text}-${index}`}
               ref={tokenRef}
               text={token.text}
               fontFamily={this.fontFamily}

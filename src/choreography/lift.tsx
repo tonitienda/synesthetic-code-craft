@@ -41,17 +41,24 @@ export function liftCommandPhrase(
 ): LiftedCommandPhrase {
   const sourceSnapshot = source.snapshot();
   const phrase = createCommandPhrase(sourceSnapshot, options.phrase);
-  const from = resolvePoint(options.from ?? absolutePosition(source.node));
   const to = resolvePoint(options.to);
   const duration = options.duration ?? 0.75;
   const sourceFadeDuration = options.sourceFadeDuration ?? 0.12;
   const startScale = options.startScale ?? 1;
   const targetScale = options.targetScale ?? 1;
 
-  phrase.node.position(from);
   phrase.node.scale(startScale);
   phrase.node.opacity(0);
   options.overlay.add(phrase.node);
+
+  if (options.from) {
+    phrase.node.position(resolvePoint(options.from));
+  } else {
+    // Place the overlay clone at the source node's world-space location.
+    // Using `position(source.absolutePosition())` mixes coordinate spaces and can
+    // make the lifted phrase appear from the bottom/right of the scene.
+    phrase.node.absolutePosition(source.node.absolutePosition());
+  }
 
   function* animation() {
     phrase.node.opacity(1);
@@ -76,10 +83,6 @@ export function liftCommandPhrase(
     phrase,
     animation: animation(),
   };
-}
-
-function absolutePosition(node: Layout): LiftPoint {
-  return node.absolutePosition() as unknown as LiftPoint;
 }
 
 function resolvePoint(point: LiftPoint): [number, number] {
