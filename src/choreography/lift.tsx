@@ -1,4 +1,4 @@
-import { Layout } from "@motion-canvas/2d"
+import { Layout, Txt } from "@motion-canvas/2d"
 import { all } from "@motion-canvas/core"
 import { CommandPhrase, createCommandPhrase } from "../components/commandPhrase"
 import type {
@@ -35,6 +35,23 @@ export interface LiftCommandPhraseOptions {
 export interface LiftedCommandPhrase {
   phrase: CommandPhrase
   animation: LiftAnimation
+}
+
+export function liftTxt(
+  txt: Txt,
+  options: LiftCommandPhraseOptions,
+): LiftedCommandPhrase {
+  const source: LiftableCommandPhrase = {
+    node: txt,
+    snapshot: () => ({
+      text: txt.text(),
+      fontSize: txt.fontSize(),
+      tokens: [{ text: txt.text(), kind: "command" }],
+    }),
+    hide: (duration = 0.12) => txt.opacity(0, duration),
+  }
+
+  return liftCommandPhrase(source, options)
 }
 
 export function liftCommandPhrase(

@@ -1,7 +1,7 @@
 import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
 import { all, createRef, Reference, waitFor } from "@motion-canvas/core"
 import { createTerminal } from "../../../components"
-import { liftCommandPhrase } from "../../../choreography"
+import { liftCommandPhrase, liftTxt } from "../../../choreography"
 
 const NARRATION_ENABLED = true
 
@@ -313,11 +313,59 @@ export default makeScene2D(function* (view) {
 
   yield* waitFor(1)
 
-  yield* lifted.phrase.highlight("nginx", {
-    hold: 1.5,
-    restore: true,
+  const runToken = lifted.phrase.token("run")
+  if (!runToken) {
+    return
+  }
+
+  const pull = liftTxt(runToken, {
+    overlay: overlay(),
+    to: [runToken.x(), runToken.y() - 200],
+    duration: 1.5,
+    restyle: {
+      fontSize: 76,
+      gap: 18,
+    },
   })
 
+  const create = liftTxt(runToken, {
+    overlay: overlay(),
+    to: [runToken.x(), runToken.y() - 30],
+    duration: 1.5,
+    restyle: {
+      fontSize: 76,
+      gap: 18,
+    },
+  })
+
+  const start = liftTxt(runToken, {
+    overlay: overlay(),
+    to: [runToken.x(), runToken.y() + 120],
+    duration: 1.5,
+    restyle: {
+      fontSize: 76,
+      gap: 18,
+    },
+  })
+
+  // Split RUN into PULL, CREATE, START
+  yield* all(
+    narrate(
+      narrator,
+      "Run is a shortcut for 3 separate commands: pull, create and start.",
+      4,
+    ),
+    pull.animation,
+    pull.phrase.replaceText("run", "pull", { delay: 0.5, duration: 1 }),
+    create.animation,
+    create.phrase.replaceText("run", "create", { delay: 0.5, duration: 1 }),
+    start.animation,
+    start.phrase.replaceText("run", "start", { duration: 1 }),
+  )
+
+  yield* pull.phrase.highlight("pull")
+
+  yield* waitFor(5)
   // const nginxToken = lifted.phrase.token("nginx")
 
   // if (!nginxToken) {
@@ -339,46 +387,46 @@ export default makeScene2D(function* (view) {
   //nginxAnchor().absolutePosition(nginxToken.absolutePosition())
 
   // Create the Registry visual on the right.
-  const registry = createRegistry()
-  registry.node.position([60, -400])
-  registry.node.opacity(0)
-  registry.node.scale(0.96)
+  // const registry = createRegistry()
+  // registry.node.position([60, -400])
+  // registry.node.opacity(0)
+  // registry.node.scale(0.96)
 
-  world().add(registry.node)
+  // world().add(registry.node)
 
-  // Create an overlay Docker-image object from the "nginx" token.
-  const nginxImage = createDockerImageBox("nginx")
+  // // Create an overlay Docker-image object from the "nginx" token.
+  // const nginxImage = createDockerImageBox("nginx")
 
-  // Start the box exactly over the title token.
-  // nginxImage.node.position(
-  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
-  // )
-  nginxImage.node.opacity(0)
-  nginxImage.node.scale(0.9)
+  // // Start the box exactly over the title token.
+  // // nginxImage.node.position(
+  // //   scenePointFromAbsolute(nginxToken.absolutePosition()),
+  // // )
+  // nginxImage.node.opacity(0)
+  // nginxImage.node.scale(0.9)
 
-  overlay().add(nginxImage.node)
+  // overlay().add(nginxImage.node)
 
   // Box the word "nginx".
   // We fade out the original title token while the boxed clone appears,
   // so visually it feels like the word became the Docker image object.
   //yield* all(nginxImage.node.opacity(1, 0.25), nginxImage.node.scale(1, 0.25))
 
-  caption().text("nginx is an image")
-  yield* waitFor(0.8)
+  // caption().text("nginx is an image")
+  // yield* waitFor(0.8)
 
-  // Registry appears.
-  yield* all(registry.node.opacity(1, 0.45), registry.node.scale(1, 0.45))
+  // // Registry appears.
+  // yield* all(registry.node.opacity(1, 0.45), registry.node.scale(1, 0.45))
 
-  caption().text("and images are stored in a registry")
-  yield* waitFor(0.3)
+  // caption().text("and images are stored in a registry")
+  // yield* waitFor(0.3)
 
-  // Move the boxed nginx image into the registry slot.
-  yield* nginxImage.node.absolutePosition(registry.imageSlotPosition(), 0.85)
+  // // Move the boxed nginx image into the registry slot.
+  // yield* nginxImage.node.absolutePosition(registry.imageSlotPosition(), 0.85)
 
-  yield* nginxImage.node.opacity(1, 0.25)
+  // yield* nginxImage.node.opacity(1, 0.25)
 
-  yield* waitFor(1)
-  // yield* lifted.phrase.highlight("nginx", {
+  // yield* waitFor(1)
+  // // yield* lifted.phrase.highlight("nginx", {
   //   hold: 1.5,
   //   restore: true,
   // })
