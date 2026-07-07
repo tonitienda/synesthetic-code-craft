@@ -1,7 +1,9 @@
 import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
-import { all, createRef, waitFor } from "@motion-canvas/core"
+import { all, createRef, Reference, waitFor } from "@motion-canvas/core"
 import { createTerminal } from "../../../components"
 import { liftCommandPhrase } from "../../../choreography"
+
+const NARRATION_ENABLED = true
 
 const colors = {
   bg: "#090b1a",
@@ -9,12 +11,34 @@ const colors = {
   amber: "#facc15",
 }
 
-function scenePointFromAbsolute(point: {
-  x: number
-  y: number
-}): [number, number] {
-  return [point.x - 960, point.y - 540]
+function* narrate(
+  narrator: Reference<Txt>,
+  text: string,
+  duration: number,
+  delay: number = 0,
+): Generator<any, void, any> {
+  if (delay > 0) {
+    yield* waitFor(delay)
+  }
+  if (!NARRATION_ENABLED) {
+    yield* waitFor(duration)
+  } else {
+    narrator().text(`"${text}"`)
+    yield* narrator()
+      .opacity(1, duration / 2)
+      .to(0, duration / 2)
+  }
 }
+
+// Shows the terminal
+// docker run nginx is executed
+// "docker run nginx" is lifted into the overlay
+// The question is asked: "But what does 'run' really do?"
+function intro(
+  world: Reference<Layout>,
+  overlay: Reference<Layout>,
+  narrator: Reference<Txt>,
+) {}
 
 function createDockerImageBox(label: string) {
   const node = (
@@ -99,6 +123,58 @@ function createRegistry() {
   }
 }
 
+function createLocalsystem() {
+  const slot = createRef<Rect>()
+
+  const node = (
+    <Rect
+      layout
+      direction={"row"}
+      alignItems={"center"}
+      justifyContent={"space-evenly"}
+      width={900}
+      height={200}
+      radius={28}
+      fill={"#0f172a"}
+      stroke={"#64748b"}
+      lineWidth={3}
+      padding={24}
+      gap={22}
+      shadowColor={"#00000066"}
+      shadowBlur={24}
+    >
+      <Layout layout direction={"column"} gap={4} alignItems={"start"}>
+        <Txt
+          text={"Local System"}
+          fontSize={38}
+          fill={"#f8fafc"}
+          fontWeight={700}
+        />
+
+        <Txt text={"remote image store"} fontSize={22} fill={"#94a3b8"} />
+      </Layout>
+
+      <Rect
+        ref={slot}
+        width={230}
+        height={100}
+        radius={20}
+        stroke={"#334155"}
+        lineWidth={3}
+        fill={"#020617"}
+        marginTop={18}
+      />
+    </Rect>
+  ) as Rect
+
+  return {
+    node,
+    imageSlotPosition() {
+      return slot().absolutePosition()
+    },
+  }
+}
+
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
@@ -111,7 +187,31 @@ export default makeScene2D(function* (view) {
   view.add(<Layout ref={captions} width={"100%"} height={"100%"} />)
 
   const caption = createRef<Txt>()
+  const narrator = createRef<Txt>()
 
+  view.add(
+    <Txt
+      ref={caption}
+      text={""}
+      y={220}
+      fontSize={38}
+      fill={colors.muted}
+      opacity={0}
+    />,
+  )
+
+  view.add(
+    <Txt
+      ref={narrator}
+      text={""}
+      y={500}
+      fontSize={50}
+      fill={colors.muted}
+      opacity={0}
+    />,
+  )
+
+  // INTRODUCTION
   const terminal = createTerminal({
     title: "local shell",
     width: 920,
@@ -125,25 +225,15 @@ export default makeScene2D(function* (view) {
 
   world().add(terminal.node)
 
-  view.add(
-    <Txt
-      ref={caption}
-      text={""}
-      y={220}
-      fontSize={38}
-      fill={colors.muted}
-      opacity={0}
-    />,
-  )
-
-  yield* waitFor(1)
-
   // 1. Terminal moment.
   yield* terminal.enter()
   yield* waitFor(1)
   yield* terminal.focus()
   yield* waitFor(1)
-  yield* terminal.typeCommand("docker run nginx")
+  yield* all(
+    narrate(narrator, "You have probably typed a command like this before.", 4),
+    terminal.typeCommand("docker run nginx", 0.1),
+  )
   yield* terminal.run()
 
   yield* waitFor(1)
@@ -152,11 +242,12 @@ export default makeScene2D(function* (view) {
   })
 
   yield* waitFor(0.75)
-  yield* terminal.print("latest: Pulling from library/nginx", {
-    kind: "muted",
-  })
-
-  yield* waitFor(2)
+  yield* all(
+    narrate(narrator, "You are just running the nginx image, right?", 4),
+    terminal.print("latest: Pulling from library/nginx", {
+      kind: "muted",
+    }),
+  )
 
   // 2. Grab the command handle from the terminal.
   const sourceCommand = terminal.command("docker run nginx")
@@ -170,41 +261,68 @@ export default makeScene2D(function* (view) {
   const lifted = liftCommandPhrase(sourceCommand, {
     overlay: overlay(),
     to: [0, -38],
-    duration: 0.85,
+    duration: 2,
     restyle: {
       fontSize: 76,
       gap: 18,
     },
   })
 
-  yield* all(lifted.animation, terminal.exit(0.7))
-
-  // 4. The lifted phrase is now the real actor.
-  caption().text("But what does 'run' really do?")
-  yield* caption().opacity(1, 0.35)
+  yield* all(
+    narrate(
+      narrator,
+      "But what are we really running? What does 'run' actually do?",
+      8,
+    ),
+    lifted.animation,
+    terminal.exit(0.7),
+  )
 
   yield* waitFor(0.4)
 
-  caption().text("// SHOWING SPLASH SCREEN WITH LOGO AND TITLE HERE")
+  // SPLASH SCREEN
+
+  const splash = createRef<Rect>()
+  overlay().add(
+    <Rect
+      width={"100%"}
+      height={"100%"}
+      fill={colors.bg}
+      opacity={1}
+      ref={splash}
+    >
+      <Txt
+        text={"Synesthesic Code Craft"}
+        fontSize={72}
+        fill={colors.amber}
+        fontWeight={800}
+      />
+    </Rect>,
+  )
 
   yield* waitFor(3)
 
-  caption().text("But what does 'run' really do?")
+  yield* all(
+    narrate(narrator, "Let's take a closer look at what happens.", 4),
+    splash().opacity(1, 2).to(0, 2),
+  )
 
-  // TODO - Inject Splash screen with logo and title here.
-  // Music fades and we get a moment of silence before the next scene.
-
-  yield* waitFor(2)
+  yield* waitFor(0.5)
 
   yield* lifted.phrase.restyle({ gap: 200 }, 1)
 
   yield* waitFor(1)
 
-  const nginxToken = lifted.phrase.token("nginx")
+  yield* lifted.phrase.highlight("nginx", {
+    hold: 1.5,
+    restore: true,
+  })
 
-  if (!nginxToken) {
-    return
-  }
+  // const nginxToken = lifted.phrase.token("nginx")
+
+  // if (!nginxToken) {
+  //   return
+  // }
 
   // const nginxAnchor = createRef<Rect>()
 
@@ -232,9 +350,9 @@ export default makeScene2D(function* (view) {
   const nginxImage = createDockerImageBox("nginx")
 
   // Start the box exactly over the title token.
-  nginxImage.node.position(
-    scenePointFromAbsolute(nginxToken.absolutePosition()),
-  )
+  // nginxImage.node.position(
+  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
+  // )
   nginxImage.node.opacity(0)
   nginxImage.node.scale(0.9)
 
@@ -243,11 +361,7 @@ export default makeScene2D(function* (view) {
   // Box the word "nginx".
   // We fade out the original title token while the boxed clone appears,
   // so visually it feels like the word became the Docker image object.
-  yield* all(
-    nginxToken.opacity(0, 0.25),
-    nginxImage.node.opacity(1, 0.25),
-    nginxImage.node.scale(1, 0.25),
-  )
+  //yield* all(nginxImage.node.opacity(1, 0.25), nginxImage.node.scale(1, 0.25))
 
   caption().text("nginx is an image")
   yield* waitFor(0.8)
@@ -260,6 +374,8 @@ export default makeScene2D(function* (view) {
 
   // Move the boxed nginx image into the registry slot.
   yield* nginxImage.node.absolutePosition(registry.imageSlotPosition(), 0.85)
+
+  yield* nginxImage.node.opacity(1, 0.25)
 
   yield* waitFor(1)
   // yield* lifted.phrase.highlight("nginx", {
