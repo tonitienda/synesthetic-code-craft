@@ -7,10 +7,278 @@ import {
   Reference,
   waitFor,
 } from "@motion-canvas/core"
-import { createTerminal } from "../../../components"
-import { liftCommandPhrase, liftTxt } from "../../../choreography"
+import {
+  createTerminal,
+  Terminal,
+  defaultTerminalTheme,
+} from "../../../components"
+import {
+  liftCommandPhrase,
+  LiftedCommandPhrase,
+  liftTxt,
+} from "../../../choreography"
+
+const Theme = {
+  highlight: "#facc15",
+  text: defaultTerminalTheme.text,
+}
 
 const NARRATION_ENABLED = true
+const VIDEO_WIDTH = 1920
+const VIDEO_HEIGHT = 1080
+
+type World = {
+  narrator: Reference<Txt>
+  background: Reference<Layout>
+  stage: Reference<Layout>
+  overlay: Reference<Layout>
+  elements?: {
+    liftedCommand?: LiftedCommandPhrase
+    terminal?: Terminal
+  }
+}
+
+const playIntro = function* (world: World) {
+  const terminal = createTerminal({
+    title: "local shell",
+    width: VIDEO_WIDTH * 0.4,
+    height: VIDEO_HEIGHT * 0.9,
+    fontSize: 30,
+    typingDelay: 0.1,
+  })
+
+  terminal.node.y(0)
+  terminal.node.x(-VIDEO_WIDTH * 0.28)
+  terminal.node.opacity(0)
+
+  world.stage().add(terminal.node)
+
+  yield* terminal.enter()
+  yield* waitFor(1)
+  yield* terminal.focus()
+  yield* waitFor(1)
+  yield* all(
+    narrate(
+      world.narrator,
+      "You have probably typed a command like this before.",
+      4,
+    ),
+    terminal.typeCommand("docker run nginx", 0.1),
+  )
+  yield* terminal.run()
+
+  yield* waitFor(1)
+  yield* terminal.print("Unable to find image 'nginx:latest' locally", {
+    kind: "muted",
+  })
+
+  yield* waitFor(0.75)
+  yield* all(
+    narrate(world.narrator, "You are just running the nginx image, right?", 4),
+    terminal.print("latest: Pulling from library/nginx", {
+      kind: "muted",
+    }),
+  )
+
+  // 2. Grab the command handle from the terminal.
+  const sourceCommand = terminal.command("docker run nginx")
+
+  if (!sourceCommand) {
+    return
+  }
+
+  // The original terminal row hides, but the terminal keeps its layout.
+  const liftedCommand = liftCommandPhrase(sourceCommand, {
+    overlay: world.overlay(),
+    to: [0, -38],
+    hideSource: false,
+    duration: 2,
+    restyle: {
+      fontSize: 76,
+      gap: 18,
+    },
+  })
+
+  yield* all(
+    narrate(
+      world.narrator,
+      "But what are we really running? What does 'run' actually do?",
+      8,
+    ),
+    liftedCommand.animation,
+    terminal.exit(0.7),
+  )
+
+  yield* waitFor(0.4)
+
+  if (!world.elements) {
+    world.elements = {}
+  }
+  world.elements.liftedCommand = liftedCommand
+  world.elements.terminal = terminal
+}
+
+const playSplash = function* (world: World) {
+  const splash = createRef<Rect>()
+  world.overlay().add(
+    <Rect
+      width={"100%"}
+      height={"100%"}
+      fill={colors.bg}
+      opacity={1}
+      ref={splash}
+    >
+      <Txt
+        text={"Synesthesic Code Craft"}
+        fontSize={72}
+        fill={colors.amber}
+        fontWeight={800}
+      />
+    </Rect>,
+  )
+
+  yield* waitFor(3)
+  yield* all(
+    narrate(world.narrator, "Let's take a closer look at what happens.", 4),
+    splash().opacity(1, 2).to(0, 2),
+  )
+
+  yield* waitFor(0.5)
+}
+
+const playImageRegistry = function* (world: World) {
+  const { liftedCommand, terminal } = world.elements ?? {}
+
+  if (!liftedCommand || !terminal) {
+    return
+  }
+
+  yield* all(
+    liftedCommand.phrase.node.opacity(0, 1),
+    terminal.node.opacity(1, 1),
+  )
+
+  const sourceCommand = terminal.command("docker run nginx")
+
+  if (!sourceCommand) {
+    return
+  }
+
+  const nginxToken = sourceCommand.token("nginx")
+
+  if (!nginxToken) {
+    return
+  }
+
+  yield* nginxToken.fill(Theme.highlight, 0.5)
+
+  // Create the Registry visual on the right.
+  const registry = createRegistry()
+  registry.node.position([VIDEO_WIDTH / 4, -400])
+  registry.node.opacity(0)
+  registry.node.scale(0.96)
+
+  world.stage().add(registry.node)
+
+  // // Create an overlay Docker-image object from the "nginx" token.
+  const nginxImage = createDockerImageBox("nginx")
+  world.overlay().add(nginxImage.node)
+
+  // // Start the box exactly over the title token.
+  // nginxImage.node.position(
+  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
+  // )
+  nginxImage.node.opacity(0)
+  nginxImage.node.scale(1)
+  nginxImage.node.absolutePosition(registry.imageSlotPosition())
+
+  yield* all(
+    registry.node.opacity(1, 1),
+    registry.node.scale(1, 1),
+    narrate(
+      world.narrator,
+      "Images are stored in registries, like this one.",
+      4,
+    ),
+    delay(
+      3,
+      all(
+        nginxImage.node.opacity(1, 2),
+        (liftedCommand.phrase.token("nginx") as Txt).opacity(0, 2),
+      ),
+    ),
+  )
+
+  yield* waitFor(5)
+
+  yield* nginxToken.fill(Theme.text, 0.5)
+}
+
+const playPullImage = function* (world: World) {
+  const { terminal } = world.elements ?? {}
+
+  if (!terminal) {
+    return
+  }
+
+  const localSystem = createLocalsystem()
+
+  localSystem.node.position([VIDEO_WIDTH / 4, 400])
+  localSystem.node.opacity(0)
+  localSystem.node.scale(0.96)
+
+  world.stage().add(localSystem.node)
+
+  yield* all(
+    localSystem.node.opacity(1, 1),
+    localSystem.node.scale(1, 1),
+    narrate(
+      world.narrator,
+      "The image is pulled from the registry to your local system.",
+      4,
+    ),
+  )
+
+  yield* waitFor(5)
+
+  const findLocallyLine = terminal.outputLine(
+    "Unable to find image 'nginx:latest' locally",
+  )
+
+  if (!findLocallyLine) {
+    return
+  }
+
+  yield* findLocallyLine.textRef().fill(Theme.highlight, 0.5)
+
+  yield* waitFor(2)
+
+  const pullLine = terminal.outputLine("latest: Pulling from library/nginx")
+
+  if (!pullLine) {
+    return
+  }
+
+  yield* all(
+    findLocallyLine.textRef().fill(Theme.text, 0.5),
+    pullLine.textRef().fill(Theme.highlight, 0.5),
+  )
+
+  yield* waitFor(2)
+}
+
+const playExpandRunCommand = function* (world: World) {
+  const { liftedCommand } = world.elements ?? {}
+
+  if (!liftedCommand) {
+    return
+  }
+
+  const runToken = liftedCommand.phrase.token("run")
+  if (!runToken) {
+    return
+  }
+}
 
 const colors = {
   bg: "#090b1a",
@@ -36,16 +304,6 @@ function* narrate(
       .to(0, duration / 2)
   }
 }
-
-// Shows the terminal
-// docker run nginx is executed
-// "docker run nginx" is lifted into the overlay
-// The question is asked: "But what does 'run' really do?"
-function intro(
-  world: Reference<Layout>,
-  overlay: Reference<Layout>,
-  narrator: Reference<Txt>,
-) {}
 
 function createDockerImageBox(label: string) {
   const node = (
@@ -185,27 +443,16 @@ function createLocalsystem() {
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
-  const world = createRef<Layout>()
+  const background = createRef<Layout>()
+  const stage = createRef<Layout>()
   const overlay = createRef<Layout>()
-  const captions = createRef<Layout>()
+  //const captions = createRef<Layout>()
 
-  view.add(<Layout ref={world} width={"100%"} height={"100%"} />)
+  view.add(<Layout ref={background} width={"100%"} height={"100%"} />)
+  view.add(<Layout ref={stage} width={"100%"} height={"100%"} />)
   view.add(<Layout ref={overlay} width={"100%"} height={"100%"} />)
-  view.add(<Layout ref={captions} width={"100%"} height={"100%"} />)
 
-  const caption = createRef<Txt>()
   const narrator = createRef<Txt>()
-
-  view.add(
-    <Txt
-      ref={caption}
-      text={""}
-      y={220}
-      fontSize={38}
-      fill={colors.muted}
-      opacity={0}
-    />,
-  )
 
   view.add(
     <Txt
@@ -218,223 +465,86 @@ export default makeScene2D(function* (view) {
     />,
   )
 
-  // INTRODUCTION - What is the question?
-  const terminal = createTerminal({
-    title: "local shell",
-    width: 920,
-    height: 390,
-    fontSize: 34,
-    typingDelay: 0.1,
-  })
-
-  terminal.node.y(110)
-  terminal.node.opacity(0)
-
-  world().add(terminal.node)
-
-  yield* terminal.enter()
-  yield* waitFor(1)
-  yield* terminal.focus()
-  yield* waitFor(1)
-  yield* all(
-    narrate(narrator, "You have probably typed a command like this before.", 4),
-    terminal.typeCommand("docker run nginx", 0.1),
-  )
-  yield* terminal.run()
-
-  yield* waitFor(1)
-  yield* terminal.print("Unable to find image 'nginx:latest' locally", {
-    kind: "muted",
-  })
-
-  yield* waitFor(0.75)
-  yield* all(
-    narrate(narrator, "You are just running the nginx image, right?", 4),
-    terminal.print("latest: Pulling from library/nginx", {
-      kind: "muted",
-    }),
-  )
-
-  // 2. Grab the command handle from the terminal.
-  const sourceCommand = terminal.command("docker run nginx")
-
-  if (!sourceCommand) {
-    return
+  const world = {
+    narrator,
+    background,
+    stage,
+    overlay,
   }
 
-  // 3. Lift a visual clone into the overlay.
-  // The original terminal row hides, but the terminal keeps its layout.
-  const lifted = liftCommandPhrase(sourceCommand, {
-    overlay: overlay(),
-    to: [0, -38],
-    duration: 2,
-    restyle: {
-      fontSize: 76,
-      gap: 18,
-    },
-  })
+  yield* playIntro(world)
 
-  yield* all(
-    narrate(
-      narrator,
-      "But what are we really running? What does 'run' actually do?",
-      8,
-    ),
-    lifted.animation,
-    terminal.exit(0.7),
-  )
+  yield* playSplash(world)
 
-  yield* waitFor(0.4)
+  yield* playImageRegistry(world)
 
-  // SPLASH SCREEN
+  yield* playPullImage(world)
 
-  const splash = createRef<Rect>()
-  overlay().add(
-    <Rect
-      width={"100%"}
-      height={"100%"}
-      fill={colors.bg}
-      opacity={1}
-      ref={splash}
-    >
-      <Txt
-        text={"Synesthesic Code Craft"}
-        fontSize={72}
-        fill={colors.amber}
-        fontWeight={800}
-      />
-    </Rect>,
-  )
-
-  yield* waitFor(3)
-
-  yield* all(
-    narrate(narrator, "Let's take a closer look at what happens.", 4),
-    splash().opacity(1, 2).to(0, 2),
-  )
-
-  yield* waitFor(0.5)
-
-  yield* lifted.phrase.restyle({ gap: 200 }, 1)
-
-  yield* waitFor(1)
-
-  // Let's focus int he actual command (run nginx)
-  yield* all(
-    (lifted.phrase.token("docker") as Txt).opacity(0, 0.5),
-    narrate(narrator, "Let's focus on the actual command: run nginx.", 4),
-  )
-
-  yield* waitFor(0.5)
-
-  // What is "nginx" in the docker run command?
-
-  yield* all(
-    lifted.phrase.highlight("nginx"),
-    narrate(narrator, "First, what does 'nginx' mean in this command?", 4),
-  )
-
-  // Explain the registry
-
-  // Create the Registry visual on the right.
-  const registry = createRegistry()
-  registry.node.position([60, -400])
-  registry.node.opacity(0)
-  registry.node.scale(0.96)
-
-  world().add(registry.node)
-
-  // // Create an overlay Docker-image object from the "nginx" token.
-  const nginxImage = createDockerImageBox("nginx")
-  overlay().add(nginxImage.node)
-
-  // // Start the box exactly over the title token.
-  // nginxImage.node.position(
-  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
-  // )
-  nginxImage.node.opacity(0)
-  nginxImage.node.scale(1)
-  nginxImage.node.absolutePosition(registry.imageSlotPosition())
-
-  yield* all(
-    registry.node.opacity(1, 1),
-    registry.node.scale(1, 1),
-    narrate(narrator, "Images are stored in registries, like this one.", 4),
-    delay(
-      3,
-      all(
-        nginxImage.node.opacity(1, 2),
-        (lifted.phrase.token("nginx") as Txt).opacity(0, 2),
-      ),
-    ),
-  )
-
-  yield* waitFor(5)
-
+  yield* playExpandRunCommand(world)
   // TODO - Potentially add more info about the registry, types, what they are, some metaphor, etc. But no need to go into a lot of detail.
 
   // EXPLAIN THE RUN COMMAND - Split in 3 operations
 
-  const runToken = lifted.phrase.token("run")
-  if (!runToken) {
-    return
-  }
+  // const runToken = lifted.phrase.token("run")
+  // if (!runToken) {
+  //   return
+  // }
 
-  const pull = liftTxt(runToken, {
-    overlay: overlay(),
-    to: [runToken.x(), runToken.y() - 200],
-    duration: 1.5,
-    restyle: {
-      fontSize: 76,
-      gap: 18,
-    },
-  })
+  // const pull = liftTxt(runToken, {
+  //   overlay: overlay(),
+  //   to: [runToken.x(), runToken.y() - 200],
+  //   duration: 1.5,
+  //   restyle: {
+  //     fontSize: 76,
+  //     gap: 18,
+  //   },
+  // })
 
-  const create = liftTxt(runToken, {
-    overlay: overlay(),
-    to: [runToken.x(), runToken.y() - 38],
-    duration: 1.5,
-    restyle: {
-      fontSize: 76,
-      gap: 18,
-    },
-  })
+  // const create = liftTxt(runToken, {
+  //   overlay: overlay(),
+  //   to: [runToken.x(), runToken.y() - 38],
+  //   duration: 1.5,
+  //   restyle: {
+  //     fontSize: 76,
+  //     gap: 18,
+  //   },
+  // })
 
-  const start = liftTxt(runToken, {
-    overlay: overlay(),
-    to: [runToken.x(), runToken.y() + 120],
-    duration: 1.5,
-    restyle: {
-      fontSize: 76,
-      gap: 18,
-    },
-  })
+  // const start = liftTxt(runToken, {
+  //   overlay: overlay(),
+  //   to: [runToken.x(), runToken.y() + 120],
+  //   duration: 1.5,
+  //   restyle: {
+  //     fontSize: 76,
+  //     gap: 18,
+  //   },
+  // })
 
-  // Split RUN into PULL, CREATE, START
-  yield* all(
-    narrate(
-      narrator,
-      "Run is a shortcut for 3 separate commands: pull, create and start.",
-      4,
-    ),
-    pull.animation,
-    pull.phrase.replaceText("run", "pull", { delay: 0.5, duration: 1 }),
-    create.animation,
-    create.phrase.replaceText("run", "create", { delay: 0.5, duration: 1 }),
-    start.animation,
-    start.phrase.replaceText("run", "start", { duration: 1 }),
-  )
+  // // Split RUN into PULL, CREATE, START
+  // yield* all(
+  //   narrate(
+  //     narrator,
+  //     "Run is a shortcut for 3 separate commands: pull, create and start.",
+  //     4,
+  //   ),
+  //   pull.animation,
+  //   pull.phrase.replaceText("run", "pull", { delay: 0.5, duration: 1 }),
+  //   create.animation,
+  //   create.phrase.replaceText("run", "create", { delay: 0.5, duration: 1 }),
+  //   start.animation,
+  //   start.phrase.replaceText("run", "start", { duration: 1 }),
+  // )
 
-  yield* all(
-    pull.phrase.highlight("pull", { hold: 4.5, restore: true }),
-    delay(2.5, pull.phrase.node.y(runToken.y() - 38, 1.5)),
-    create.phrase.node.opacity(0, 1),
-    start.phrase.node.opacity(0, 1),
-    narrate(narrator, "Let's focus on the first command: pull.", 4),
-  )
+  // yield* all(
+  //   pull.phrase.highlight("pull", { hold: 4.5, restore: true }),
+  //   delay(2.5, pull.phrase.node.y(runToken.y() - 38, 1.5)),
+  //   create.phrase.node.opacity(0, 1),
+  //   start.phrase.node.opacity(0, 1),
+  //   narrate(narrator, "Let's focus on the first command: pull.", 4),
+  // )
 
-  yield* waitFor(5)
-  // const nginxToken = lifted.phrase.token("nginx")
+  // yield* waitFor(5)
+  // // const nginxToken = lifted.phrase.token("nginx")
 
   // if (!nginxToken) {
   //   return
