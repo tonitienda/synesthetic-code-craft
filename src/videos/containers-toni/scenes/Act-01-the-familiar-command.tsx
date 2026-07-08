@@ -1,5 +1,12 @@
 import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
-import { all, createRef, Reference, waitFor } from "@motion-canvas/core"
+import {
+  all,
+  chain,
+  createRef,
+  delay,
+  Reference,
+  waitFor,
+} from "@motion-canvas/core"
 import { createTerminal } from "../../../components"
 import { liftCommandPhrase, liftTxt } from "../../../choreography"
 
@@ -211,7 +218,7 @@ export default makeScene2D(function* (view) {
     />,
   )
 
-  // INTRODUCTION
+  // INTRODUCTION - What is the question?
   const terminal = createTerminal({
     title: "local shell",
     width: 920,
@@ -225,7 +232,6 @@ export default makeScene2D(function* (view) {
 
   world().add(terminal.node)
 
-  // 1. Terminal moment.
   yield* terminal.enter()
   yield* waitFor(1)
   yield* terminal.focus()
@@ -313,6 +319,62 @@ export default makeScene2D(function* (view) {
 
   yield* waitFor(1)
 
+  // Let's focus int he actual command (run nginx)
+  yield* all(
+    (lifted.phrase.token("docker") as Txt).opacity(0, 0.5),
+    narrate(narrator, "Let's focus on the actual command: run nginx.", 4),
+  )
+
+  yield* waitFor(0.5)
+
+  // What is "nginx" in the docker run command?
+
+  yield* all(
+    lifted.phrase.highlight("nginx"),
+    narrate(narrator, "First, what does 'nginx' mean in this command?", 4),
+  )
+
+  // Explain the registry
+
+  // Create the Registry visual on the right.
+  const registry = createRegistry()
+  registry.node.position([60, -400])
+  registry.node.opacity(0)
+  registry.node.scale(0.96)
+
+  world().add(registry.node)
+
+  // // Create an overlay Docker-image object from the "nginx" token.
+  const nginxImage = createDockerImageBox("nginx")
+  overlay().add(nginxImage.node)
+
+  // // Start the box exactly over the title token.
+  // nginxImage.node.position(
+  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
+  // )
+  nginxImage.node.opacity(0)
+  nginxImage.node.scale(1)
+  nginxImage.node.absolutePosition(registry.imageSlotPosition())
+
+  yield* all(
+    registry.node.opacity(1, 1),
+    registry.node.scale(1, 1),
+    narrate(narrator, "Images are stored in registries, like this one.", 4),
+    delay(
+      3,
+      all(
+        nginxImage.node.opacity(1, 2),
+        (lifted.phrase.token("nginx") as Txt).opacity(0, 2),
+      ),
+    ),
+  )
+
+  yield* waitFor(5)
+
+  // TODO - Potentially add more info about the registry, types, what they are, some metaphor, etc. But no need to go into a lot of detail.
+
+  // EXPLAIN THE RUN COMMAND - Split in 3 operations
+
   const runToken = lifted.phrase.token("run")
   if (!runToken) {
     return
@@ -330,7 +392,7 @@ export default makeScene2D(function* (view) {
 
   const create = liftTxt(runToken, {
     overlay: overlay(),
-    to: [runToken.x(), runToken.y() - 30],
+    to: [runToken.x(), runToken.y() - 38],
     duration: 1.5,
     restyle: {
       fontSize: 76,
@@ -363,7 +425,13 @@ export default makeScene2D(function* (view) {
     start.phrase.replaceText("run", "start", { duration: 1 }),
   )
 
-  yield* pull.phrase.highlight("pull")
+  yield* all(
+    pull.phrase.highlight("pull", { hold: 4.5, restore: true }),
+    delay(2.5, pull.phrase.node.y(runToken.y() - 38, 1.5)),
+    create.phrase.node.opacity(0, 1),
+    start.phrase.node.opacity(0, 1),
+    narrate(narrator, "Let's focus on the first command: pull.", 4),
+  )
 
   yield* waitFor(5)
   // const nginxToken = lifted.phrase.token("nginx")
@@ -386,45 +454,6 @@ export default makeScene2D(function* (view) {
 
   //nginxAnchor().absolutePosition(nginxToken.absolutePosition())
 
-  // Create the Registry visual on the right.
-  // const registry = createRegistry()
-  // registry.node.position([60, -400])
-  // registry.node.opacity(0)
-  // registry.node.scale(0.96)
-
-  // world().add(registry.node)
-
-  // // Create an overlay Docker-image object from the "nginx" token.
-  // const nginxImage = createDockerImageBox("nginx")
-
-  // // Start the box exactly over the title token.
-  // // nginxImage.node.position(
-  // //   scenePointFromAbsolute(nginxToken.absolutePosition()),
-  // // )
-  // nginxImage.node.opacity(0)
-  // nginxImage.node.scale(0.9)
-
-  // overlay().add(nginxImage.node)
-
-  // Box the word "nginx".
-  // We fade out the original title token while the boxed clone appears,
-  // so visually it feels like the word became the Docker image object.
-  //yield* all(nginxImage.node.opacity(1, 0.25), nginxImage.node.scale(1, 0.25))
-
-  // caption().text("nginx is an image")
-  // yield* waitFor(0.8)
-
-  // // Registry appears.
-  // yield* all(registry.node.opacity(1, 0.45), registry.node.scale(1, 0.45))
-
-  // caption().text("and images are stored in a registry")
-  // yield* waitFor(0.3)
-
-  // // Move the boxed nginx image into the registry slot.
-  // yield* nginxImage.node.absolutePosition(registry.imageSlotPosition(), 0.85)
-
-  // yield* nginxImage.node.opacity(1, 0.25)
-
   // yield* waitFor(1)
   // // yield* lifted.phrase.highlight("nginx", {
   //   hold: 1.5,
@@ -444,4 +473,6 @@ export default makeScene2D(function* (view) {
   // yield* all(lifted.phrase.dimExcept("run"), caption().fill(colors.amber, 0.25))
 
   // yield* waitFor(1)
+
+  yield* waitFor(5)
 })
