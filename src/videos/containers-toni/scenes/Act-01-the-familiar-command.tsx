@@ -1,10 +1,15 @@
 import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
 import {
   all,
+  cancel,
   chain,
   createRef,
   delay,
+  easeInCubic,
+  easeOutBack,
+  loop,
   Reference,
+  ThreadGenerator,
   waitFor,
 } from "@motion-canvas/core"
 import {
@@ -48,6 +53,10 @@ type World = {
     localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
     registryImage?: DockerImage
     localImage?: DockerImage
+  }
+  cancellation: {
+    registryBreath?: ThreadGenerator
+    localSystemBreath?: ThreadGenerator
   }
 }
 
@@ -177,7 +186,7 @@ const playSplash = function* (world: World) {
   yield* waitFor(0.5)
 }
 
-const playImageRegistry = function* (world: World) {
+const playImageRegistry = function* (world: World): ThreadGenerator {
   const { liftedCommand, terminal } = world.elements ?? {}
 
   if (!liftedCommand || !terminal) {
@@ -213,7 +222,11 @@ const playImageRegistry = function* (world: World) {
     toWorldY(PADDING, registry.node.height()),
   ])
   registry.node.opacity(0)
-  registry.node.scale(0.96)
+
+  world.cancellation.registryBreath = yield loop(
+    Infinity,
+    () => registry.node.scale(1, 1).to(1.01, 1), // ~1% breath, background
+  )
 
   world.stage().add(registry.node)
 
@@ -257,10 +270,11 @@ const playImageRegistry = function* (world: World) {
   yield* nginxToken.fill(Theme.text, 0.5)
 }
 
-const playPullImage = function* (world: World) {
-  const { terminal, registryImage } = world.elements ?? {}
+const playPullImage = function* (world: World): ThreadGenerator {
+  const { terminal, registryImage, registry } = world.elements ?? {}
+  const { registryBreath } = world.cancellation ?? {}
 
-  if (!terminal || !registryImage) {
+  if (!terminal || !registryImage || !registry || !registryBreath) {
     return
   }
 
@@ -277,7 +291,15 @@ const playPullImage = function* (world: World) {
     ),
   ])
   localSystem.node.opacity(0)
-  localSystem.node.scale(0.96)
+
+  // STOP breathing animation on the registry, and start breathing on the local system.
+  cancel(registryBreath)
+  yield* registry.node.scale(1, 0.4) // ease it back to 1 so nothing "jumps"
+
+  world.cancellation.localSystemBreath = yield loop(
+    Infinity,
+    () => localSystem.node.scale(1, 1).to(1.01, 1), // ~1% breath, background
+  )
 
   world.stage().add(localSystem.node)
 
@@ -325,11 +347,15 @@ const playPullImage = function* (world: World) {
 
   world.overlay().add(localImage.node)
 
-  // TODO - Animate the image falling more organically. squashing and stretching and accelerating. Maybe even a little bounce at the end. But not too much, it should feel like a heavy object.
   yield* all(
     localImage.node.opacity(1, 0.3),
-    localImage.node.scale(1, 0.5),
-    localImage.node.absolutePosition(localSlotCenter, 1.2),
+    // fall: accelerate in, so easeInCubic on the way down
+    localImage.node.absolutePosition(localSlotCenter, 1.0, easeInCubic),
+    chain(
+      delay(0.75, localImage.node.scale([1.15, 0.8], 0.12)), // squash on impact
+      localImage.node.scale([0.92, 1.08], 0.12), // stretch rebound
+      localImage.node.scale(1, 0.18, easeOutBack), // settle w/ tiny overshoot
+    ),
   )
 
   yield* waitFor(5)
@@ -404,19 +430,38 @@ function createDockerImageBox(label: string): DockerImage {
   }
 }
 
-const playWhatIsAnImage = function* (world: World) {
-  const { registry, localSystem, registryImage, localImage } =
+const playWhatIsAnImage = function* (world: World): ThreadGenerator {
+  const { registry, localSystem, registryImage, localImage, terminal } =
     world.elements ?? {}
 
-  if (!registry || !localSystem || !registryImage || !localImage) {
+  if (!registry || !localSystem || !registryImage || !localImage || !terminal) {
     return
   }
 
   const localSystemTargetHeight = VIDEO_HEIGHT - PADDING * 2
 
+  // The terminal has served its purpose as the script. Demote it to a compact
+  // anchor chip in the bottom-left corner so the concept diagram can own the
+  // screen, and slide the local system into the freed space so it reads as the
+  // subject rather than a right-hand sidebar.
+  const dockWidth = 470
+  const dockHeight = 140
+  const focusX = 240 // centred in the band to the right of the docked chip
+
   yield* all(
+    terminal.dock({
+      width: dockWidth,
+      height: dockHeight,
+      position: [
+        toWorldX(PADDING, dockWidth),
+        toWorldY(VIDEO_HEIGHT - PADDING - dockHeight, dockHeight),
+      ],
+      duration: 2,
+    }),
     registry.node.y(-1000, 2),
     registryImage.node.y(-1000, 2),
+    localSystem.node.x(focusX, 2),
+    localImage.node.x(focusX, 2),
     localSystem.node.height(localSystemTargetHeight, 2),
     localSystem.node.y(toWorldY(PADDING, localSystemTargetHeight), 2),
     narrate(world.narrator, "But what is exactly an image?", 4),
@@ -503,6 +548,7 @@ export default makeScene2D(function* (view) {
     stage,
     overlay,
     elements: {},
+    cancellation: {},
   }
 
   yield* playIntro(world)
