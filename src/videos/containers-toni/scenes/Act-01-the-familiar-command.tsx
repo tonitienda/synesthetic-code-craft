@@ -1,11 +1,10 @@
-import { Layout, Txt, Rect, Line, makeScene2D } from "@motion-canvas/2d"
+import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
 import {
   all,
   chain,
   createRef,
   delay,
   Reference,
-  Vector2,
   waitFor,
 } from "@motion-canvas/core"
 import {
@@ -13,11 +12,14 @@ import {
   Terminal,
   defaultTerminalTheme,
 } from "../../../components"
+import { liftCommandPhrase, LiftedCommandPhrase } from "../../../choreography"
+import { createFileSystemLayers } from "../../../components/filesystem"
 import {
-  liftCommandPhrase,
-  LiftedCommandPhrase,
-  liftTxt,
-} from "../../../choreography"
+  LocalSystem,
+  Registry,
+  createLocalsystem,
+  createRegistry,
+} from "../../../components/registries"
 
 const Theme = {
   highlight: "#facc15",
@@ -91,6 +93,24 @@ const playIntro = function* (world: World) {
     }),
   )
 
+  yield* all(
+    ...[
+      "81b43e7a1eae: Pull complete",
+      "74e33773ee42: Pull complete",
+      "3be819c1c8cf: Pull complete",
+      "63e237f10cf6: Pull complete",
+      "75e5e08234c9: Pull complete",
+      "41103e2ff54e: Pull complete",
+      "5d1f91636239: Pull complete",
+      "Digest: sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce",
+      "Status: Downloaded newer image for nginx:latest",
+    ].map((line, idx) =>
+      delay(idx * 0.2, terminal.print(line, { kind: "muted" })),
+    ),
+  )
+
+  yield* waitFor(1)
+
   // 2. Grab the command handle from the terminal.
   const sourceCommand = terminal.command("docker run nginx")
 
@@ -106,7 +126,7 @@ const playIntro = function* (world: World) {
     duration: 2,
     restyle: {
       fontSize: 76,
-      gap: 18,
+      //gap: 18,
     },
   })
 
@@ -324,19 +344,6 @@ const playPullImage = function* (world: World) {
   world.elements.localSystem = localSystem
 }
 
-// const playExpandRunCommand = function* (world: World) {
-//   const { liftedCommand } = world.elements ?? {}
-
-//   if (!liftedCommand) {
-//     return
-//   }
-
-//   const runToken = liftedCommand.phrase.token("run")
-//   if (!runToken) {
-//     return
-//   }
-// }
-
 const colors = {
   bg: "#090b1a",
   muted: "#94a3b8",
@@ -394,221 +401,6 @@ function createDockerImageBox(label: string): DockerImage {
 
   return {
     node,
-  }
-}
-
-type Registry = {
-  node: Rect
-  imageSlotPosition(): Vector2
-}
-
-type LocalSystem = {
-  node: Rect
-  label: Reference<Layout>
-  slot: Reference<Rect>
-}
-
-class FileSystemLayer {
-  node: Rect
-  label: Txt
-
-  constructor(
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    label: string,
-  ) {
-    this.label = (
-      <Txt text={label} fontSize={26} fill={"#f8fafc"} fontWeight={700} />
-    ) as Txt
-
-    this.node = (
-      <Rect
-        layout
-        direction={"column"}
-        alignItems={"start"}
-        justifyContent={"center"}
-        width={width}
-        height={height}
-        paddingLeft={26}
-        radius={12}
-        fill={"#0f172a88"}
-        stroke={"#7dd3fc99"}
-        lineWidth={3}
-        shadowColor={"#38bdf833"}
-        shadowBlur={14}
-        //backdropBlur={8}
-        opacity={0}
-      >
-        {this.label}
-      </Rect>
-    ) as Rect
-  }
-}
-
-// Composes, manages and animates a filesystem representation. Each layer is a FileSystemLayer, and the layers are stacked vertically. The layers can be animated to appear one by one, or all at once.
-class FileSystem {
-  layers: FileSystemLayer[]
-  node: Rect
-  layersContainer: Reference<Layout>
-
-  constructor(
-    layers: FileSystemLayer[],
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    title: string,
-  ) {
-    this.layers = layers
-    this.layersContainer = createRef<Layout>()
-    this.node = (
-      <Rect
-        layout
-        direction={"column"}
-        alignItems={"start"}
-        justifyContent={"start"}
-        width={width}
-        height={height}
-        x={x}
-        y={y}
-        padding={32}
-        gap={52}
-        radius={28}
-        fill={"#0f172a88"}
-        stroke={"#7dd3fc99"}
-        lineWidth={3}
-        shadowColor={"#38bdf833"}
-        shadowBlur={14}
-        //backdropBlur={8}
-      >
-        <Txt text={title} fontSize={28} fill={"#38bdf8"} fontWeight={700} />
-        <Layout
-          ref={this.layersContainer}
-          layout
-          direction={"column"}
-          gap={12}
-          alignItems={"center"}
-          justifyContent={"end"}
-          width={"100%"}
-          height={"100%"}
-        >
-          {[...this.layers].reverse().map((layer) => layer.node)}
-        </Layout>
-      </Rect>
-    ) as Rect
-  }
-
-  appear(duration: number) {
-    return all(
-      ...this.layers.map((layer, index) =>
-        chain(waitFor(index * 0.2), layer.node.opacity(1, duration)),
-      ),
-    )
-  }
-
-  *collapse(label: string, duration: number) {
-    const survivingLayer = this.layers[0]
-    const collapsingLayers = this.layers.slice(1)
-    const originalHeight = survivingLayer.node.height()
-
-    yield* all(
-      survivingLayer.label.text(label, duration),
-      ...collapsingLayers.map((layer) =>
-        all(
-          layer.label.opacity(0, duration),
-          layer.node.height(0, duration),
-          layer.node.lineWidth(0, duration),
-        ),
-      ),
-    )
-
-    collapsingLayers.forEach((layer) => layer.node.remove())
-
-    this.layers = [survivingLayer]
-  }
-}
-
-const createFileSystemLayers = (
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  title: string,
-  labels: string[],
-): FileSystem => {
-  const panelPadding = 32
-  const titleAreaHeight = 86
-  const layerGap = 12
-  const layerWidth = width - panelPadding * 2
-  const layersHeight =
-    height - panelPadding * 2 - titleAreaHeight - layerGap * (labels.length - 1)
-  const layerHeight = layersHeight / labels.length
-  const layers = labels.map(
-    (label) => new FileSystemLayer(layerWidth, layerHeight, 0, 0, label),
-  )
-  return new FileSystem(layers, width, height, x, y, title)
-}
-
-function createRegistry(): Registry {
-  const slot = createRef<Rect>()
-
-  const node = (
-    <Rect
-      layout
-      direction={"column"}
-      justifyContent={"space-evenly"}
-      width={900}
-      height={200}
-      radius={28}
-      fill={"#0f172a"}
-      stroke={"#64748b"}
-      lineWidth={3}
-      padding={24}
-      gap={22}
-      shadowColor={"#00000066"}
-      shadowBlur={24}
-    >
-      <Layout
-        layout
-        direction={"column"}
-        gap={4}
-        alignItems={"start"}
-        width="100%"
-      >
-        <Txt
-          text={"Remote registry"}
-          fontSize={30}
-          fill={"#f8fafc"}
-          fontWeight={700}
-        />
-      </Layout>
-      <Layout
-        layout
-        direction={"column"}
-        gap={4}
-        alignItems={"center"}
-        width="100%"
-      >
-        <Rect
-          ref={slot}
-          width={230}
-          height={100}
-          radius={20}
-          stroke={"#334155"}
-          lineWidth={3}
-          fill={"#020617"}
-        />
-      </Layout>
-    </Rect>
-  ) as Rect
-
-  return {
-    node,
-    imageSlotPosition() {
-      return slot().absolutePosition()
-    },
   }
 }
 
@@ -674,68 +466,13 @@ const playWhatIsAnImage = function* (world: World) {
   yield* fsLayers.collapse("image fs (read-only)", 3)
 }
 
-function createLocalsystem(): LocalSystem {
-  const slot = createRef<Rect>()
-  const label = createRef<Layout>()
+const playWhatIsAContainer = function* (world: World) {
+  const { localSystem } = world.elements ?? {}
 
-  const node = (
-    <Rect
-      layout
-      direction={"column"}
-      justifyContent={"space-between"}
-      width={900}
-      height={200}
-      radius={28}
-      fill={"#0f172a"}
-      stroke={"#64748b"}
-      lineWidth={3}
-      padding={24}
-      gap={22}
-      shadowColor={"#00000066"}
-      shadowBlur={24}
-    >
-      <Layout
-        layout
-        direction={"column"}
-        gap={4}
-        alignItems={"start"}
-        width="100%"
-        ref={label}
-      >
-        <Txt
-          text={"Local system"}
-          fontSize={30}
-          fill={"#f8fafc"}
-          fontWeight={700}
-        />
-      </Layout>
-      <Layout
-        layout
-        direction={"column"}
-        gap={4}
-        alignItems={"center"}
-        width="100%"
-      >
-        <Rect
-          ref={slot}
-          width={230}
-          height={100}
-          radius={20}
-          stroke={"#334155"}
-          lineWidth={3}
-          fill={"#020617"}
-        />
-      </Layout>
-    </Rect>
-  ) as Rect
-
-  return {
-    node,
-    label,
-    slot,
+  if (!localSystem) {
+    return
   }
 }
-
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
@@ -777,6 +514,8 @@ export default makeScene2D(function* (view) {
   yield* playPullImage(world)
 
   yield* playWhatIsAnImage(world)
+
+  yield* playWhatIsAContainer(world)
 
   // playWhatIsAContainer -> docker create
   // playWhatIsAProcess -> docker start
