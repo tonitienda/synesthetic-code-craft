@@ -27,7 +27,10 @@
     "screenshots:containers": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process",
     "start:containers:alive": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-alive.ts vite",
     "build:containers:alive": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-alive.ts vite build",
-    "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive"
+    "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive",
+    "start:containers:v2": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-v2.ts vite",
+    "build:containers:v2": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-v2.ts vite build",
+    "screenshots:containers:v2": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-v2"
   },
   "dependencies": {
     "@motion-canvas/2d": "^3.17.2",
