@@ -431,8 +431,6 @@ class FileSystemLayer {
         justifyContent={"center"}
         width={width}
         height={height}
-        x={x}
-        y={y}
         paddingLeft={26}
         radius={12}
         fill={"#0f172a88"}
@@ -453,6 +451,7 @@ class FileSystemLayer {
 class FileSystem {
   layers: FileSystemLayer[]
   node: Rect
+  layersContainer: Reference<Layout>
 
   constructor(
     layers: FileSystemLayer[],
@@ -463,6 +462,7 @@ class FileSystem {
     title: string,
   ) {
     this.layers = layers
+    this.layersContainer = createRef<Layout>()
     this.node = (
       <Rect
         layout
@@ -485,11 +485,14 @@ class FileSystem {
       >
         <Txt text={title} fontSize={28} fill={"#38bdf8"} fontWeight={700} />
         <Layout
+          ref={this.layersContainer}
           layout
           direction={"column"}
           gap={12}
           alignItems={"center"}
+          justifyContent={"end"}
           width={"100%"}
+          height={"100%"}
         >
           {[...this.layers].reverse().map((layer) => layer.node)}
         </Layout>
@@ -503,6 +506,27 @@ class FileSystem {
         chain(waitFor(index * 0.2), layer.node.opacity(1, duration)),
       ),
     )
+  }
+
+  *collapse(label: string, duration: number) {
+    const survivingLayer = this.layers[0]
+    const collapsingLayers = this.layers.slice(1)
+    const originalHeight = survivingLayer.node.height()
+
+    yield* all(
+      survivingLayer.label.text(label, duration),
+      ...collapsingLayers.map((layer) =>
+        all(
+          layer.label.opacity(0, duration),
+          layer.node.height(0, duration),
+          layer.node.lineWidth(0, duration),
+        ),
+      ),
+    )
+
+    collapsingLayers.forEach((layer) => layer.node.remove())
+
+    this.layers = [survivingLayer]
   }
 }
 
@@ -619,7 +643,7 @@ const playWhatIsAnImage = function* (world: World) {
     ),
     narrate(
       world.narrator,
-      "An image is a static snapshot of a filesystem. It is inert, and cannot run.",
+      "An image is a static snapshot of a filesystem built in layers. It is inert, and cannot run.",
       8,
     ),
   )
@@ -646,6 +670,8 @@ const playWhatIsAnImage = function* (world: World) {
     fsLayers.node.opacity(1, 0.5),
   )
   yield* fsLayers.appear(0.5)
+
+  yield* fsLayers.collapse("image fs (read-only)", 3)
 }
 
 function createLocalsystem(): LocalSystem {
