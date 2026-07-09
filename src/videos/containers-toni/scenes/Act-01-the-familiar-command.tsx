@@ -376,11 +376,11 @@ function createDockerImageBox(label: string): DockerImage {
       width={220}
       height={86}
       radius={18}
-      fill={"#111827"}
-      stroke={"#38bdf8"}
-      lineWidth={4}
-      shadowColor={"#38bdf866"}
-      shadowBlur={18}
+      fill={"#0f172acc"}
+      stroke={"#7dd3fc99"}
+      lineWidth={3}
+      shadowColor={"#38bdf833"}
+      shadowBlur={14}
     >
       <Txt
         text={label}
@@ -420,28 +420,28 @@ class FileSystemLayer {
     label: string,
   ) {
     this.label = (
-      <Txt
-        text={label}
-        fontSize={20}
-        fill={"#94a3b8"}
-        fontFamily={"monospace"}
-      />
+      <Txt text={label} fontSize={26} fill={"#f8fafc"} fontWeight={700} />
     ) as Txt
 
     this.node = (
       <Rect
         layout
         direction={"column"}
-        alignItems={"center"}
+        alignItems={"start"}
         justifyContent={"center"}
         width={width}
         height={height}
         x={x}
         y={y}
+        paddingLeft={26}
         radius={12}
-        fill={"#1e293b"}
-        stroke={"#334155"}
-        lineWidth={2}
+        fill={"#0f172a88"}
+        stroke={"#7dd3fc99"}
+        lineWidth={3}
+        shadowColor={"#38bdf833"}
+        shadowBlur={14}
+        //backdropBlur={8}
+        opacity={0}
       >
         {this.label}
       </Rect>
@@ -452,15 +452,49 @@ class FileSystemLayer {
 // Composes, manages and animates a filesystem representation. Each layer is a FileSystemLayer, and the layers are stacked vertically. The layers can be animated to appear one by one, or all at once.
 class FileSystem {
   layers: FileSystemLayer[]
-  node: Layout
+  node: Rect
 
-  constructor(layers: FileSystemLayer[]) {
+  constructor(
+    layers: FileSystemLayer[],
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    title: string,
+  ) {
     this.layers = layers
     this.node = (
-      <Layout layout direction={"column"} gap={4} alignItems={"center"}>
-        {this.layers.map((layer) => layer.node)}
-      </Layout>
-    ) as Layout
+      <Rect
+        layout
+        direction={"column"}
+        alignItems={"start"}
+        justifyContent={"start"}
+        width={width}
+        height={height}
+        x={x}
+        y={y}
+        padding={32}
+        gap={52}
+        radius={28}
+        fill={"#0f172a88"}
+        stroke={"#7dd3fc99"}
+        lineWidth={3}
+        shadowColor={"#38bdf833"}
+        shadowBlur={14}
+        //backdropBlur={8}
+      >
+        <Txt text={title} fontSize={28} fill={"#38bdf8"} fontWeight={700} />
+        <Layout
+          layout
+          direction={"column"}
+          gap={12}
+          alignItems={"center"}
+          width={"100%"}
+        >
+          {[...this.layers].reverse().map((layer) => layer.node)}
+        </Layout>
+      </Rect>
+    ) as Rect
   }
 
   appear(duration: number) {
@@ -477,13 +511,20 @@ const createFileSystemLayers = (
   height: number,
   x: number,
   y: number,
+  title: string,
   labels: string[],
 ): FileSystem => {
-  const layerHeight = height / labels.length
+  const panelPadding = 32
+  const titleAreaHeight = 86
+  const layerGap = 12
+  const layerWidth = width - panelPadding * 2
+  const layersHeight =
+    height - panelPadding * 2 - titleAreaHeight - layerGap * (labels.length - 1)
+  const layerHeight = layersHeight / labels.length
   const layers = labels.map(
-    (label) => new FileSystemLayer(width, layerHeight, x, y, label),
+    (label) => new FileSystemLayer(layerWidth, layerHeight, 0, 0, label),
   )
-  return new FileSystem(layers)
+  return new FileSystem(layers, width, height, x, y, title)
 }
 
 function createRegistry(): Registry {
@@ -584,26 +625,27 @@ const playWhatIsAnImage = function* (world: World) {
   )
 
   const fsLayers = createFileSystemLayers(
-    localImage.node.width() - PADDING * 2,
-    VIDEO_HEIGHT / 2 - PADDING,
+    localImage.node.width(),
+    localImage.node.height(),
     localImage.node.x(),
     localImage.node.y(),
+    "nginx",
     [
       "base filesystem",
       "packages",
       "runtime dependencies",
       "application files",
-      "packages",
     ],
   )
+  fsLayers.node.opacity(0)
   world.overlay().add(fsLayers.node)
 
+  yield* all(
+    localImage.node.opacity(0, 0.5),
+    localSystem.slot().opacity(0, 0.5),
+    fsLayers.node.opacity(1, 0.5),
+  )
   yield* fsLayers.appear(0.5)
-
-  // Expand the docker image horizontally to use as much as possible
-  // Leave the local system title on the top left out of the way
-  // ..
-  // Expand the image into fs layers. Explain what they are.
 }
 
 function createLocalsystem(): LocalSystem {
