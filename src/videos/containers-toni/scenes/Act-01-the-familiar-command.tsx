@@ -1,10 +1,11 @@
-import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
+import { Layout, Txt, Rect, Line, makeScene2D } from "@motion-canvas/2d"
 import {
   all,
   chain,
   createRef,
   delay,
   Reference,
+  Vector2,
   waitFor,
 } from "@motion-canvas/core"
 import {
@@ -27,28 +28,38 @@ const NARRATION_ENABLED = true
 const VIDEO_WIDTH = 1920
 const VIDEO_HEIGHT = 1080
 
+const toWorldX = (x: number, width: number) => x - VIDEO_WIDTH / 2 + width / 2
+const toWorldY = (y: number, height: number) =>
+  y - VIDEO_HEIGHT / 2 + height / 2
+
+const PADDING = 24
+
 type World = {
   narrator: Reference<Txt>
   background: Reference<Layout>
   stage: Reference<Layout>
   overlay: Reference<Layout>
-  elements?: {
+  elements: {
     liftedCommand?: LiftedCommandPhrase
     terminal?: Terminal
+    registry?: Registry
+    localSystem?: Registry // We will need a different type here for the fs layers, etc
+    registryImage?: DockerImage
+    localImage?: DockerImage
   }
 }
 
 const playIntro = function* (world: World) {
   const terminal = createTerminal({
     title: "local shell",
-    width: VIDEO_WIDTH * 0.4,
-    height: VIDEO_HEIGHT * 0.9,
+    width: VIDEO_WIDTH / 2 - PADDING * 2,
+    height: VIDEO_HEIGHT - PADDING * 2,
     fontSize: 30,
     typingDelay: 0.1,
   })
 
-  terminal.node.y(0)
-  terminal.node.x(-VIDEO_WIDTH * 0.28)
+  terminal.node.y(toWorldY(PADDING, terminal.node.height()))
+  terminal.node.x(toWorldX(PADDING, terminal.node.width()))
   terminal.node.opacity(0)
 
   world.stage().add(terminal.node)
@@ -174,7 +185,13 @@ const playImageRegistry = function* (world: World) {
 
   // Create the Registry visual on the right.
   const registry = createRegistry()
-  registry.node.position([VIDEO_WIDTH / 4, -400])
+  registry.node.position([
+    toWorldX(
+      VIDEO_WIDTH - registry.node.width() - PADDING,
+      registry.node.width(),
+    ),
+    toWorldY(PADDING, registry.node.height()),
+  ])
   registry.node.opacity(0)
   registry.node.scale(0.96)
 
@@ -211,33 +228,40 @@ const playImageRegistry = function* (world: World) {
 
   yield* waitFor(5)
 
+  if (!world.elements) {
+    world.elements = {}
+  }
+  world.elements.registryImage = nginxImage
+  world.elements.registry = registry
+
   yield* nginxToken.fill(Theme.text, 0.5)
 }
 
 const playPullImage = function* (world: World) {
-  const { terminal } = world.elements ?? {}
+  const { terminal, registryImage } = world.elements ?? {}
 
-  if (!terminal) {
+  if (!terminal || !registryImage) {
     return
   }
 
   const localSystem = createLocalsystem()
 
-  localSystem.node.position([VIDEO_WIDTH / 4, 400])
+  localSystem.node.position([
+    toWorldX(
+      VIDEO_WIDTH - localSystem.node.width() - PADDING,
+      localSystem.node.width(),
+    ),
+    toWorldY(
+      VIDEO_HEIGHT - PADDING - localSystem.node.height(),
+      localSystem.node.height(),
+    ),
+  ])
   localSystem.node.opacity(0)
   localSystem.node.scale(0.96)
 
   world.stage().add(localSystem.node)
 
-  yield* all(
-    localSystem.node.opacity(1, 1),
-    localSystem.node.scale(1, 1),
-    narrate(
-      world.narrator,
-      "The image is pulled from the registry to your local system.",
-      4,
-    ),
-  )
+  yield* all(localSystem.node.opacity(1, 1), localSystem.node.scale(1, 1))
 
   yield* waitFor(5)
 
@@ -249,7 +273,10 @@ const playPullImage = function* (world: World) {
     return
   }
 
-  yield* findLocallyLine.textRef().fill(Theme.highlight, 0.5)
+  yield* all(
+    findLocallyLine.textRef().fill(Theme.highlight, 0.5),
+    narrate(world.narrator, "The image is searched in your local system.", 4),
+  )
 
   yield* waitFor(2)
 
@@ -262,23 +289,53 @@ const playPullImage = function* (world: World) {
   yield* all(
     findLocallyLine.textRef().fill(Theme.text, 0.5),
     pullLine.textRef().fill(Theme.highlight, 0.5),
+    narrate(
+      world.narrator,
+      "Since it is not found, the image will be downloaded from the registry.",
+      4,
+    ),
+  )
+
+  const localSlotCenter = localSystem.imageSlotPosition()
+
+  const localImage = createDockerImageBox("nginx")
+  localImage.node.position(registryImage.node.position()) // TODO - Maybe absolute position
+  localImage.node.opacity(0)
+  localImage.node.scale(1)
+
+  world.overlay().add(localImage.node)
+
+  // TODO - Animate the image falling more organically. squashing and stretching and accelerating. Maybe even a little bounce at the end. But not too much, it should feel like a heavy object.
+  yield* all(
+    localImage.node.opacity(1, 0.3),
+    localImage.node.scale(1, 0.5),
+    localImage.node.absolutePosition(localSlotCenter, 1.2),
+  )
+
+  yield* waitFor(5)
+  yield* all(
+    pullLine.textRef().fill(Theme.text, 0.5),
+    narrate(world.narrator, "The image is now stored in your local system.", 4),
   )
 
   yield* waitFor(2)
+
+  world.elements.localImage = localImage
+  world.elements.localSystem = localSystem
 }
 
-const playExpandRunCommand = function* (world: World) {
-  const { liftedCommand } = world.elements ?? {}
+// const playExpandRunCommand = function* (world: World) {
+//   const { liftedCommand } = world.elements ?? {}
 
-  if (!liftedCommand) {
-    return
-  }
+//   if (!liftedCommand) {
+//     return
+//   }
 
-  const runToken = liftedCommand.phrase.token("run")
-  if (!runToken) {
-    return
-  }
-}
+//   const runToken = liftedCommand.phrase.token("run")
+//   if (!runToken) {
+//     return
+//   }
+// }
 
 const colors = {
   bg: "#090b1a",
@@ -305,7 +362,11 @@ function* narrate(
   }
 }
 
-function createDockerImageBox(label: string) {
+type DockerImage = {
+  node: Rect
+}
+
+function createDockerImageBox(label: string): DockerImage {
   const node = (
     <Rect
       layout
@@ -336,7 +397,12 @@ function createDockerImageBox(label: string) {
   }
 }
 
-function createRegistry() {
+type Registry = {
+  node: Rect
+  imageSlotPosition(): Vector2
+}
+
+function createRegistry(): Registry {
   const slot = createRef<Rect>()
 
   const node = (
@@ -386,6 +452,28 @@ function createRegistry() {
       return slot().absolutePosition()
     },
   }
+}
+
+const playWhatIsAnImage = function* (world: World) {
+  const { registry, localSystem, registryImage } = world.elements ?? {}
+
+  if (!registry || !localSystem || !registryImage) {
+    return
+  }
+
+  const localSystemTargetHeight = VIDEO_HEIGHT - PADDING * 2
+
+  yield* all(
+    registry.node.y(-1000, 2),
+    registryImage.node.y(-1000, 2),
+    localSystem.node.height(localSystemTargetHeight, 2),
+    localSystem.node.y(toWorldY(PADDING, localSystemTargetHeight), 2),
+  )
+  // Expand local system vertically and push remote registry out of the scene.
+  // Expand the docker image horizontally to use as much as possible
+  // Leave the local system title on the top left out of the way
+  // ..
+  // Expand the image into fs layers. Explain what they are.
 }
 
 function createLocalsystem() {
@@ -446,7 +534,6 @@ export default makeScene2D(function* (view) {
   const background = createRef<Layout>()
   const stage = createRef<Layout>()
   const overlay = createRef<Layout>()
-  //const captions = createRef<Layout>()
 
   view.add(<Layout ref={background} width={"100%"} height={"100%"} />)
   view.add(<Layout ref={stage} width={"100%"} height={"100%"} />)
@@ -470,6 +557,7 @@ export default makeScene2D(function* (view) {
     background,
     stage,
     overlay,
+    elements: {},
   }
 
   yield* playIntro(world)
@@ -480,7 +568,18 @@ export default makeScene2D(function* (view) {
 
   yield* playPullImage(world)
 
-  yield* playExpandRunCommand(world)
+  yield* playWhatIsAnImage(world)
+
+  // playWhatIsAContainer -> docker create
+  // playWhatIsAProcess -> docker start
+
+  // playMutipleContainers containers side be side reading shared layers, writing to they own writtable layer
+
+  // playNamespaceCgroups -- only one container again. Explain the concepts
+
+  // playClosingScene -- not sure
+
+  //yield* playExpandRunCommand(world)
   // TODO - Potentially add more info about the registry, types, what they are, some metaphor, etc. But no need to go into a lot of detail.
 
   // EXPLAIN THE RUN COMMAND - Split in 3 operations
