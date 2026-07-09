@@ -43,7 +43,7 @@ type World = {
     liftedCommand?: LiftedCommandPhrase
     terminal?: Terminal
     registry?: Registry
-    localSystem?: Registry // We will need a different type here for the fs layers, etc
+    localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
     registryImage?: DockerImage
     localImage?: DockerImage
   }
@@ -296,7 +296,7 @@ const playPullImage = function* (world: World) {
     ),
   )
 
-  const localSlotCenter = localSystem.imageSlotPosition()
+  const localSlotCenter = localSystem.slot().absolutePosition()
 
   const localImage = createDockerImageBox("nginx")
   localImage.node.position(registryImage.node.position()) // TODO - Maybe absolute position
@@ -402,14 +402,97 @@ type Registry = {
   imageSlotPosition(): Vector2
 }
 
+type LocalSystem = {
+  node: Rect
+  label: Reference<Layout>
+  slot: Reference<Rect>
+}
+
+class FileSystemLayer {
+  node: Rect
+  label: Txt
+
+  constructor(
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    label: string,
+  ) {
+    this.label = (
+      <Txt
+        text={label}
+        fontSize={20}
+        fill={"#94a3b8"}
+        fontFamily={"monospace"}
+      />
+    ) as Txt
+
+    this.node = (
+      <Rect
+        layout
+        direction={"column"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        width={width}
+        height={height}
+        x={x}
+        y={y}
+        radius={12}
+        fill={"#1e293b"}
+        stroke={"#334155"}
+        lineWidth={2}
+      >
+        {this.label}
+      </Rect>
+    ) as Rect
+  }
+}
+
+// Composes, manages and animates a filesystem representation. Each layer is a FileSystemLayer, and the layers are stacked vertically. The layers can be animated to appear one by one, or all at once.
+class FileSystem {
+  layers: FileSystemLayer[]
+  node: Layout
+
+  constructor(layers: FileSystemLayer[]) {
+    this.layers = layers
+    this.node = (
+      <Layout layout direction={"column"} gap={4} alignItems={"center"}>
+        {this.layers.map((layer) => layer.node)}
+      </Layout>
+    ) as Layout
+  }
+
+  appear(duration: number) {
+    return all(
+      ...this.layers.map((layer, index) =>
+        chain(waitFor(index * 0.2), layer.node.opacity(1, duration)),
+      ),
+    )
+  }
+}
+
+const createFileSystemLayers = (
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  labels: string[],
+): FileSystem => {
+  const layerHeight = height / labels.length
+  const layers = labels.map(
+    (label) => new FileSystemLayer(width, layerHeight, x, y, label),
+  )
+  return new FileSystem(layers)
+}
+
 function createRegistry(): Registry {
   const slot = createRef<Rect>()
 
   const node = (
     <Rect
       layout
-      direction={"row"}
-      alignItems={"center"}
+      direction={"column"}
       justifyContent={"space-evenly"}
       width={900}
       height={200}
@@ -422,27 +505,37 @@ function createRegistry(): Registry {
       shadowColor={"#00000066"}
       shadowBlur={24}
     >
-      <Layout layout direction={"column"} gap={4} alignItems={"start"}>
+      <Layout
+        layout
+        direction={"column"}
+        gap={4}
+        alignItems={"start"}
+        width="100%"
+      >
         <Txt
-          text={"Registry"}
-          fontSize={38}
+          text={"Remote registry"}
+          fontSize={30}
           fill={"#f8fafc"}
           fontWeight={700}
         />
-
-        <Txt text={"remote image store"} fontSize={22} fill={"#94a3b8"} />
       </Layout>
-
-      <Rect
-        ref={slot}
-        width={230}
-        height={100}
-        radius={20}
-        stroke={"#334155"}
-        lineWidth={3}
-        fill={"#020617"}
-        marginTop={18}
-      />
+      <Layout
+        layout
+        direction={"column"}
+        gap={4}
+        alignItems={"center"}
+        width="100%"
+      >
+        <Rect
+          ref={slot}
+          width={230}
+          height={100}
+          radius={20}
+          stroke={"#334155"}
+          lineWidth={3}
+          fill={"#020617"}
+        />
+      </Layout>
     </Rect>
   ) as Rect
 
@@ -455,9 +548,10 @@ function createRegistry(): Registry {
 }
 
 const playWhatIsAnImage = function* (world: World) {
-  const { registry, localSystem, registryImage } = world.elements ?? {}
+  const { registry, localSystem, registryImage, localImage } =
+    world.elements ?? {}
 
-  if (!registry || !localSystem || !registryImage) {
+  if (!registry || !localSystem || !registryImage || !localImage) {
     return
   }
 
@@ -468,23 +562,59 @@ const playWhatIsAnImage = function* (world: World) {
     registryImage.node.y(-1000, 2),
     localSystem.node.height(localSystemTargetHeight, 2),
     localSystem.node.y(toWorldY(PADDING, localSystemTargetHeight), 2),
+    narrate(world.narrator, "But what is exactly an image?", 4),
   )
-  // Expand local system vertically and push remote registry out of the scene.
+
+  yield* all(
+    chain(
+      localImage.node.width(localSystem.node.width() - PADDING * 2, 2),
+      all(
+        localImage.node.height(VIDEO_HEIGHT / 2 - PADDING, 2),
+        localImage.node.y(
+          toWorldY(VIDEO_HEIGHT / 2 - PADDING, VIDEO_HEIGHT / 2 - PADDING),
+          2,
+        ),
+      ),
+    ),
+    narrate(
+      world.narrator,
+      "An image is a static snapshot of a filesystem. It is inert, and cannot run.",
+      8,
+    ),
+  )
+
+  const fsLayers = createFileSystemLayers(
+    localImage.node.width() - PADDING * 2,
+    VIDEO_HEIGHT / 2 - PADDING,
+    localImage.node.x(),
+    localImage.node.y(),
+    [
+      "base filesystem",
+      "packages",
+      "runtime dependencies",
+      "application files",
+      "packages",
+    ],
+  )
+  world.overlay().add(fsLayers.node)
+
+  yield* fsLayers.appear(0.5)
+
   // Expand the docker image horizontally to use as much as possible
   // Leave the local system title on the top left out of the way
   // ..
   // Expand the image into fs layers. Explain what they are.
 }
 
-function createLocalsystem() {
+function createLocalsystem(): LocalSystem {
   const slot = createRef<Rect>()
+  const label = createRef<Layout>()
 
   const node = (
     <Rect
       layout
-      direction={"row"}
-      alignItems={"center"}
-      justifyContent={"space-evenly"}
+      direction={"column"}
+      justifyContent={"space-between"}
       width={900}
       height={200}
       radius={28}
@@ -496,35 +626,45 @@ function createLocalsystem() {
       shadowColor={"#00000066"}
       shadowBlur={24}
     >
-      <Layout layout direction={"column"} gap={4} alignItems={"start"}>
+      <Layout
+        layout
+        direction={"column"}
+        gap={4}
+        alignItems={"start"}
+        width="100%"
+        ref={label}
+      >
         <Txt
-          text={"Local System"}
-          fontSize={38}
+          text={"Local system"}
+          fontSize={30}
           fill={"#f8fafc"}
           fontWeight={700}
         />
-
-        <Txt text={"remote image store"} fontSize={22} fill={"#94a3b8"} />
       </Layout>
-
-      <Rect
-        ref={slot}
-        width={230}
-        height={100}
-        radius={20}
-        stroke={"#334155"}
-        lineWidth={3}
-        fill={"#020617"}
-        marginTop={18}
-      />
+      <Layout
+        layout
+        direction={"column"}
+        gap={4}
+        alignItems={"center"}
+        width="100%"
+      >
+        <Rect
+          ref={slot}
+          width={230}
+          height={100}
+          radius={20}
+          stroke={"#334155"}
+          lineWidth={3}
+          fill={"#020617"}
+        />
+      </Layout>
     </Rect>
   ) as Rect
 
   return {
     node,
-    imageSlotPosition() {
-      return slot().absolutePosition()
-    },
+    label,
+    slot,
   }
 }
 
