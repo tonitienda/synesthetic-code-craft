@@ -1121,9 +1121,14 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
 
   const base: SharedImageBase = { node: readonlyNode }
 
+  // The cards live in world.stage() alongside the base, so place them in the
+  // base's LOCAL space — not the absolute space `roPos` is in. (Mixing the two
+  // offsets the cards by the stage transform and shoves them off-screen.)
+  const baseLocal = readonlyNode.position()
+
   // Two container boxes sit directly on top of the base — touching it, no gaps
   // and no connector lines — side by side and centred over it.
-  const topEdgeY = roPos.y - roH / 2
+  const topEdgeY = baseLocal.y - roH / 2
   const cardHeight = 320
   const cardCenterY = topEdgeY - cardHeight / 2
   const cardWidth = 372
@@ -1134,7 +1139,7 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
   // container we've been looking at", now drawn as a discrete box on the base.
   const A = createContainerCard("web-1")
   A.node.width(roW)
-  A.node.position([roPos.x, cardCenterY])
+  A.node.position([baseLocal.x, cardCenterY])
   A.node.opacity(0)
   world.stage().add(A.node)
 
@@ -1154,18 +1159,18 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
   // emerges to the right — both still resting on the exact same base beneath.
   const B = createContainerCard("web-2")
   B.node.width(cardWidth)
-  B.node.position([roPos.x, cardCenterY])
+  B.node.position([baseLocal.x, cardCenterY])
   B.node.opacity(0)
   world.stage().add(B.node)
 
   yield* all(
     A.node.width(cardWidth, 0.9, easeInOutCubic),
-    A.node.x(roPos.x - splitX, 0.9, easeInOutCubic),
+    A.node.x(baseLocal.x - splitX, 0.9, easeInOutCubic),
     delay(
       0.15,
       all(
         B.node.opacity(1, 0.75),
-        B.node.x(roPos.x + splitX, 0.9, easeInOutCubic),
+        B.node.x(baseLocal.x + splitX, 0.9, easeInOutCubic),
       ),
     ),
     // The base glows once to say: both of these rest on the one shared image.
@@ -1202,38 +1207,6 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
   )
 
   yield* waitFor(0.8)
-
-  // TEMP-DEBUG
-  console.log(
-    "DEBUG-CARDS " +
-      JSON.stringify({
-        roPos: [Math.round(roPos.x), Math.round(roPos.y)],
-        roW: Math.round(roW),
-        roH: Math.round(roH),
-        cardCenterY: Math.round(cardCenterY),
-        A: {
-          x: Math.round(A.node.x()),
-          y: Math.round(A.node.y()),
-          absY: Math.round(A.node.absolutePosition().y),
-          w: Math.round(A.node.width()),
-          h: Math.round(A.node.height()),
-          op: A.node.opacity(),
-          parent: A.node.parent()?.key ?? "none",
-        },
-        B: {
-          x: Math.round(B.node.x()),
-          y: Math.round(B.node.y()),
-          w: Math.round(B.node.width()),
-          h: Math.round(B.node.height()),
-          op: B.node.opacity(),
-        },
-        base: {
-          absY: Math.round(base.node.absolutePosition().y),
-          w: Math.round(base.node.width()),
-          op: base.node.opacity(),
-        },
-      }),
-  )
 
   // Both processes are alive — pulse each status light between a bright and a
   // dim green so they read as steady heartbeats without anything resizing.
@@ -1567,9 +1540,6 @@ export default makeScene2D(function* (view) {
 
   // Two containers over one shared read-only image on the host.
   yield* playMultipleContainers(world)
-
-  yield* waitFor(2)
-  if (String(1) === "1") return // TEMP-DEBUG: stop here to inspect two-container frame
 
   // What keeps the two apart, and bounded.
   yield* playNamespaces(world)
