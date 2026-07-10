@@ -55,6 +55,8 @@ type World = {
   overlay: Reference<Layout>
   elements: {
     liftedCommand?: LiftedCommandPhrase
+    /** The middle token of the docked command banner — rotates run/pull/create/start. */
+    phaseToken?: Txt
     terminal?: Terminal
     registry?: Registry
     localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
@@ -96,7 +98,7 @@ const playIntro = function* (world: World) {
   yield* all(
     narrate(
       world.narrator,
-      "If you've spent any time around Docker, you've almost certainly typed something like this.",
+      "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
       6,
     ),
     terminal.typeCommand("docker run nginx", 0.1),
@@ -263,10 +265,25 @@ const playImageRegistry = function* (world: World): ThreadGenerator {
     return
   }
 
+  // The command doesn't leave — it docks in the top-left corner as a small
+  // persistent banner that will narrate which phase of `run` we're in. The
+  // terminal comes back too, but smaller: from here on it's a prop, not the
+  // protagonist.
   yield* all(
-    liftedCommand.phrase.node.opacity(0, 1),
+    liftedCommand.phrase.node.position([-710, -486], 1.2, easeInOutCubic),
+    liftedCommand.phrase.node.scale(0.5, 1.2, easeInOutCubic),
+    // The lift kept the terminal's tight token gap; at banner size the words
+    // fuse together, so open it up to a proper word space.
+    liftedCommand.phrase.node.gap(44, 1.2, easeInOutCubic),
     terminal.node.opacity(1, 1),
+    terminal.node.scale(0.62, 1.2, easeInOutCubic),
+    terminal.node.position([-600, 40], 1.2, easeInOutCubic),
   )
+
+  world.elements.phaseToken = liftedCommand.phrase.token("run")
+
+  // First act of `run`: pull.
+  yield* rotatePhaseToken(world, "pull", colors.amber)
 
   const sourceCommand = terminal.command("docker run nginx")
 
@@ -357,6 +374,11 @@ const playPullImage = function* (world: World): ThreadGenerator {
   // it can persist unchanged all the way through to the container scenes.
   localSystem.title().text("Your machine — the host")
 
+  // Tall enough to hold the terminal (docked into its left half in a moment),
+  // with the image slot pushed to the right half to make room for it.
+  localSystem.node.height(740)
+  localSystem.slot().margin.left(500)
+
   localSystem.node.position([
     toWorldX(
       VIDEO_WIDTH - localSystem.node.width() - PADDING,
@@ -383,12 +405,19 @@ const playPullImage = function* (world: World): ThreadGenerator {
 
   world.stage().add(localSystem.node)
 
+  // The host panel wraps the terminal as it appears: the terminal glides into
+  // the panel's left half while the box materialises around it — no words
+  // needed, the containment says it. (The terminal joined the stage before the
+  // panel, so bring it in front first.)
+  terminal.node.moveToTop()
   yield* all(
     localSystem.node.opacity(1, 1),
     localSystem.node.scale(1, 1, easeOutBack),
+    terminal.node.position([311, 165], 1.4, easeInOutCubic),
+    terminal.node.scale(0.55, 1.4, easeInOutCubic),
     narrate(
       world.narrator,
-      "This box down here is your own machine — the host that Docker is actually running on.",
+      "And where does all of this happen? On your own machine — the host. Docker itself, and the terminal you type into, both run right there.",
       6,
     ),
   )
@@ -407,7 +436,7 @@ const playPullImage = function* (world: World): ThreadGenerator {
     findLocallyLine.textRef().fill(Theme.highlight, 0.5),
     narrate(
       world.narrator,
-      "The very first thing Docker does is look right here on your machine and ask: do I already have this image?",
+      "The very first thing Docker does is check your own machine: do I already have this image?",
       7,
     ),
   )
@@ -472,13 +501,18 @@ const playPullImage = function* (world: World): ThreadGenerator {
     pullLine.textRef().fill(Theme.text, 0.5),
     narrate(
       world.narrator,
-      "And there it is — the image now lives on your machine, ready to go. That's the pull step done.",
+      "Once the last layer arrives, the image lives on your machine, ready to go. That's the pull step done.",
       6,
     ),
     // The terminal has done its one honest job: showing the pull. `docker run`
     // prints nothing for create or start, so instead of leaving it hanging
     // around as a chip, we let it bow out the moment pull is complete.
-    delay(2, terminal.exit(0.9)),
+    // (Not terminal.exit() — that would tween scale back UP to 0.96 from the
+    // docked 0.55; shrink it away in place instead.)
+    delay(
+      2,
+      all(terminal.node.opacity(0, 0.9), terminal.node.scale(0.48, 0.9)),
+    ),
   )
   terminal.node.remove()
 
@@ -516,6 +550,25 @@ function* narrate(
     yield* waitFor(hold)
     yield* narrator().opacity(0, fade)
   }
+}
+
+// Flip the banner's middle token to the next phase of `run` — a little
+// split-flap roll: the word folds shut, swaps, and springs back open.
+function* rotatePhaseToken(
+  world: World,
+  next: string,
+  color: string,
+): ThreadGenerator {
+  const token = world.elements?.phaseToken
+
+  if (!token) {
+    return
+  }
+
+  yield* token.scale.y(0, 0.16, easeInCubic)
+  token.text(next)
+  token.fill(color)
+  yield* token.scale.y(1, 0.22, easeOutBack)
 }
 
 type DockerImage = {
@@ -813,6 +866,9 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   const barWidth = readonlyNode.width()
   const barHeight = readonlyNode.height()
 
+  // The banner rolls on to the second act of `run`.
+  yield* rotatePhaseToken(world, "create", colors.amber)
+
   // 1) CREATE — a container is the image plus a thin writable layer on top.
   // Re-badge the image panel as a "container" and stack the writable layer in.
   const writable = createWritableLayer(barWidth, barHeight)
@@ -841,6 +897,8 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* waitFor(0.5)
 
   // 2) START — the container's main process comes to life as PID 1.
+  yield* rotatePhaseToken(world, "start", colors.amber)
+
   const process = createProcessBox("nginx", "PID 1")
   process.node.scale(0.8)
   imageFs.layersContainer().insert(process.node, 0)
@@ -868,7 +926,7 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   // 3) READ — config is read from the read-only image layer.
   yield* narrate(
     world.narrator,
-    "Now watch how it uses that filesystem. When the process needs its configuration, it reads it straight from the read-only image underneath.",
+    "So how does that process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
     7,
   )
   yield* flow(
@@ -1157,6 +1215,10 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
     return
   }
 
+  // All three phases have played out — the banner settles back to `run`,
+  // which is exactly what we're about to do again with a second container.
+  yield* rotatePhaseToken(world, "run", Theme.text)
+
   // The shared read-only image is the foundation, so it must NOT move. We pin it
   // exactly where it already sits and build everything new on top of it, in
   // place. Going from one container to two never disturbs the base — or the host
@@ -1202,7 +1264,7 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
     imageFs.layers[0].label.text("shared image fs (read-only)", 0.6),
     narrate(
       world.narrator,
-      "So far we've been looking at just one container, sitting on top of that read-only image. Now watch what happens when we run a second one.",
+      "So far, that's a single container sitting on top of a read-only image. But what happens when we run a second one?",
       8,
     ),
   )
@@ -1487,7 +1549,7 @@ const playClosingScene = function* (world: World): ThreadGenerator {
     cmd.scale(1, 0.6, easeOutBack),
     narrate(
       world.narrator,
-      "It still looks like one simple line. But now you know everything it quietly sets in motion.",
+      "docker run nginx still looks like one simple line. But now you know everything it quietly sets in motion.",
       6,
     ),
   )
