@@ -9,6 +9,7 @@ export type Registry = {
 export type LocalSystem = {
   node: Rect
   label: Reference<Layout>
+  title: Reference<Txt>
   slot: Reference<Rect>
 }
 
@@ -76,6 +77,7 @@ export function createRegistry(): Registry {
 export function createLocalsystem(): LocalSystem {
   const slot = createRef<Rect>()
   const label = createRef<Layout>()
+  const title = createRef<Txt>()
 
   const node = (
     <Rect
@@ -102,6 +104,7 @@ export function createLocalsystem(): LocalSystem {
         ref={label}
       >
         <Txt
+          ref={title}
           text={"Local system"}
           fontSize={30}
           fill={"#f8fafc"}
@@ -131,6 +134,7 @@ export function createLocalsystem(): LocalSystem {
   return {
     node,
     label,
+    title,
     slot,
   }
 }

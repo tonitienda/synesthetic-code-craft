@@ -41,10 +41,11 @@ class FileSystemLayer {
 }
 
 // Composes, manages and animates a filesystem representation. Each layer is a FileSystemLayer, and the layers are stacked vertically. The layers can be animated to appear one by one, or all at once.
-class FileSystem {
+export class FileSystem {
   layers: FileSystemLayer[]
   node: Rect
   layersContainer: Reference<Layout>
+  titleRef: Reference<Txt>
 
   constructor(
     layers: FileSystemLayer[],
@@ -56,6 +57,7 @@ class FileSystem {
   ) {
     this.layers = layers
     this.layersContainer = createRef<Layout>()
+    this.titleRef = createRef<Txt>()
     this.node = (
       <Rect
         layout
@@ -76,7 +78,13 @@ class FileSystem {
         shadowBlur={14}
         //backdropBlur={8}
       >
-        <Txt text={title} fontSize={28} fill={"#38bdf8"} fontWeight={700} />
+        <Txt
+          ref={this.titleRef}
+          text={title}
+          fontSize={28}
+          fill={"#38bdf8"}
+          fontWeight={700}
+        />
         <Layout
           ref={this.layersContainer}
           layout

@@ -1,4 +1,4 @@
-import { Layout, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
+import { Circle, Layout, Line, Txt, Rect, makeScene2D } from "@motion-canvas/2d"
 import {
   all,
   cancel,
@@ -6,9 +6,12 @@ import {
   createRef,
   delay,
   easeInCubic,
+  easeInOutCubic,
   easeOutBack,
+  easeOutCubic,
   loop,
   Reference,
+  sequence,
   ThreadGenerator,
   waitFor,
 } from "@motion-canvas/core"
@@ -18,7 +21,10 @@ import {
   defaultTerminalTheme,
 } from "../../../components"
 import { liftCommandPhrase, LiftedCommandPhrase } from "../../../choreography"
-import { createFileSystemLayers } from "../../../components/filesystem"
+import {
+  createFileSystemLayers,
+  FileSystem,
+} from "../../../components/filesystem"
 import {
   LocalSystem,
   Registry,
@@ -53,6 +59,10 @@ type World = {
     localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
     registryImage?: DockerImage
     localImage?: DockerImage
+    imageFs?: FileSystem
+    sharedImage?: SharedImageBase
+    containerA?: ContainerCard
+    containerB?: ContainerCard
   }
   cancellation: {
     registryBreath?: ThreadGenerator
@@ -509,15 +519,794 @@ const playWhatIsAnImage = function* (world: World): ThreadGenerator {
   yield* fsLayers.appear(0.5)
 
   yield* fsLayers.collapse("image fs (read-only)", 3)
+
+  world.elements.imageFs = fsLayers
 }
 
-const playWhatIsAContainer = function* (world: World) {
-  const { localSystem } = world.elements ?? {}
+const containerColors = {
+  readonly: "#7dd3fc", // cool blue — inert, read-only image
+  writable: "#fbbf24", // warm amber — the container's mutable layer
+  process: "#34d399", // green — a live, running process
+  processSoft: "#34d39922",
+}
 
-  if (!localSystem) {
+type WritableLayer = {
+  node: Rect
+  chipsRow: Reference<Layout>
+}
+
+// A warm, amber "read-write" layer that stacks on top of the read-only image.
+function createWritableLayer(width: number, height: number): WritableLayer {
+  const chipsRow = createRef<Layout>()
+
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"start"}
+      justifyContent={"center"}
+      gap={10}
+      width={width}
+      height={height}
+      paddingLeft={26}
+      paddingRight={26}
+      radius={12}
+      fill={"#1c130088"}
+      stroke={containerColors.writable + "cc"}
+      lineWidth={3}
+      shadowColor={containerColors.writable + "22"}
+      shadowBlur={14}
+      opacity={0}
+    >
+      <Txt
+        text={"writable layer (read-write)"}
+        fontSize={24}
+        fill={containerColors.writable}
+        fontWeight={700}
+      />
+      <Layout ref={chipsRow} layout direction={"row"} gap={10} />
+    </Rect>
+  ) as Rect
+
+  return { node, chipsRow }
+}
+
+// The container's main process, drawn as a live "pill" with a status dot.
+function createProcessBox(name: string, pid: string): { node: Rect } {
+  const node = (
+    <Rect
+      layout
+      direction={"row"}
+      gap={14}
+      alignItems={"center"}
+      justifyContent={"center"}
+      paddingLeft={28}
+      paddingRight={28}
+      height={78}
+      radius={999}
+      fill={containerColors.processSoft}
+      stroke={containerColors.process}
+      lineWidth={3}
+      shadowColor={containerColors.process + "44"}
+      shadowBlur={20}
+      opacity={0}
+    >
+      <Circle size={16} fill={containerColors.process} />
+      <Txt
+        text={name}
+        fontFamily={"monospace"}
+        fontSize={34}
+        fill={"#ecfdf5"}
+      />
+      <Txt text={pid} fontSize={22} fill={containerColors.process} />
+    </Rect>
+  ) as Rect
+
+  return { node }
+}
+
+// A small monospace "packet" that travels between the process and a layer to
+// represent a single read or write of a specific file.
+function createPacket(text: string, color: string): Rect {
+  return (
+    <Rect
+      layout
+      alignItems={"center"}
+      justifyContent={"center"}
+      paddingLeft={16}
+      paddingRight={16}
+      height={40}
+      radius={10}
+      fill={"#020617ee"}
+      stroke={color}
+      lineWidth={2}
+      shadowColor={color + "55"}
+      shadowBlur={16}
+      opacity={0}
+    >
+      <Txt text={text} fontFamily={"monospace"} fontSize={22} fill={color} />
+    </Rect>
+  ) as Rect
+}
+
+// A persisted file that lives inside the writable layer after a write.
+function createFileChip(text: string, color: string): Rect {
+  return (
+    <Rect
+      layout
+      alignItems={"center"}
+      justifyContent={"center"}
+      paddingLeft={12}
+      paddingRight={12}
+      height={34}
+      radius={8}
+      fill={color + "22"}
+      stroke={color + "aa"}
+      lineWidth={2}
+      opacity={0}
+    >
+      <Txt text={text} fontFamily={"monospace"} fontSize={20} fill={color} />
+    </Rect>
+  ) as Rect
+}
+
+// Send a packet from one node to another along an eased path, then clean it up.
+function* flow(
+  world: World,
+  from: Layout,
+  to: Layout,
+  label: string,
+  color: string,
+  pulseTarget: boolean,
+): ThreadGenerator {
+  const packet = createPacket(label, color)
+  world.overlay().add(packet)
+  packet.absolutePosition(from.absolutePosition())
+  packet.scale(0.9)
+
+  yield* packet.opacity(1, 0.2)
+  yield* packet.absolutePosition(to.absolutePosition(), 0.8, easeInOutCubic)
+
+  if (pulseTarget) {
+    yield* to.scale(1.05, 0.15).to(1, 0.2)
+  } else {
+    yield* waitFor(0.15)
+  }
+
+  yield* packet.opacity(0, 0.3)
+  packet.remove()
+}
+
+const playWhatIsAContainer = function* (world: World): ThreadGenerator {
+  const { imageFs } = world.elements ?? {}
+
+  if (!imageFs) {
     return
   }
+
+  const readonlyNode = imageFs.layers[0].node
+  const barWidth = readonlyNode.width()
+  const barHeight = readonlyNode.height()
+
+  // 1) CREATE — a container is the image plus a thin writable layer on top.
+  // Re-badge the image panel as a "container" and stack the writable layer in.
+  const writable = createWritableLayer(barWidth, barHeight)
+  writable.node.height(0)
+  imageFs.layersContainer().insert(writable.node, 0)
+
+  yield* all(
+    imageFs.titleRef().text("container", 0.6),
+    imageFs.titleRef().fill(containerColors.writable, 0.6),
+    narrate(
+      world.narrator,
+      "Creating a container adds a thin writable layer on top of the read-only image.",
+      6,
+    ),
+    delay(
+      0.6,
+      all(
+        writable.node.height(barHeight, 0.9, easeOutCubic),
+        writable.node.opacity(1, 0.7),
+      ),
+    ),
+  )
+
+  yield* waitFor(0.5)
+
+  // 2) START — the container's main process comes to life as PID 1.
+  const process = createProcessBox("nginx", "PID 1")
+  process.node.scale(0.8)
+  imageFs.layersContainer().insert(process.node, 0)
+
+  yield* all(
+    process.node.opacity(1, 0.5),
+    process.node.scale(1, 0.5, easeOutBack),
+    narrate(
+      world.narrator,
+      "Starting the container launches the image's main process as PID 1.",
+      6,
+    ),
+  )
+
+  // Unlike the inert image, the process has a heartbeat.
+  const processBreath = yield loop(Infinity, () =>
+    process.node.scale(1, 0.9).to(1.03, 0.9),
+  )
+
+  yield* waitFor(0.6)
+
+  // 3) READ — config is read from the read-only image layer.
+  yield* narrate(
+    world.narrator,
+    "It reads its configuration straight from the read-only image...",
+    4,
+  )
+  yield* flow(
+    world,
+    readonlyNode,
+    process.node,
+    "read  /etc/nginx/nginx.conf",
+    containerColors.readonly,
+    false,
+  )
+
+  yield* waitFor(0.4)
+
+  // 4) WRITE — logs are written to the writable layer, never the image.
+  yield* narrate(
+    world.narrator,
+    "...but every write goes to the writable layer — the image is never touched.",
+    6,
+  )
+  yield* flow(
+    world,
+    process.node,
+    writable.node,
+    "write  /var/log/nginx/access.log",
+    containerColors.writable,
+    true,
+  )
+
+  // The write persists: the file now lives in the writable layer.
+  const chip = createFileChip("access.log", containerColors.writable)
+  chip.scale(0.8)
+  writable.chipsRow().add(chip)
+  yield* all(chip.opacity(1, 0.4), chip.scale(1, 0.4, easeOutBack))
+
+  yield* waitFor(1)
+
+  // Land the point: same image, isolated changes.
+  yield* all(
+    readonlyNode.scale(1.03, 0.3).to(1, 0.4),
+    imageFs.layers[0].label.fill(containerColors.readonly, 0.4),
+    narrate(
+      world.narrator,
+      "Same read-only image, isolated changes. That is a container.",
+      5,
+    ),
+  )
+
+  yield* waitFor(1)
+
+  cancel(processBreath)
+  yield* process.node.scale(1, 0.3)
 }
+
+// ---------------------------------------------------------------------------
+// docker run = pull + create + start
+// ---------------------------------------------------------------------------
+
+function createStepCard(name: string, gloss: string): Rect {
+  return (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"center"}
+      justifyContent={"center"}
+      gap={14}
+      width={380}
+      height={190}
+      paddingLeft={20}
+      paddingRight={20}
+      radius={20}
+      fill={"#0f172acc"}
+      stroke={colors.amber + "99"}
+      lineWidth={3}
+      shadowColor={"#00000055"}
+      shadowBlur={18}
+      opacity={0}
+    >
+      <Txt
+        text={`docker ${name}`}
+        fontFamily={"monospace"}
+        fontSize={32}
+        fill={colors.amber}
+        fontWeight={700}
+      />
+      <Txt text={gloss} fontSize={23} fill={"#cbd5e1"} />
+    </Rect>
+  ) as Rect
+}
+
+const playRunBreakdown = function* (world: World): ThreadGenerator {
+  const { liftedCommand } = world.elements ?? {}
+
+  if (!liftedCommand) {
+    return
+  }
+
+  const runToken = liftedCommand.phrase.token("run") as Txt | undefined
+
+  const steps = [
+    createStepCard("pull", "download image layers"),
+    createStepCard("create", "add a writable layer"),
+    createStepCard("start", "launch the process"),
+  ]
+  steps.forEach((card) => card.scale(0.85))
+
+  const row = (
+    <Layout layout direction={"row"} gap={44} y={210}>
+      {steps}
+    </Layout>
+  ) as Layout
+  world.overlay().add(row)
+
+  yield* all(
+    runToken ? runToken.fill(colors.amber, 0.4) : waitFor(0),
+    narrate(world.narrator, "But run is really three steps in one.", 4),
+  )
+
+  yield* sequence(
+    0.35,
+    ...steps.map((card) =>
+      all(card.opacity(1, 0.5), card.scale(1, 0.5, easeOutBack)),
+    ),
+  )
+
+  yield* narrate(
+    world.narrator,
+    "Pull the image, create the container, start the process. We'll follow each one.",
+    6,
+  )
+
+  yield* all(
+    row.opacity(0, 0.6),
+    runToken ? runToken.fill(Theme.text, 0.4) : waitFor(0),
+  )
+  row.remove()
+}
+
+// ---------------------------------------------------------------------------
+// Two containers over one shared, read-only image on the host
+// ---------------------------------------------------------------------------
+
+type SharedImageBase = { node: Rect }
+
+type ContainerCard = {
+  node: Rect
+  titleRef: Reference<Txt>
+  process: Rect
+  writable: Rect
+  chipsRow: Reference<Layout>
+  badgeRow: Reference<Layout>
+}
+
+function createSharedImageBase(width: number, height: number): SharedImageBase {
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"center"}
+      justifyContent={"center"}
+      gap={6}
+      width={width}
+      height={height}
+      paddingLeft={26}
+      paddingRight={26}
+      radius={16}
+      fill={"#0f172a88"}
+      stroke={containerColors.readonly + "cc"}
+      lineWidth={3}
+      shadowColor={containerColors.readonly + "22"}
+      shadowBlur={16}
+      opacity={0}
+    >
+      <Txt
+        text={"nginx image layers (read-only)"}
+        fontFamily={"monospace"}
+        fontSize={26}
+        fill={containerColors.readonly}
+        fontWeight={700}
+      />
+      <Txt
+        text={"stored on the host · /var/lib/docker/overlay2"}
+        fontSize={20}
+        fill={"#7dd3fcaa"}
+      />
+    </Rect>
+  ) as Rect
+
+  return { node }
+}
+
+function createContainerCard(name: string): ContainerCard {
+  const titleRef = createRef<Txt>()
+  const chipsRow = createRef<Layout>()
+  const badgeRow = createRef<Layout>()
+  const processRef = createRef<Rect>()
+  const writableRef = createRef<Rect>()
+
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"stretch"}
+      justifyContent={"start"}
+      gap={16}
+      width={620}
+      height={320}
+      padding={22}
+      radius={22}
+      fill={"#0b1220cc"}
+      stroke={"#94a3b8aa"}
+      lineWidth={3}
+      shadowColor={"#00000066"}
+      shadowBlur={22}
+      opacity={0}
+    >
+      <Layout
+        layout
+        direction={"row"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        width={"100%"}
+      >
+        <Txt
+          ref={titleRef}
+          text={name}
+          fontFamily={"monospace"}
+          fontSize={28}
+          fill={"#e2e8f0"}
+          fontWeight={700}
+        />
+        <Layout ref={badgeRow} layout direction={"row"} gap={8} />
+      </Layout>
+
+      <Rect
+        ref={processRef}
+        layout
+        direction={"row"}
+        gap={12}
+        alignItems={"center"}
+        justifyContent={"center"}
+        height={64}
+        radius={999}
+        fill={containerColors.processSoft}
+        stroke={containerColors.process}
+        lineWidth={3}
+      >
+        <Circle size={14} fill={containerColors.process} />
+        <Txt
+          text={"nginx"}
+          fontFamily={"monospace"}
+          fontSize={26}
+          fill={"#ecfdf5"}
+        />
+        <Txt text={"PID 1"} fontSize={18} fill={containerColors.process} />
+      </Rect>
+
+      <Rect
+        ref={writableRef}
+        layout
+        direction={"column"}
+        alignItems={"start"}
+        justifyContent={"center"}
+        gap={8}
+        height={110}
+        paddingLeft={20}
+        paddingRight={20}
+        radius={12}
+        fill={"#1c130088"}
+        stroke={containerColors.writable + "cc"}
+        lineWidth={3}
+      >
+        <Txt
+          text={"writable layer"}
+          fontSize={20}
+          fill={containerColors.writable}
+          fontWeight={700}
+        />
+        <Layout ref={chipsRow} layout direction={"row"} gap={8} />
+      </Rect>
+    </Rect>
+  ) as Rect
+
+  return {
+    node,
+    titleRef,
+    process: processRef(),
+    writable: writableRef(),
+    chipsRow,
+    badgeRow,
+  }
+}
+
+function createBadge(text: string, color: string): Rect {
+  return (
+    <Rect
+      layout
+      alignItems={"center"}
+      justifyContent={"center"}
+      paddingLeft={10}
+      paddingRight={10}
+      height={30}
+      radius={8}
+      fill={color + "22"}
+      stroke={color + "aa"}
+      lineWidth={2}
+      opacity={0}
+    >
+      <Txt text={text} fontFamily={"monospace"} fontSize={16} fill={color} />
+    </Rect>
+  ) as Rect
+}
+
+function createMountLine(
+  a: [number, number],
+  b: [number, number],
+  color: string,
+): Line {
+  return (
+    <Line
+      points={[a, b]}
+      stroke={color}
+      lineWidth={3}
+      lineDash={[10, 8]}
+      end={0}
+    />
+  ) as Line
+}
+
+const playMultipleContainers = function* (world: World): ThreadGenerator {
+  const { imageFs, localSystem, terminal } = world.elements ?? {}
+
+  if (!imageFs || !localSystem) {
+    return
+  }
+
+  // 1) Reframe the stage: the local system becomes "the host", widened to hold
+  // two containers. The single-container panel and the terminal step aside.
+  yield* all(
+    terminal ? terminal.node.opacity(0, 0.8) : waitFor(0),
+    imageFs.node.opacity(0, 0.8),
+    localSystem.node.x(0, 1.2, easeInOutCubic),
+    localSystem.node.width(1640, 1.2, easeInOutCubic),
+    localSystem.title().text("Host · one shared Linux kernel", 0.8),
+    narrate(
+      world.narrator,
+      "A container is not a copy of the image. Watch what a second one shares.",
+      6,
+    ),
+  )
+  imageFs.node.remove()
+
+  // 2) The read-only image lives on the host disk — one copy, shared.
+  const base = createSharedImageBase(1040, 130)
+  base.node.position([0, 350])
+  base.node.scale(0.96)
+  world.stage().add(base.node)
+
+  yield* all(
+    base.node.opacity(1, 0.6),
+    base.node.scale(1, 0.6, easeOutBack),
+    narrate(
+      world.narrator,
+      "The image layers are just read-only directories on the host disk.",
+      5,
+    ),
+  )
+
+  // 3) Container web-1 mounts the shared image and adds a private writable layer.
+  const A = createContainerCard("web-1")
+  A.node.position([-380, 20])
+  A.node.scale(0.9)
+  world.stage().add(A.node)
+  const lineA = createMountLine([-380, 180], [-380, 285], containerColors.readonly)
+  world.overlay().add(lineA)
+
+  yield* all(
+    A.node.opacity(1, 0.6),
+    A.node.scale(1, 0.6, easeOutBack),
+    narrate(
+      world.narrator,
+      "A container mounts those read-only layers as its root, then stacks its own writable layer on top.",
+      7,
+    ),
+  )
+  yield* lineA.end(1, 0.6)
+
+  // 4) Container web-2: same image, no copy, its own writable layer.
+  const B = createContainerCard("web-2")
+  B.node.position([380, 20])
+  B.node.scale(0.9)
+  world.stage().add(B.node)
+  const lineB = createMountLine([380, 180], [380, 285], containerColors.readonly)
+  world.overlay().add(lineB)
+
+  yield* all(
+    B.node.opacity(1, 0.6),
+    B.node.scale(1, 0.6, easeOutBack),
+    narrate(
+      world.narrator,
+      "Start a second container: it mounts the exact same read-only image — no copy — with its own writable layer.",
+      8,
+    ),
+  )
+  yield* lineB.end(1, 0.6)
+  yield* base.node.scale(1.02, 0.25).to(1, 0.3)
+
+  // 5) Writes are isolated to each container's own layer.
+  const chipA = createFileChip("web-1.log", containerColors.writable)
+  chipA.scale(0.8)
+  A.chipsRow().add(chipA)
+
+  yield* all(
+    chipA.opacity(1, 0.4),
+    chipA.scale(1, 0.4, easeOutBack),
+    narrate(
+      world.narrator,
+      "A write in web-1 lands only in web-1's layer. web-2 never sees it.",
+      6,
+    ),
+  )
+  yield* waitFor(1)
+
+  world.elements.sharedImage = base
+  world.elements.containerA = A
+  world.elements.containerB = B
+}
+
+// ---------------------------------------------------------------------------
+// Namespaces — what each container gets its own private view of
+// ---------------------------------------------------------------------------
+
+const playNamespaces = function* (world: World): ThreadGenerator {
+  const { containerA: A, containerB: B } = world.elements ?? {}
+
+  if (!A || !B) {
+    return
+  }
+
+  const nsColor = "#c084fc" // purple = namespaces
+  const names = ["pid", "net", "mnt", "uts", "ipc"]
+
+  yield* narrate(world.narrator, "So how are the two kept apart? Namespaces.", 4)
+
+  const badgesA = names.map((n) => createBadge(n, nsColor))
+  const badgesB = names.map((n) => createBadge(n, nsColor))
+  badgesA.forEach((badge) => A.badgeRow().add(badge))
+  badgesB.forEach((badge) => B.badgeRow().add(badge))
+
+  yield* all(
+    sequence(0.1, ...badgesA.map((badge) => badge.opacity(1, 0.3))),
+    sequence(0.1, ...badgesB.map((badge) => badge.opacity(1, 0.3))),
+    narrate(
+      world.narrator,
+      "A namespace gives a container its own private view of one kind of resource: process IDs, network, mounts, and more.",
+      8,
+    ),
+  )
+
+  yield* all(
+    A.process.scale(1.06, 0.3).to(1, 0.3),
+    B.process.scale(1.06, 0.3).to(1, 0.3),
+    narrate(
+      world.narrator,
+      "In its PID namespace each process is PID 1 — and cannot even see the other's.",
+      6,
+    ),
+  )
+
+  yield* narrate(
+    world.narrator,
+    "The mount namespace is why each one sees the shared image as its own root filesystem.",
+    6,
+  )
+
+  yield* waitFor(1)
+}
+
+// ---------------------------------------------------------------------------
+// Cgroups — how much of the host each container is allowed to use
+// ---------------------------------------------------------------------------
+
+const playCgroups = function* (world: World): ThreadGenerator {
+  const { containerA: A, containerB: B } = world.elements ?? {}
+
+  if (!A || !B) {
+    return
+  }
+
+  const cg1 = "#38bdf8"
+  const cg2 = "#f472b6"
+  const trackW = 1000
+  const trackH = 56
+
+  const seg1 = (<Rect width={0} height={trackH} fill={cg1} />) as Rect
+  const seg2 = (<Rect width={0} height={trackH} fill={cg2} />) as Rect
+  const track = (
+    <Rect
+      layout
+      direction={"row"}
+      alignItems={"center"}
+      width={trackW}
+      height={trackH}
+      radius={14}
+      fill={"#1e293b"}
+      stroke={"#475569"}
+      lineWidth={2}
+      clip
+      opacity={0}
+      y={-430}
+    >
+      {seg1}
+      {seg2}
+    </Rect>
+  ) as Rect
+  const caption = (
+    <Txt
+      text={"host CPU & memory"}
+      fontSize={22}
+      fill={"#cbd5e1"}
+      y={-482}
+      opacity={0}
+    />
+  ) as Txt
+  world.stage().add(track)
+  world.stage().add(caption)
+
+  yield* all(
+    track.opacity(1, 0.5),
+    caption.opacity(1, 0.5),
+    narrate(
+      world.narrator,
+      "Isolation is one half. The other is limits — cgroups.",
+      5,
+    ),
+  )
+
+  yield* all(
+    seg1.width(360, 0.8, easeOutCubic),
+    A.node.stroke(cg1, 0.5),
+    narrate(
+      world.narrator,
+      "A cgroup caps how much CPU and memory a container may use.",
+      6,
+    ),
+  )
+
+  yield* all(
+    seg2.width(220, 0.8, easeOutCubic),
+    B.node.stroke(cg2, 0.5),
+    narrate(
+      world.narrator,
+      "web-2 is capped tighter, so it can't starve web-1 — or the host.",
+      6,
+    ),
+  )
+
+  // web-2 tries to grab more, but the cgroup clamps it back.
+  yield* seg2.width(268, 0.3).to(220, 0.6)
+
+  yield* narrate(
+    world.narrator,
+    "Same kernel, same image — but isolated by namespaces and bounded by cgroups. That is a container.",
+    7,
+  )
+
+  yield* waitFor(1.5)
+}
+
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
@@ -555,126 +1344,28 @@ export default makeScene2D(function* (view) {
 
   yield* playSplash(world)
 
+  // What does `run` actually do? -> pull + create + start.
+  yield* playRunBreakdown(world)
+
+  // pull: find the image, download it from the registry.
   yield* playImageRegistry(world)
 
   yield* playPullImage(world)
 
   yield* playWhatIsAnImage(world)
 
+  // create + start: a writable layer and a running process.
   yield* playWhatIsAContainer(world)
 
-  // playWhatIsAContainer -> docker create
-  // playWhatIsAProcess -> docker start
+  // Two containers over one shared read-only image on the host.
+  yield* playMultipleContainers(world)
 
-  // playMutipleContainers containers side be side reading shared layers, writing to they own writtable layer
+  // What keeps the two apart, and bounded.
+  yield* playNamespaces(world)
 
-  // playNamespaceCgroups -- only one container again. Explain the concepts
+  yield* playCgroups(world)
 
   // playClosingScene -- not sure
-
-  //yield* playExpandRunCommand(world)
-  // TODO - Potentially add more info about the registry, types, what they are, some metaphor, etc. But no need to go into a lot of detail.
-
-  // EXPLAIN THE RUN COMMAND - Split in 3 operations
-
-  // const runToken = lifted.phrase.token("run")
-  // if (!runToken) {
-  //   return
-  // }
-
-  // const pull = liftTxt(runToken, {
-  //   overlay: overlay(),
-  //   to: [runToken.x(), runToken.y() - 200],
-  //   duration: 1.5,
-  //   restyle: {
-  //     fontSize: 76,
-  //     gap: 18,
-  //   },
-  // })
-
-  // const create = liftTxt(runToken, {
-  //   overlay: overlay(),
-  //   to: [runToken.x(), runToken.y() - 38],
-  //   duration: 1.5,
-  //   restyle: {
-  //     fontSize: 76,
-  //     gap: 18,
-  //   },
-  // })
-
-  // const start = liftTxt(runToken, {
-  //   overlay: overlay(),
-  //   to: [runToken.x(), runToken.y() + 120],
-  //   duration: 1.5,
-  //   restyle: {
-  //     fontSize: 76,
-  //     gap: 18,
-  //   },
-  // })
-
-  // // Split RUN into PULL, CREATE, START
-  // yield* all(
-  //   narrate(
-  //     narrator,
-  //     "Run is a shortcut for 3 separate commands: pull, create and start.",
-  //     4,
-  //   ),
-  //   pull.animation,
-  //   pull.phrase.replaceText("run", "pull", { delay: 0.5, duration: 1 }),
-  //   create.animation,
-  //   create.phrase.replaceText("run", "create", { delay: 0.5, duration: 1 }),
-  //   start.animation,
-  //   start.phrase.replaceText("run", "start", { duration: 1 }),
-  // )
-
-  // yield* all(
-  //   pull.phrase.highlight("pull", { hold: 4.5, restore: true }),
-  //   delay(2.5, pull.phrase.node.y(runToken.y() - 38, 1.5)),
-  //   create.phrase.node.opacity(0, 1),
-  //   start.phrase.node.opacity(0, 1),
-  //   narrate(narrator, "Let's focus on the first command: pull.", 4),
-  // )
-
-  // yield* waitFor(5)
-  // // const nginxToken = lifted.phrase.token("nginx")
-
-  // if (!nginxToken) {
-  //   return
-  // }
-
-  // const nginxAnchor = createRef<Rect>()
-
-  // overlay().add(
-  //   <Rect
-  //     ref={nginxAnchor}
-  //     width={4}
-  //     height={4}
-  //     fill={"#ff00ff"}
-  //     opacity={0}
-  //   />,
-  // )
-
-  //nginxAnchor().absolutePosition(nginxToken.absolutePosition())
-
-  // yield* waitFor(1)
-  // // yield* lifted.phrase.highlight("nginx", {
-  //   hold: 1.5,
-  //   restore: true,
-  // })
-  // // caption().text("nginx: the image name")
-  // // yield* waitFor(0.5)
-
-  // yield* lifted.phrase.highlight("run", {
-  //   hold: 0.5,
-  //   restore: true,
-  // })
-  // // caption().text("run: image becomes process")
-  // // yield* waitFor(0.7)
-
-  // // 5. End with one token isolated.
-  // yield* all(lifted.phrase.dimExcept("run"), caption().fill(colors.amber, 0.25))
-
-  // yield* waitFor(1)
 
   yield* waitFor(5)
 })
