@@ -6,6 +6,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start:containers:toni"],
       "port": 9000
+    },
+    {
+      "name": "brand-splash",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:splash", "--", "--port", "9001"],
+      "port": 9001
+    },
+    {
+      "name": "containers-toni-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:containers:toni", "--", "--port", "9002"],
+      "port": 9002
     }
   ]
 }

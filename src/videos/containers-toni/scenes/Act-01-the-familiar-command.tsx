@@ -16,6 +16,7 @@ import {
   waitFor,
 } from "@motion-canvas/core"
 import {
+  createLineBird,
   createTerminal,
   Terminal,
   defaultTerminalTheme,
@@ -184,18 +185,64 @@ const playSplash = function* (world: World) {
       fill={colors.bg}
       opacity={0}
       ref={splash}
-    >
-      <Txt
-        text={"Synesthetic Code Craft"}
-        fontSize={72}
-        fill={colors.amber}
-        fontWeight={800}
-      />
-    </Rect>,
+    />,
   )
 
+  // The channel's line-art bird sketches itself on, then sings the title into
+  // existence — colored ripples carrying each word in.
+  const bird = createLineBird()
+  bird.node.position([-420, -30])
+  bird.node.scale(1.15)
+  splash().add(bird.node)
+  bird.prepareDraw()
+
+  const words = [
+    { text: "Synesthetic", position: [255, -100], settle: colors.amber },
+    { text: "Code", position: [50, 40], settle: "#e5e7eb" },
+    { text: "Craft", position: [370, 40], settle: "#e5e7eb" },
+  ].map(({ text, position, settle }) => {
+    const node = (
+      <Txt
+        text={text}
+        fontSize={118}
+        fontWeight={800}
+        fill={colors.amber}
+        position={[position[0] - 36, position[1]]}
+        opacity={0}
+        letterSpacing={2}
+      />
+    ) as Txt
+    splash().add(node)
+    return { node, settle }
+  })
+  words[0].node.fill("#a78bfa")
+  words[1].node.fill("#38bdf8")
+  words[2].node.fill("#4ade80")
+
   yield* splash().opacity(1, 0.8, easeInOutCubic)
-  yield* waitFor(2.2)
+  yield* bird.draw()
+  yield* bird.blink()
+
+  yield* bird.tiltHead(-14, 0.35)
+  yield* all(
+    bird.sing({ spread: 2400, duration: 1.9, stagger: 0.28 }),
+    delay(
+      0.35,
+      sequence(
+        0.3,
+        ...words.map(({ node }) =>
+          all(node.opacity(1, 0.7), node.x(node.x() + 36, 0.7, easeOutCubic)),
+        ),
+      ),
+    ),
+  )
+  yield* all(
+    bird.tiltHead(0, 0.4),
+    ...words.map(({ node, settle }) => node.fill(settle, 1.2)),
+  )
+  yield* bird.blink()
+
+  yield* waitFor(0.4)
   yield* all(
     narrate(
       world.narrator,
