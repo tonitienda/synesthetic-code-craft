@@ -1,5 +1,5 @@
 import { Circle, Layout, Rect, Txt } from "@motion-canvas/2d"
-import { all, createRef, easeInOutCubic, waitFor } from "@motion-canvas/core"
+import { all, createRef, waitFor } from "@motion-canvas/core"
 import type { Reference, ThreadGenerator } from "@motion-canvas/core"
 import type {
   CommandPhraseSnapshot,
@@ -66,16 +66,6 @@ export interface TerminalHighlightOptions {
   restore?: boolean
   command?: string
   occurrence?: number
-}
-
-export interface TerminalDockOptions {
-  /** Chip width when docked. Defaults to min(width, 470). */
-  width?: number
-  /** Chip height when docked. Defaults to header + one command line. */
-  height?: number
-  /** Center position for the docked chip, in scene coordinates. */
-  position?: [number, number]
-  duration?: number
 }
 
 export interface TerminalToken {
@@ -154,7 +144,6 @@ export class Terminal {
 
   private readonly lines: Array<TerminalCommandLine | TerminalOutputLine> = []
   private activeCommand?: TerminalCommandLine
-  private dockRestore?: { width: number; height: number; x: number; y: number }
 
   constructor(options: TerminalOptions = {}) {
     this.theme = { ...defaultTerminalTheme, ...options.theme }
@@ -236,53 +225,6 @@ export class Terminal {
 
   *exit(duration = 0.25) {
     yield* all(this.node.opacity(0, duration), this.node.scale(0.96, duration))
-  }
-
-  /**
-   * Demote the terminal to a compact corner "chip" that shows only the header
-   * and the command prompt line — the scrollback is clipped away. The frame is
-   * top-left anchored, so the prompt stays pinned as the frame shrinks. Use
-   * this once the terminal has served its purpose as the script and the concept
-   * diagrams should own the screen. Reverse with `undock()`.
-   */
-  *dock(options: TerminalDockOptions = {}) {
-    const duration = options.duration ?? 0.6
-    const width = options.width ?? Math.min(this.width, 470)
-    const height =
-      options.height ?? this.headerHeight + this.fontSize + this.padding * 2
-    const position: [number, number] = options.position ?? [
-      this.node.x(),
-      this.node.y(),
-    ]
-
-    this.dockRestore = {
-      width: this.node.width(),
-      height: this.node.height(),
-      x: this.node.x(),
-      y: this.node.y(),
-    }
-
-    yield* all(
-      this.node.width(width, duration, easeInOutCubic),
-      this.node.height(height, duration, easeInOutCubic),
-      this.node.position(position, duration, easeInOutCubic),
-    )
-  }
-
-  /** Restore the terminal to its pre-dock size and position. */
-  *undock(options: { duration?: number } = {}) {
-    if (!this.dockRestore) {
-      return
-    }
-
-    const duration = options.duration ?? 0.6
-    const { width, height, x, y } = this.dockRestore
-
-    yield* all(
-      this.node.width(width, duration, easeInOutCubic),
-      this.node.height(height, duration, easeInOutCubic),
-      this.node.position([x, y], duration, easeInOutCubic),
-    )
   }
 
   *focus(duration = 0.25) {
