@@ -6,6 +6,7 @@ declare global {
     motionCanvasAgent?: {
       player: Player;
       seek: (seconds: number) => void;
+      seekFrame: (frame: number) => void;
       frame: () => number;
       time: () => number;
       duration: () => number;
@@ -13,17 +14,17 @@ declare global {
   }
 }
 
-function readTimeParam(): number | null {
-  const params = new URLSearchParams(window.location.search);
-  const value = params.get('ts') ?? params.get('time') ?? params.get('t');
-  if (value === null) return null;
+const timeParamNames = ['ts', 'time', 't'];
+
+function readTimeParam(params: URLSearchParams): number | null {
+  const value = timeParamNames.map(name => params.get(name)).find(value => value !== null);
+  if (value === undefined || value === null) return null;
 
   const seconds = Number(value);
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 }
 
-function readFrameParam(): number | null {
-  const params = new URLSearchParams(window.location.search);
+function readFrameParam(params: URLSearchParams): number | null {
   const value = params.get('frame');
   if (value === null) return null;
 
@@ -31,36 +32,55 @@ function readFrameParam(): number | null {
   return Number.isFinite(frame) && frame >= 0 ? Math.round(frame) : null;
 }
 
+function hasAgentPreviewParam(params: URLSearchParams): boolean {
+  return params.has('agent-preview') || params.has('agentPreview');
+}
+
+function hasSeekParam(params: URLSearchParams): boolean {
+  return params.has('frame') || timeParamNames.some(name => params.has(name));
+}
+
 function installUrlSync(player: Player): void {
-  const seekToSeconds = (seconds: number) => {
+  const params = new URLSearchParams(window.location.search);
+  const shouldSyncUrl = hasAgentPreviewParam(params) || hasSeekParam(params);
+
+  const seekToFrame = (frame: number) => {
     player.togglePlayback(false);
-    player.requestSeek(player.status.secondsToFrames(seconds));
+    player.requestSeek(frame);
     player.requestRender();
+  };
+
+  const seekToSeconds = (seconds: number) => {
+    seekToFrame(player.status.secondsToFrames(seconds));
   };
 
   window.motionCanvasAgent = {
     player,
     seek: seekToSeconds,
+    seekFrame: seekToFrame,
     frame: () => player.playback.frame,
     time: () => player.status.framesToSeconds(player.playback.frame),
     duration: () => player.status.framesToSeconds(player.playback.duration),
   };
 
-  const targetFrame = readFrameParam();
-  const targetSeconds = readTimeParam();
+  const targetFrame = readFrameParam(params);
+  const targetSeconds = readTimeParam(params);
   if (targetFrame !== null) {
-    player.togglePlayback(false);
-    player.requestSeek(targetFrame);
-    player.requestRender();
+    seekToFrame(targetFrame);
   } else if (targetSeconds !== null) {
     seekToSeconds(targetSeconds);
   }
 
+  if (!shouldSyncUrl) return;
+
   const writeUrl = (frame: number) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set('frame', String(frame));
-    params.set('ts', player.status.framesToSeconds(frame).toFixed(3));
-    const next = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+    const nextParams = new URLSearchParams(window.location.search);
+    const seconds = player.status.framesToSeconds(frame).toFixed(3);
+    if (nextParams.get('frame') === String(frame) && nextParams.get('ts') === seconds) return;
+
+    nextParams.set('frame', String(frame));
+    nextParams.set('ts', seconds);
+    const next = `${window.location.pathname}?${nextParams.toString()}${window.location.hash}`;
     window.history.replaceState(null, '', next);
   };
 

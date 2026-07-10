@@ -12,9 +12,10 @@ http://localhost:9000/?ts=35
 http://localhost:9000/?time=35
 http://localhost:9000/?t=35
 http://localhost:9000/?frame=2100
+http://localhost:9000/?agentPreview=1
 ```
 
-The plugin pauses playback, seeks the Motion Canvas player, renders the requested position, and keeps the URL updated with the current `frame` and `ts` as the timeline changes.
+The plugin pauses playback, seeks the Motion Canvas player, renders the requested position, and keeps the URL updated with the current `frame` and `ts` as the timeline changes when opened with a seek parameter or `?agentPreview=1`.
 
 ## Browser console helper
 
@@ -37,7 +38,7 @@ Use the frame capture helper when a Chromium-compatible browser is installed loc
 npm run screenshot:frame -- src/projects/containers-image-to-running-process.ts 35 artifacts/screenshots/containers/035s.png
 ```
 
-The helper starts Vite with `MOTION_CANVAS_PROJECT`, opens the Studio URL with `?ts=<seconds>`, and asks headless Chromium to write a PNG screenshot. If Chromium is not on `PATH`, set `CHROME=/path/to/chrome` or `CHROMIUM=/path/to/chromium`.
+The helper starts Vite with `MOTION_CANVAS_PROJECT`, opens the Studio URL with `?agentPreview=1&ts=<seconds>`, and asks headless Chromium to write a PNG screenshot. If Chromium is not on `PATH`, set `CHROME=/path/to/chrome` or `CHROMIUM=/path/to/chromium`.
 
 Screenshots belong under `artifacts/screenshots/` and should not be committed.
 

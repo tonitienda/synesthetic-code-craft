@@ -68,7 +68,11 @@ if (!browser) {
 }
 
 await mkdir(dirname(output), {recursive: true});
-const port = 9000;
+const port = Number(process.env.MOTION_CANVAS_PREVIEW_PORT ?? 9000);
+if (!Number.isInteger(port) || port <= 0) {
+  console.error(`Invalid MOTION_CANVAS_PREVIEW_PORT: ${process.env.MOTION_CANVAS_PREVIEW_PORT}`);
+  process.exit(1);
+}
 const server = run('npx', ['vite', '--host', '127.0.0.1', '--port', String(port)], {
   env: {...process.env, MOTION_CANVAS_PROJECT: projectFile},
 });
@@ -77,7 +81,7 @@ server.stderr.on('data', chunk => process.stderr.write(chunk));
 
 try {
   await waitForServer(port);
-  const url = `http://127.0.0.1:${port}/?ts=${seconds}`;
+  const url = `http://127.0.0.1:${port}/?agentPreview=1&ts=${seconds}`;
   const capture = run(browser, [
     '--headless=new',
     '--disable-gpu',
@@ -85,6 +89,8 @@ try {
     '--hide-scrollbars',
     '--window-size=1280,720',
     `--screenshot=${output}`,
+    '--run-all-compositor-stages-before-draw',
+    '--timeout=10000',
     '--virtual-time-budget=5000',
     url,
   ]);
