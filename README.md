@@ -64,6 +64,19 @@ npm run screenshots:containers:alive
 
 Generated files are written to `artifacts/screenshots/`, which is ignored by Git.
 
+
+## Agent-friendly Motion Canvas previews
+
+This repo adds a lightweight Studio plugin for timestamp-driven visual checks. While a project dev server is running, open Studio with `?ts=<seconds>` or `?frame=<frame>` to pause and render that moment, for example `http://localhost:9000/?ts=35`. The URL is kept in sync as the timeline moves.
+
+A headless capture helper is also available when Chromium is installed:
+
+```bash
+npm run screenshot:frame -- src/projects/containers-image-to-running-process.ts 35 artifacts/screenshots/containers/035s.png
+```
+
+See `docs/agent-motion-canvas-preview.md` for the full agent preview loop.
+
 ## Video folders
 
 Each substantial video should include a dedicated folder under `src/videos/<slug>/` with timestamped narration, production notes, and representative screenshots. For examples, see `src/videos/backpropagation-basics/` and `src/videos/containers-image-to-running-process/`.

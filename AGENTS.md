@@ -126,3 +126,9 @@ npm run build
 If the change adds a video-specific build script, also run that script when practical.
 
 For preview changes, run the relevant `npm run screenshots:<slug>` command or the generic screenshot generator when practical.
+
+## Agent visual preview loop
+
+- Use `docs/agent-motion-canvas-preview.md` when a task requires visual iteration on Motion Canvas scenes.
+- While the Vite dev server is running, Motion Canvas Studio accepts `?ts=<seconds>`, `?time=<seconds>`, `?t=<seconds>`, or `?frame=<frame>` and seeks to that point through the repository-local agent preview plugin.
+- For frame captures, prefer `npm run screenshot:frame -- <project-file> <seconds> <output.png>` when Chromium is available. Keep generated screenshots under `artifacts/screenshots/` and do not commit them.
