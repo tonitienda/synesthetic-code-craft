@@ -1,5 +1,12 @@
 import { Layout, Rect, Txt } from "@motion-canvas/2d"
-import { all, createRef, delay, Reference } from "@motion-canvas/core"
+import {
+  all,
+  createRef,
+  delay,
+  easeInCubic,
+  easeOutBack,
+  Reference,
+} from "@motion-canvas/core"
 
 class FileSystemLayer {
   node: Rect
@@ -102,9 +109,18 @@ export class FileSystem {
   }
 
   appear(duration: number) {
+    // Each layer pops in with a small overshoot, staggered bottom-up, so the
+    // stack reads as layers landing on top of each other rather than a fade.
+    this.layers.forEach((layer) => layer.node.scale(0.92))
     return all(
       ...this.layers.map((layer, index) =>
-        delay(index * 0.2, layer.node.opacity(1, duration)),
+        delay(
+          index * 0.2,
+          all(
+            layer.node.opacity(1, duration),
+            layer.node.scale(1, duration, easeOutBack),
+          ),
+        ),
       ),
     )
   }
@@ -119,8 +135,10 @@ export class FileSystem {
       ...collapsingLayers.map((layer) =>
         all(
           layer.label.opacity(0, duration),
-          layer.node.height(0, duration),
-          layer.node.lineWidth(0, duration),
+          // easeInCubic makes the layers squeeze shut faster and faster, so the
+          // flattening reads as compression rather than a uniform shrink.
+          layer.node.height(0, duration, easeInCubic),
+          layer.node.lineWidth(0, duration, easeInCubic),
         ),
       ),
     )

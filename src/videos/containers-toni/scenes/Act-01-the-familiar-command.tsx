@@ -182,11 +182,11 @@ const playSplash = function* (world: World) {
       width={"100%"}
       height={"100%"}
       fill={colors.bg}
-      opacity={1}
+      opacity={0}
       ref={splash}
     >
       <Txt
-        text={"Synesthesic Code Craft"}
+        text={"Synesthetic Code Craft"}
         fontSize={72}
         fill={colors.amber}
         fontWeight={800}
@@ -194,15 +194,17 @@ const playSplash = function* (world: World) {
     </Rect>,
   )
 
-  yield* waitFor(3)
+  yield* splash().opacity(1, 0.8, easeInOutCubic)
+  yield* waitFor(2.2)
   yield* all(
     narrate(
       world.narrator,
       "So let's slow it right down, and follow what actually happens behind that one line.",
       4,
     ),
-    splash().opacity(1, 2).to(0, 2),
+    splash().opacity(0, 2),
   )
+  splash().remove()
 
   yield* waitFor(0.5)
 }
@@ -243,6 +245,7 @@ const playImageRegistry = function* (world: World): ThreadGenerator {
     toWorldY(PADDING, registry.node.height()),
   ])
   registry.node.opacity(0)
+  registry.node.scale(0.92)
 
   // Breathe with a soft glow — pulse the border brighter and back — instead of
   // scaling, so the panel never shimmers or nudges its neighbours.
@@ -263,27 +266,27 @@ const playImageRegistry = function* (world: World): ThreadGenerator {
   //   scenePointFromAbsolute(nginxToken.absolutePosition()),
   // )
   nginxImage.node.opacity(0)
-  nginxImage.node.scale(1)
+  nginxImage.node.scale(0.8)
   nginxImage.node.absolutePosition(registry.imageSlotPosition())
 
   yield* all(
     registry.node.opacity(1, 1),
-    registry.node.scale(1, 1),
+    registry.node.scale(1, 1, easeOutBack),
     narrate(
       world.narrator,
-      "Every image lives in a registry — think of it as a big shared library of images out on the internet. By default, that's Docker Hub.",
+      "Public images like nginx live in a registry — a shared library of images. By default, Docker looks in Docker Hub.",
       7,
     ),
     delay(
       3,
       all(
-        nginxImage.node.opacity(1, 2),
-        (liftedCommand.phrase.token("nginx") as Txt).opacity(0, 2),
+        nginxImage.node.opacity(1, 0.6),
+        nginxImage.node.scale(1, 0.8, easeOutBack),
       ),
     ),
   )
 
-  yield* waitFor(5)
+  yield* waitFor(1.5)
 
   if (!world.elements) {
     world.elements = {}
@@ -318,6 +321,7 @@ const playPullImage = function* (world: World): ThreadGenerator {
     ),
   ])
   localSystem.node.opacity(0)
+  localSystem.node.scale(0.92)
 
   // Hand the "breathing" glow over: settle the registry's border back to rest,
   // and start the same soft pulse on the local system instead.
@@ -334,7 +338,7 @@ const playPullImage = function* (world: World): ThreadGenerator {
 
   yield* all(
     localSystem.node.opacity(1, 1),
-    localSystem.node.scale(1, 1),
+    localSystem.node.scale(1, 1, easeOutBack),
     narrate(
       world.narrator,
       "This box down here is your own machine — the host that Docker is actually running on.",
@@ -374,7 +378,7 @@ const playPullImage = function* (world: World): ThreadGenerator {
     pullLine.textRef().fill(Theme.highlight, 0.5),
     narrate(
       world.narrator,
-      "This time it doesn't. So it reaches out to the registry and pulls the image down onto your machine, one layer at a time.",
+      "This time it doesn't. So it reaches out to the registry and pulls the image down onto your machine, layer by layer.",
       7,
     ),
   )
@@ -589,7 +593,7 @@ const playWhatIsAnImage = function* (world: World): ThreadGenerator {
     fsLayers.collapse("image fs (read-only)", 3),
     narrate(
       world.narrator,
-      "Flatten all of that together and you get one single, read-only filesystem. That's really all an image is. And notice — nothing is actually running yet.",
+      "Stacked together, those layers behave as one single, read-only filesystem. Add a little metadata — like which program to start — and that's an image. And notice: nothing is actually running yet.",
       9,
     ),
   )
@@ -779,7 +783,9 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
     delay(
       0.6,
       all(
-        writable.node.height(barHeight, 0.9, easeOutCubic),
+        // easeOutBack overshoots the target height slightly, so the new layer
+        // "snaps" into place instead of gliding in.
+        writable.node.height(barHeight, 0.9, easeOutBack),
         writable.node.opacity(1, 0.7),
       ),
     ),
@@ -832,8 +838,8 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   // 4) WRITE — logs are written to the writable layer, never the image.
   yield* narrate(
     world.narrator,
-    "But the moment it writes something — a log file, say — that never touches the image. It lands up here, in the container's own writable layer.",
-    8,
+    "But the moment it writes something — a log file, say — that never touches the image. The write lands in the container's own writable layer. Even changing an existing file first copies it up into that layer.",
+    9,
   )
   yield* flow(
     world,
@@ -858,7 +864,7 @@ const playWhatIsAContainer = function* (world: World): ThreadGenerator {
     imageFs.layers[0].label.fill(containerColors.readonly, 0.4),
     narrate(
       world.narrator,
-      "Same read-only image underneath, but every change stays isolated up here. That, right there, is a container.",
+      "Same read-only image underneath, but every change stays isolated in the container's own layer. That is a container.",
       6,
     ),
   )
@@ -946,8 +952,8 @@ const playRunBreakdown = function* (world: World): ThreadGenerator {
 
   yield* narrate(
     world.narrator,
-    "First it pulls the image, then it creates a container from it, and finally it starts the process inside. Let's walk through each one.",
-    8,
+    "First it pulls the image — if you don't already have it — then it creates a container from it, and finally it starts the process inside. Let's walk through each one.",
+    9,
   )
 
   yield* all(
@@ -1161,23 +1167,32 @@ const playMultipleContainers = function* (world: World): ThreadGenerator {
   B.node.width(cardWidth)
   B.node.position([baseLocal.x, cardCenterY])
   B.node.opacity(0)
+  B.node.scale(0.9)
   world.stage().add(B.node)
 
+  // Both cards overshoot their final x by a touch and settle back, and web-2
+  // pops in with a small scale-up, so the second container feels born rather
+  // than slid into place.
   yield* all(
     A.node.width(cardWidth, 0.9, easeInOutCubic),
-    A.node.x(baseLocal.x - splitX, 0.9, easeInOutCubic),
+    A.node
+      .x(baseLocal.x - splitX - 14, 0.7, easeOutCubic)
+      .to(baseLocal.x - splitX, 0.35, easeInOutCubic),
     delay(
       0.15,
       all(
         B.node.opacity(1, 0.75),
-        B.node.x(baseLocal.x + splitX, 0.9, easeInOutCubic),
+        B.node.scale(1, 0.9, easeOutBack),
+        B.node
+          .x(baseLocal.x + splitX + 14, 0.7, easeOutCubic)
+          .to(baseLocal.x + splitX, 0.35, easeInOutCubic),
       ),
     ),
     // The base glows once to say: both of these rest on the one shared image.
     delay(0.5, base.node.stroke("#7dd3fc", 0.3).to("#7dd3fc99", 0.5)),
     narrate(
       world.narrator,
-      "The image itself doesn't move, and it doesn't get copied. The container just splits in two — each one with its own process and its own writable layer — both stacked on that very same shared image.",
+      "Docker doesn't copy the image. It creates a brand-new container from it — a new process, and a new, empty writable layer — and both containers read from the very same image on disk.",
       10,
     ),
   )
@@ -1242,7 +1257,7 @@ const playNamespaces = function* (world: World): ThreadGenerator {
 
   yield* narrate(
     world.narrator,
-    "Now, both of these containers are running on the one same kernel, the host's kernel. So how on earth are they kept apart? The answer is namespaces.",
+    "Now, both of these containers are running on the same kernel — the host's. So how are they kept apart? The answer is namespaces.",
     8,
   )
 
@@ -1266,15 +1281,15 @@ const playNamespaces = function* (world: World): ThreadGenerator {
     B.process.scale(1.06, 0.3).to(1, 0.3),
     narrate(
       world.narrator,
-      "Take process IDs. Inside its own namespace, each process proudly thinks it's PID 1 — and neither container can even see the other's processes.",
+      "Take process IDs. Inside its own namespace, each container's main process is PID 1 — and neither container can see the other's processes at all.",
       8,
     ),
   )
 
   yield* narrate(
     world.narrator,
-    "And that mount namespace? That's the trick that lets each container see the shared image as its very own root filesystem, sitting at slash.",
-    8,
+    "And the mount namespace is the trick that lets each container see its own stack — the shared image plus its own writable layer — as its entire root filesystem, starting at slash.",
+    9,
   )
 
   yield* waitFor(1)
@@ -1293,8 +1308,14 @@ const playCgroups = function* (world: World): ThreadGenerator {
 
   const cg1 = "#38bdf8"
   const cg2 = "#f472b6"
-  const trackW = 1000
+  // The track must sit INSIDE the host panel (900 wide, top edge at y≈-516,
+  // title row down to y≈-456), so keep it narrower than the panel and below
+  // the title — otherwise it crosses the panel border and collides with the
+  // "Your machine — the host" label.
+  const trackW = 800
   const trackH = 56
+  const trackRestY = -390
+  const captionRestY = -436
 
   const seg1 = (<Rect width={0} height={trackH} fill={cg1} />) as Rect
   const seg2 = (<Rect width={0} height={trackH} fill={cg2} />) as Rect
@@ -1311,7 +1332,7 @@ const playCgroups = function* (world: World): ThreadGenerator {
       lineWidth={2}
       clip
       opacity={0}
-      y={-430}
+      y={trackRestY}
     >
       {seg1}
       {seg2}
@@ -1322,16 +1343,22 @@ const playCgroups = function* (world: World): ThreadGenerator {
       text={"host CPU & memory"}
       fontSize={22}
       fill={"#cbd5e1"}
-      y={-482}
+      y={captionRestY}
       opacity={0}
     />
   ) as Txt
   world.stage().add(track)
   world.stage().add(caption)
 
+  // Drift down into place while fading in, instead of materialising in situ.
+  track.y(trackRestY - 30)
+  caption.y(captionRestY - 30)
+
   yield* all(
     track.opacity(1, 0.5),
+    track.y(trackRestY, 0.7, easeOutCubic),
     caption.opacity(1, 0.5),
+    caption.y(captionRestY, 0.7, easeOutCubic),
     narrate(
       world.narrator,
       "Now, keeping them apart is only half the story. The other half is stopping any one container from hogging everything. And that's the job of cgroups.",
@@ -1340,17 +1367,17 @@ const playCgroups = function* (world: World): ThreadGenerator {
   )
 
   yield* all(
-    seg1.width(360, 0.8, easeOutCubic),
+    seg1.width(288, 0.8, easeOutCubic),
     A.node.stroke(cg1, 0.5),
     narrate(
       world.narrator,
-      "A cgroup — short for control group — sets a hard cap on how much CPU and memory a container is allowed to use out of the host's total.",
+      "A cgroup — short for control group — lets you set a hard cap on how much CPU and memory a container may use out of the host's total.",
       8,
     ),
   )
 
   yield* all(
-    seg2.width(220, 0.8, easeOutCubic),
+    seg2.width(176, 0.8, easeOutCubic),
     B.node.stroke(cg2, 0.5),
     narrate(
       world.narrator,
@@ -1360,7 +1387,7 @@ const playCgroups = function* (world: World): ThreadGenerator {
   )
 
   // web-2 tries to grab more, but the cgroup clamps it back.
-  yield* seg2.width(268, 0.3).to(220, 0.6)
+  yield* seg2.width(214, 0.3).to(176, 0.6, easeOutBack)
 
   yield* narrate(
     world.narrator,
@@ -1505,8 +1532,11 @@ export default makeScene2D(function* (view) {
     <Txt
       ref={narrator}
       text={""}
-      y={500}
-      fontSize={50}
+      y={450}
+      width={VIDEO_WIDTH - 300}
+      fontSize={36}
+      textAlign={"center"}
+      textWrap
       fill={colors.muted}
       opacity={0}
     />,
