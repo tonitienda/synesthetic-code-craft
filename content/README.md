@@ -32,6 +32,10 @@ Each content phase is gated by human approval. See:
 docs/phases.md
 ```
 
+## Idea backlog
+
+Potential future topics are collected in [`future-video-ideas.md`](future-video-ideas.md). Treat this file as an idea backlog only: before implementation, promote a selected idea into its own `content/videos/<video-slug>/` folder and move it through the phase gates.
+
 ## Folder structure
 
 ```text
