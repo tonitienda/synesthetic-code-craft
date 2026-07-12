@@ -50,6 +50,17 @@ npm run narration:containers:audio
 
 The `:audio` scripts call the macOS `say` command when available. On non-macOS environments, the helper still writes the `.say.txt` file and skips audio generation with a warning.
 
+### OpenAI sentence TTS
+
+For OpenAI-generated narration, keep the input simple: a JSON list of sentences, optionally with one global `settings` object for tone, speed, voice, model, and format. The generator writes one audio file per sentence so Motion Canvas can play each file at the right moment.
+
+```bash
+npm run narration:openai-tts -- path/to/sentences.json --dry-run
+OPENAI_API_KEY=... npm run narration:openai-tts -- path/to/sentences.json --out-dir artifacts/narration/video-audio --tone "Calm, precise, friendly." --speed 0.95
+```
+
+See `docs/openai-sentence-tts.md` for accepted sentence JSON shapes and global settings.
+
 ## Preview screenshots
 
 Binary screenshots are not committed. Pull requests that touch Motion Canvas projects, scenes, or video folders run the `Motion Canvas previews` workflow, which builds the project, generates PNG preview frames for changed video folders, and uploads them as the `motion-canvas-screenshots` artifact.

@@ -83,6 +83,8 @@ Do not add major new scenes, concepts, jokes, visual metaphors, or stylistic cha
 - Add or update npm scripts in `package.json` for serving and building each new project.
 - Update `README.md` when adding, renaming, or changing how to run a video.
 - Do not commit binary screenshot/video exports; generate them into `artifacts/` and upload them from CI instead.
+- Keep generated narration scripts and OpenAI TTS audio under `artifacts/narration/` unless there is a deliberate reason to commit a small text fixture.
+- When adding or changing narration automation, update `README.md` and relevant docs such as `docs/openai-sentence-tts.md`.
 
 ## Visual style
 
