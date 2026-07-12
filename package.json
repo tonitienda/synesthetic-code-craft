@@ -28,7 +28,8 @@
     "start:containers:alive": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-alive.ts vite",
     "build:containers:alive": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-alive.ts vite build",
     "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive",
-    "screenshot:frame": "node scripts/capture-motion-canvas-frame.mjs"
+    "screenshot:frame": "node scripts/capture-motion-canvas-frame.mjs",
+    "narration:openai-tts": "node scripts/openai-tts.mjs"
   },
   "dependencies": {
     "@motion-canvas/2d": "^3.17.2",
