@@ -22,10 +22,10 @@ The plugin pauses playback, seeks the Motion Canvas player, renders the requeste
 The plugin also exposes a small helper for debugging from the browser console:
 
 ```js
-window.motionCanvasAgent.seek(35);
-window.motionCanvasAgent.time();
-window.motionCanvasAgent.frame();
-window.motionCanvasAgent.duration();
+window.motionCanvasAgent.seek(35)
+window.motionCanvasAgent.time()
+window.motionCanvasAgent.frame()
+window.motionCanvasAgent.duration()
 ```
 
 This is intentionally lightweight and repository-local. It does not patch Motion Canvas packages in `node_modules`.

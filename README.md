@@ -75,7 +75,6 @@ npm run screenshots:containers:alive
 
 Generated files are written to `artifacts/screenshots/`, which is ignored by Git.
 
-
 ## Agent-friendly Motion Canvas previews
 
 This repo adds a lightweight Studio plugin for timestamp-driven visual checks. While a project dev server is running, open Studio with `?ts=<seconds>` or `?frame=<frame>` to pause and render that moment, or add `?agentPreview=1` to sync the URL during manual navigation, for example `http://localhost:9000/?ts=35`. When opened with a seek parameter or `?agentPreview=1`, the URL is kept in sync as the timeline moves.
