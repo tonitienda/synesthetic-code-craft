@@ -32,163 +32,41 @@ import {
   createLocalsystem,
   createRegistry,
 } from "../../../components/registries"
+import {
+  PADDING,
+  toWorldX,
+  toWorldY,
+  VIDEO_HEIGHT,
+  VIDEO_WIDTH,
+  World,
+} from "./utils"
+import { narrate, playNarration } from "./narration"
+import {
+  containerColors,
+  createContainerCard,
+  createDockerImageBox,
+  SharedImageBase,
+} from "../../../components/docker"
+import { playIntro } from "./intro"
 
 const Theme = {
   highlight: "#facc15",
   text: defaultTerminalTheme.text,
 }
 
-const NARRATION_ENABLED = true
-const VIDEO_WIDTH = 1920
-const VIDEO_HEIGHT = 1080
-
-const toWorldX = (x: number, width: number) => x - VIDEO_WIDTH / 2 + width / 2
-const toWorldY = (y: number, height: number) =>
-  y - VIDEO_HEIGHT / 2 + height / 2
-
-const PADDING = 24
-
-type World = {
-  narrator: Reference<Txt>
-  background: Reference<Layout>
-  stage: Reference<Layout>
-  overlay: Reference<Layout>
-  elements: {
-    liftedCommand?: LiftedCommandPhrase
-    /** The middle token of the docked command banner — rotates run/pull/create/start. */
-    phaseToken?: Txt
-    terminal?: Terminal
-    registry?: Registry
-    localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
-    registryImage?: DockerImage
-    localImage?: DockerImage
-    imageFs?: FileSystem
-    sharedImage?: SharedImageBase
-    containerA?: ContainerCard
-    containerB?: ContainerCard
-  }
-  cancellation: {
-    registryBreath?: ThreadGenerator
-    localSystemBreath?: ThreadGenerator
-    imageFloat?: ThreadGenerator
-    heartA?: ThreadGenerator
-    heartB?: ThreadGenerator
-  }
-}
-
-const playIntro = function* (world: World) {
-  const terminal = createTerminal({
-    title: "local shell",
-    width: VIDEO_WIDTH / 2 - PADDING * 2,
-    height: VIDEO_HEIGHT - PADDING * 2,
-    fontSize: 30,
-    typingDelay: 0.1,
-  })
-
-  terminal.node.y(toWorldY(PADDING, terminal.node.height()))
-  terminal.node.x(toWorldX(PADDING, terminal.node.width()))
-  terminal.node.opacity(0)
-
-  world.stage().add(terminal.node)
-
-  yield* terminal.enter()
-  yield* waitFor(1)
-  yield* terminal.focus()
-  yield* waitFor(1)
-  yield* all(
-    narrate(
-      world.narrator,
-      "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
-      6,
-    ),
-    terminal.typeCommand("docker run nginx", 0.1),
-  )
-  yield* terminal.run()
-
-  yield* waitFor(1)
-  yield* terminal.print("Unable to find image 'nginx:latest' locally", {
-    kind: "muted",
-  })
-
-  yield* waitFor(0.75)
-  yield* all(
-    narrate(
-      world.narrator,
-      "You hit enter, and it just works. You wanted nginx, so Docker goes and gets it.",
-      6,
-    ),
-    terminal.print("latest: Pulling from library/nginx", {
-      kind: "muted",
-    }),
-  )
-
-  yield* all(
-    ...[
-      "81b43e7a1eae: Pull complete",
-      "74e33773ee42: Pull complete",
-      "3be819c1c8cf: Pull complete",
-      "63e237f10cf6: Pull complete",
-      "75e5e08234c9: Pull complete",
-      "41103e2ff54e: Pull complete",
-      "5d1f91636239: Pull complete",
-      "Digest: sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce",
-      "Status: Downloaded newer image for nginx:latest",
-    ].map((line, idx) =>
-      delay(idx * 0.2, terminal.print(line, { kind: "muted" })),
-    ),
-  )
-
-  yield* waitFor(1)
-
-  // 2. Grab the command handle from the terminal.
-  const sourceCommand = terminal.command("docker run nginx")
-
-  if (!sourceCommand) {
-    return
-  }
-
-  // The original terminal row hides, but the terminal keeps its layout.
-  const liftedCommand = liftCommandPhrase(sourceCommand, {
-    overlay: world.overlay(),
-    to: [0, -38],
-    hideSource: false,
-    duration: 2,
-    restyle: {
-      fontSize: 76,
-      //gap: 18,
-    },
-  })
-
-  yield* all(
-    narrate(
-      world.narrator,
-      "But have you ever stopped to ask what's really going on here? What does 'run' actually do?",
-      7,
-    ),
-    liftedCommand.animation,
-    terminal.exit(0.7),
-  )
-
-  yield* waitFor(0.4)
-
-  if (!world.elements) {
-    world.elements = {}
-  }
-  world.elements.liftedCommand = liftedCommand
-  world.elements.terminal = terminal
-}
-
-const playSplash = function* (world: World) {
+const playSplash = function* (world: World): ThreadGenerator {
   const splash = createRef<Rect>()
-  world.overlay().add(
-    <Rect
-      width={"100%"}
-      height={"100%"}
-      fill={colors.bg}
-      opacity={0}
-      ref={splash}
-    />,
-  )
+  world
+    .overlay()
+    .add(
+      <Rect
+        width={"100%"}
+        height={"100%"}
+        fill={colors.bg}
+        opacity={0}
+        ref={splash}
+      />,
+    )
 
   // The channel's line-art bird sketches itself on, then sings the title into
   // existence — colored ripples carrying each word in.
@@ -528,30 +406,6 @@ const colors = {
   amber: "#facc15",
 }
 
-function* narrate(
-  narrator: Reference<Txt>,
-  text: string,
-  duration: number,
-  delay: number = 0,
-): Generator<any, void, any> {
-  if (delay > 0) {
-    yield* waitFor(delay)
-  }
-  if (!NARRATION_ENABLED) {
-    yield* waitFor(duration)
-  } else {
-    narrator().text(`"${text}"`)
-    // Fade in quickly, hold the line so it stays readable, then fade out.
-    // This keeps longer, conversational lines legible instead of only
-    // peaking for a single instant.
-    const fade = Math.min(0.6, duration / 3)
-    const hold = Math.max(0, duration - fade * 2)
-    yield* narrator().opacity(1, fade)
-    yield* waitFor(hold)
-    yield* narrator().opacity(0, fade)
-  }
-}
-
 // Flip the banner's middle token to the next phase of `run` — a little
 // split-flap roll: the word folds shut, swaps, and springs back open.
 function* rotatePhaseToken(
@@ -569,41 +423,6 @@ function* rotatePhaseToken(
   token.text(next)
   token.fill(color)
   yield* token.scale.y(1, 0.22, easeOutBack)
-}
-
-type DockerImage = {
-  node: Rect
-}
-
-function createDockerImageBox(label: string): DockerImage {
-  const node = (
-    <Rect
-      layout
-      direction={"column"}
-      alignItems={"center"}
-      justifyContent={"center"}
-      width={220}
-      height={86}
-      radius={18}
-      fill={"#0f172acc"}
-      stroke={"#7dd3fc99"}
-      lineWidth={3}
-      shadowColor={"#38bdf833"}
-      shadowBlur={14}
-    >
-      <Txt
-        text={label}
-        fontFamily={"monospace"}
-        fontSize={42}
-        fill={"#e0f2fe"}
-      />
-      <Txt text={"Docker Image"} fontSize={20} fill={"#7dd3fc"} marginTop={4} />
-    </Rect>
-  ) as Rect
-
-  return {
-    node,
-  }
 }
 
 const playWhatIsAnImage = function* (world: World): ThreadGenerator {
@@ -699,13 +518,6 @@ const playWhatIsAnImage = function* (world: World): ThreadGenerator {
   )
 
   world.elements.imageFs = fsLayers
-}
-
-const containerColors = {
-  readonly: "#7dd3fc", // cool blue — inert, read-only image
-  writable: "#fbbf24", // warm amber — the container's mutable layer
-  process: "#34d399", // green — a live, running process
-  processSoft: "#34d39922",
 }
 
 type WritableLayer = {
@@ -1044,7 +856,7 @@ const playRunBreakdown = function* (world: World): ThreadGenerator {
     narrate(
       world.narrator,
       "Here's the first surprise: run isn't really one thing at all. It's three smaller steps rolled into one convenient command.",
-      7,
+      5,
     ),
   )
 
@@ -1071,122 +883,6 @@ const playRunBreakdown = function* (world: World): ThreadGenerator {
 // ---------------------------------------------------------------------------
 // Two containers over one shared, read-only image on the host
 // ---------------------------------------------------------------------------
-
-type SharedImageBase = { node: Rect }
-
-type ContainerCard = {
-  node: Rect
-  titleRef: Reference<Txt>
-  process: Rect
-  dot: Circle
-  writable: Rect
-  chipsRow: Reference<Layout>
-  badgeRow: Reference<Layout>
-}
-
-function createContainerCard(name: string): ContainerCard {
-  const titleRef = createRef<Txt>()
-  const chipsRow = createRef<Layout>()
-  const badgeRow = createRef<Layout>()
-  const processRef = createRef<Rect>()
-  const dotRef = createRef<Circle>()
-  const writableRef = createRef<Rect>()
-
-  const node = (
-    <Rect
-      layout
-      direction={"column"}
-      alignItems={"stretch"}
-      justifyContent={"start"}
-      gap={16}
-      width={620}
-      height={320}
-      padding={22}
-      radius={22}
-      fill={"#0b1220cc"}
-      stroke={"#94a3b8aa"}
-      lineWidth={3}
-      shadowColor={"#00000066"}
-      shadowBlur={22}
-      opacity={0}
-    >
-      <Layout
-        layout
-        direction={"row"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        width={"100%"}
-      >
-        <Txt
-          ref={titleRef}
-          text={name}
-          fontFamily={"monospace"}
-          fontSize={28}
-          fill={"#e2e8f0"}
-          fontWeight={700}
-        />
-        <Layout ref={badgeRow} layout direction={"row"} gap={8} />
-      </Layout>
-
-      <Rect
-        ref={processRef}
-        layout
-        direction={"row"}
-        gap={12}
-        alignItems={"center"}
-        justifyContent={"center"}
-        height={64}
-        radius={999}
-        fill={containerColors.processSoft}
-        stroke={containerColors.process}
-        lineWidth={3}
-      >
-        <Circle ref={dotRef} size={14} fill={containerColors.process} />
-        <Txt
-          text={"nginx"}
-          fontFamily={"monospace"}
-          fontSize={26}
-          fill={"#ecfdf5"}
-        />
-        <Txt text={"PID 1"} fontSize={18} fill={containerColors.process} />
-      </Rect>
-
-      <Rect
-        ref={writableRef}
-        layout
-        direction={"column"}
-        alignItems={"start"}
-        justifyContent={"center"}
-        gap={8}
-        height={110}
-        paddingLeft={20}
-        paddingRight={20}
-        radius={12}
-        fill={"#1c130088"}
-        stroke={containerColors.writable + "cc"}
-        lineWidth={3}
-      >
-        <Txt
-          text={"writable layer"}
-          fontSize={20}
-          fill={containerColors.writable}
-          fontWeight={700}
-        />
-        <Layout ref={chipsRow} layout direction={"row"} gap={8} />
-      </Rect>
-    </Rect>
-  ) as Rect
-
-  return {
-    node,
-    titleRef,
-    process: processRef(),
-    dot: dotRef(),
-    writable: writableRef(),
-    chipsRow,
-    badgeRow,
-  }
-}
 
 function createBadge(text: string, color: string): Rect {
   return (
@@ -1624,6 +1320,10 @@ const playClosingScene = function* (world: World): ThreadGenerator {
   yield* waitFor(2)
 }
 
+function* playMovie(world: World): ThreadGenerator {
+  yield* playIntro(world)
+}
+
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
@@ -1660,8 +1360,9 @@ export default makeScene2D(function* (view) {
     cancellation: {},
   }
 
-  yield* playIntro(world)
+  yield* all(playMovie(world), playNarration(world))
 
+  return
   yield* playSplash(world)
 
   // What does `run` actually do? -> pull + create + start.
