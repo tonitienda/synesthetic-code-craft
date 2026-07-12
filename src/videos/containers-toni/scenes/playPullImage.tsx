@@ -15,6 +15,7 @@ import { createDockerImageBox } from "../../../components/docker"
 import { createLocalsystem } from "../../../components/registries"
 import {
   PADDING,
+  rotatePhaseToken,
   Theme,
   toWorldX,
   toWorldY,
@@ -23,13 +24,20 @@ import {
   World,
 } from "./utils"
 
-export const playPullImage = function* (world: World): ThreadGenerator {
-  const { terminal, registryImage, registry } = world.elements ?? {}
-  const { registryBreath } = world.cancellation ?? {}
+// TODO - Show mini terminal in the host
+// Show "Docker Daemon". Narrator says: Docker itself, and the terminal you're typing into, both run right there.
+// Should we also show "Docker Daemon" in the host panel?
 
-  if (!terminal || !registryImage || !registry || !registryBreath) {
+export const playPullImage = function* (world: World): ThreadGenerator {
+  const { registryImage, registry } = world.elements ?? {}
+  //const { registryBreath } = world.cancellation ?? {}
+
+  if (!registryImage || !registry) {
     return
   }
+
+  // First act of `run`: pull.
+  yield* rotatePhaseToken(world, "pull", Theme.text)
 
   const localSystem = createLocalsystem()
   // Frame the local system as "the host" from the very first time we see it, so
@@ -56,14 +64,14 @@ export const playPullImage = function* (world: World): ThreadGenerator {
 
   // Hand the "breathing" glow over: settle the registry's border back to rest,
   // and start the same soft pulse on the local system instead.
-  cancel(registryBreath)
-  yield* registry.node.stroke("#64748b", 0.4)
+  // cancel(registryBreath)
+  // yield* registry.node.stroke("#64748b", 0.4)
 
-  world.cancellation.localSystemBreath = yield loop(Infinity, () =>
-    localSystem.node
-      .stroke("#94a3b8", 1.6, easeInOutCubic)
-      .to("#64748b", 1.6, easeInOutCubic),
-  )
+  // world.cancellation.localSystemBreath = yield loop(Infinity, () =>
+  //   localSystem.node
+  //     .stroke("#94a3b8", 1.6, easeInOutCubic)
+  //     .to("#64748b", 1.6, easeInOutCubic),
+  // )
 
   world.stage().add(localSystem.node)
 
@@ -71,38 +79,38 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   // the panel's left half while the box materialises around it — no words
   // needed, the containment says it. (The terminal joined the stage before the
   // panel, so bring it in front first.)
-  terminal.node.moveToTop()
+  //terminal.node.moveToTop()
   yield* all(
     localSystem.node.opacity(1, 1),
     localSystem.node.scale(1, 1, easeOutBack),
-    terminal.node.position([311, 165], 1.4, easeInOutCubic),
-    terminal.node.scale(0.55, 1.4, easeInOutCubic),
+    //terminal.node.position([311, 165], 1.4, easeInOutCubic),
+    // terminal.node.scale(0.55, 1.4, easeInOutCubic),
   )
 
   yield* waitFor(1.5)
 
-  const findLocallyLine = terminal.outputLine(
-    "Unable to find image 'nginx:latest' locally",
-  )
+  // const findLocallyLine = terminal.outputLine(
+  //   "Unable to find image 'nginx:latest' locally",
+  // )
 
-  if (!findLocallyLine) {
-    return
-  }
+  // if (!findLocallyLine) {
+  //   return
+  // }
 
-  yield* all(findLocallyLine.textRef().fill(Theme.highlight, 0.5))
+  // yield* all(findLocallyLine.textRef().fill(Theme.highlight, 0.5))
 
   yield* waitFor(2)
 
-  const pullLine = terminal.outputLine("latest: Pulling from library/nginx")
+  // const pullLine = terminal.outputLine("latest: Pulling from library/nginx")
 
-  if (!pullLine) {
-    return
-  }
+  // if (!pullLine) {
+  //   return
+  // }
 
-  yield* all(
-    findLocallyLine.textRef().fill(Theme.text, 0.5),
-    pullLine.textRef().fill(Theme.highlight, 0.5),
-  )
+  // yield* all(
+  //   findLocallyLine.textRef().fill(Theme.text, 0.5),
+  //   pullLine.textRef().fill(Theme.highlight, 0.5),
+  // )
 
   const localSlotCenter = localSystem.slot().absolutePosition()
   const cx = localSlotCenter.x
@@ -135,26 +143,26 @@ export const playPullImage = function* (world: World): ThreadGenerator {
 
   // ...then let it bob gently, as if floating on the surface.
   const landedY = localImage.node.y()
-  world.cancellation.imageFloat = yield loop(Infinity, () =>
-    localImage.node
-      .y(landedY + 5, 1.6, easeInOutCubic)
-      .to(landedY - 5, 1.6, easeInOutCubic),
-  )
+  // world.cancellation.imageFloat = yield loop(Infinity, () =>
+  //   localImage.node
+  //     .y(landedY + 5, 1.6, easeInOutCubic)
+  //     .to(landedY - 5, 1.6, easeInOutCubic),
+  // )
 
   yield* waitFor(3)
-  yield* all(
-    pullLine.textRef().fill(Theme.text, 0.5),
-    // The terminal has done its one honest job: showing the pull. `docker run`
-    // prints nothing for create or start, so instead of leaving it hanging
-    // around as a chip, we let it bow out the moment pull is complete.
-    // (Not terminal.exit() — that would tween scale back UP to 0.96 from the
-    // docked 0.55; shrink it away in place instead.)
-    delay(
-      2,
-      all(terminal.node.opacity(0, 0.9), terminal.node.scale(0.48, 0.9)),
-    ),
-  )
-  terminal.node.remove()
+  // yield* all(
+  // //  pullLine.textRef().fill(Theme.text, 0.5),
+  //   // The terminal has done its one honest job: showing the pull. `docker run`
+  //   // prints nothing for create or start, so instead of leaving it hanging
+  //   // around as a chip, we let it bow out the moment pull is complete.
+  //   // (Not terminal.exit() — that would tween scale back UP to 0.96 from the
+  //   // docked 0.55; shrink it away in place instead.)
+  //   delay(
+  //     2,
+  //   //  all(terminal.node.opacity(0, 0.9), terminal.node.scale(0.48, 0.9)),
+  //   ),
+  // )
+  //terminal.node.remove()
 
   yield* waitFor(1)
 

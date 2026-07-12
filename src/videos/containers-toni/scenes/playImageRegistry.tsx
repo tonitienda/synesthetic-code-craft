@@ -19,6 +19,7 @@ import {
 } from "./utils"
 import { createDockerImageBox } from "../../../components/docker"
 import { createRegistry } from "../../../components/registries"
+import { Txt } from "@motion-canvas/2d"
 
 function* rotatePhaseToken(
   world: World,
@@ -38,9 +39,9 @@ function* rotatePhaseToken(
 }
 
 export const playImageRegistry = function* (world: World): ThreadGenerator {
-  const { liftedCommand, terminal } = world.elements ?? {}
+  const { liftedCommand } = world.elements ?? {}
 
-  if (!liftedCommand || !terminal) {
+  if (!liftedCommand) {
     return
   }
 
@@ -54,29 +55,17 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
     // The lift kept the terminal's tight token gap; at banner size the words
     // fuse together, so open it up to a proper word space.
     liftedCommand.phrase.node.gap(44, 1.2, easeInOutCubic),
-    terminal.node.opacity(1, 1),
-    terminal.node.scale(0.62, 1.2, easeInOutCubic),
-    terminal.node.position([-600, 40], 1.2, easeInOutCubic),
   )
 
-  world.elements.phaseToken = liftedCommand.phrase.token("run")
-
-  // First act of `run`: pull.
-  yield* rotatePhaseToken(world, "pull", Theme.text)
-
-  const sourceCommand = terminal.command("docker run nginx")
-
-  if (!sourceCommand) {
-    return
-  }
-
-  const nginxToken = sourceCommand.token("nginx")
+  const nginxToken = liftedCommand.phrase.token("nginx") as Txt | undefined
 
   if (!nginxToken) {
     return
   }
 
-  yield* nginxToken.fill(Theme.highlight, 0.5)
+  yield* nginxToken.fill(Theme.highlight, 0.4)
+
+  world.elements.phaseToken = liftedCommand.phrase.token("run")
 
   // Create the Registry visual on the right.
   const registry = createRegistry()
@@ -92,11 +81,11 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
 
   // Breathe with a soft glow — pulse the border brighter and back — instead of
   // scaling, so the panel never shimmers or nudges its neighbours.
-  world.cancellation.registryBreath = yield loop(Infinity, () =>
-    registry.node
-      .stroke("#94a3b8", 1.6, easeInOutCubic)
-      .to("#64748b", 1.6, easeInOutCubic),
-  )
+  // world.cancellation.registryBreath = yield loop(Infinity, () =>
+  //   registry.node
+  //     .stroke("#94a3b8", 1.6, easeInOutCubic)
+  //     .to("#64748b", 1.6, easeInOutCubic),
+  // )
 
   world.stage().add(registry.node)
 
@@ -131,6 +120,4 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   }
   world.elements.registryImage = nginxImage
   world.elements.registry = registry
-
-  yield* nginxToken.fill(Theme.text, 0.5)
 }

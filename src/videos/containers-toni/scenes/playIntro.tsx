@@ -91,7 +91,7 @@ export const playIntro = function* (world: World): ThreadGenerator {
     world.elements = {}
   }
   world.elements.liftedCommand = liftedCommand
-  world.elements.terminal = terminal
+  terminal.node.remove()
 
   yield* all(
     liftedCommand.phrase.restyle({ gap: 75 }, 1),

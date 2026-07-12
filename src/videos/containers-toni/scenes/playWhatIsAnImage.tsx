@@ -18,9 +18,9 @@ export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
 
   // The image is about to be reshaped into layers, so stop its idle float first
   // to avoid fighting the upcoming position tweens.
-  if (world.cancellation.imageFloat) {
-    cancel(world.cancellation.imageFloat)
-  }
+  // if (world.cancellation.imageFloat) {
+  //   cancel(world.cancellation.imageFloat)
+  // }
 
   const localSystemTargetHeight = VIDEO_HEIGHT - PADDING * 2
 

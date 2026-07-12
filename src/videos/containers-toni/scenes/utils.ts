@@ -33,7 +33,6 @@ export type World = {
     liftedCommand?: LiftedCommandPhrase
     /** The middle token of the docked command banner — rotates run/pull/create/start. */
     phaseToken?: Txt
-    terminal?: Terminal
     registry?: Registry
     localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
     registryImage?: DockerImage

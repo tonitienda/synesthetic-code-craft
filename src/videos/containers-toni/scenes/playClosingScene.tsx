@@ -46,10 +46,10 @@ function createStepCard(name: string, gloss: string): Rect {
 
 export const playClosingScene = function* (world: World): ThreadGenerator {
   // Stop the idle loops so nothing keeps ticking behind the outro.
-  const { localSystemBreath, heartA, heartB } = world.cancellation ?? {}
-  if (localSystemBreath) cancel(localSystemBreath)
-  if (heartA) cancel(heartA)
-  if (heartB) cancel(heartB)
+  // const { localSystemBreath, heartA, heartB } = world.cancellation ?? {}
+  // if (localSystemBreath) cancel(localSystemBreath)
+  // if (heartA) cancel(heartA)
+  // if (heartB) cancel(heartB)
 
   // 1) Calmly clear the working diagram. The closing content lives in the
   // background layer, which shows through once the front layers fade out.

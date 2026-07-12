@@ -118,16 +118,16 @@ export const playMultipleContainers = function* (
 
   // Both processes are alive — pulse each status light between a bright and a
   // dim green so they read as steady heartbeats without anything resizing.
-  world.cancellation.heartA = yield loop(Infinity, () =>
-    A.dot
-      .fill("#6ee7b7", 0.7, easeInOutCubic)
-      .to("#10b981", 0.7, easeInOutCubic),
-  )
-  world.cancellation.heartB = yield loop(Infinity, () =>
-    B.dot
-      .fill("#6ee7b7", 0.7, easeInOutCubic)
-      .to("#10b981", 0.7, easeInOutCubic),
-  )
+  // world.cancellation.heartA = yield loop(Infinity, () =>
+  //   A.dot
+  //     .fill("#6ee7b7", 0.7, easeInOutCubic)
+  //     .to("#10b981", 0.7, easeInOutCubic),
+  // )
+  // world.cancellation.heartB = yield loop(Infinity, () =>
+  //   B.dot
+  //     .fill("#6ee7b7", 0.7, easeInOutCubic)
+  //     .to("#10b981", 0.7, easeInOutCubic),
+  // )
 
   world.elements.sharedImage = base
   world.elements.containerA = A

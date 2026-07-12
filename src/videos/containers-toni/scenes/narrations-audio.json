@@ -1,224 +1,218 @@
 [
   {
     "id": "intro_command",
-    "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
+    "text": "If you've used Docker, you've probably typed something like this: docker run nginx.",
     "duration": 89478.485,
-    "path": "/audio/intro_command.wav"
+    "path": "audio/intro_command.wav"
   },
   {
     "id": "pull_success",
-    "text": "You hit enter, and it just works. You wanted nginx, so Docker goes and gets it.",
+    "text": "You press enter, Docker pulls the image, and seconds later nginx is running. This works really well.",
     "duration": 89478.485,
-    "path": "/audio/pull_success.wav"
+    "path": "audio/pull_success.wav"
   },
   {
     "id": "what_is_run",
-    "text": "But have you ever stopped to ask what's really going on here? What does 'run' actually do?",
+    "text": "But what does 'run' actually do? The word is a little vague, so let's break it down.",
     "duration": 89478.485,
-    "path": "/audio/what_is_run.wav"
-  },
-  {
-    "id": "splash_narration",
-    "text": "Let's slow it right down, and follow what actually happens behind that one line.",
-    "duration": 89478.485,
-    "path": "/audio/splash_narration.wav"
+    "path": "audio/what_is_run.wav"
   },
   {
     "id": "what_is_run_detail",
     "text": "When you execute docker run nginx, Docker does three things: it pulls the image, creates a container, and starts the process inside.",
     "duration": 89478.485,
-    "path": "/audio/what_is_run_detail.wav"
+    "path": "audio/what_is_run_detail.wav"
   },
   {
     "id": "registry_intro",
     "text": "Public images like nginx live in a registry — a shared library of images. By default, Docker looks in Docker Hub.",
     "duration": 89478.485,
-    "path": "/audio/registry_intro.wav"
+    "path": "audio/registry_intro.wav"
   },
   {
     "id": "host_machine",
-    "text": "And where does all of this happen? On your own machine — the host. Docker itself, and the terminal you type into, both run right there.",
+    "text": "All of this happens on your own machine — the host. Docker itself, and the terminal you're typing into, both run right there.",
     "duration": 89478.485,
-    "path": "/audio/host_machine.wav"
+    "path": "audio/host_machine.wav"
   },
   {
     "id": "check_locally",
-    "text": "The very first thing Docker does is check your own machine: do I already have this image?",
+    "text": "The first thing Docker does is check whether the image is already on your machine — a simple check that can save the whole download.",
     "duration": 89478.485,
-    "path": "/audio/check_locally.wav"
+    "path": "audio/check_locally.wav"
   },
   {
     "id": "pull_layers",
-    "text": "This time it doesn't. So it reaches out to the registry and pulls the image down onto your machine, layer by layer.",
+    "text": "This time, it doesn't. So Docker contacts the registry and pulls the image down onto your machine, layer by layer.",
     "duration": 89478.485,
-    "path": "/audio/pull_layers.wav"
+    "path": "audio/pull_layers.wav"
   },
   {
     "id": "pull_complete",
-    "text": "Once the last layer arrives, the image lives on your machine, ready to go. That's the pull step done.",
+    "text": "Once the last layer arrives, the image is on your machine, ready to use. That's the pull step complete.",
     "duration": 89478.485,
-    "path": "/audio/pull_complete.wav"
+    "path": "audio/pull_complete.wav"
   },
   {
     "id": "what_is_image",
-    "text": "But hold on — what exactly is this thing we just downloaded? What is an image?",
+    "text": "So what exactly did we just download? What is an image?",
     "duration": 89478.485,
-    "path": "/audio/what_is_image.wav"
+    "path": "audio/what_is_image.wav"
   },
   {
     "id": "image_definition",
-    "text": "An image is really just a frozen snapshot of a filesystem, stacked up in layers. It's completely inert — it can't do anything on its own. It just sits there.",
+    "text": "An image is a frozen snapshot of a filesystem, built up in layers. And it's completely inert — it can't do anything on its own. It's data, not a running process.",
     "duration": 89478.485,
-    "path": "/audio/image_definition.wav"
+    "path": "audio/image_definition.wav"
   },
   {
     "id": "layers_detail",
-    "text": "Each layer is one step in how the image was built: a base system at the bottom, then packages, then dependencies, and the application files right on top.",
+    "text": "Each layer is one step in how the image was built: a base system at the bottom, then packages, then dependencies, and the application files on top.",
     "duration": 89478.485,
-    "path": "/audio/layers_detail.wav"
+    "path": "audio/layers_detail.wav"
   },
   {
     "id": "layers_stacked",
-    "text": "Stacked together, those layers behave as one single, read-only filesystem. Add a little metadata — like which program to start — and that's an image. And notice: nothing is actually running yet.",
+    "text": "Stacked together, those layers behave as a single, read-only filesystem. Add some metadata — like which program to start — and that's an image. And so far, nothing is running.",
     "duration": 89478.485,
-    "path": "/audio/layers_stacked.wav"
+    "path": "audio/layers_stacked.wav"
   },
   {
     "id": "create_step",
-    "text": "Here's where create comes in. Docker takes that read-only image and lays a thin, writable layer right on top of it. The image plus that new layer — together, that's a container.",
+    "text": "This is where create comes in. Docker takes that read-only image and lays a thin, writable layer on top of it. The image plus that new layer — together, that's a container.",
     "duration": 89478.485,
-    "path": "/audio/create_step.wav"
+    "path": "audio/create_step.wav"
   },
   {
     "id": "start_step",
-    "text": "And then start brings it to life. It launches the image's main program — for nginx, that's the web server — as the very first process inside the container, PID 1.",
+    "text": "And then start launches the image's main program — for nginx, that's the web server — as the first process inside the container: PID 1.",
     "duration": 89478.485,
-    "path": "/audio/start_step.wav"
+    "path": "audio/start_step.wav"
   },
   {
     "id": "read_config",
-    "text": "So how does that process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
+    "text": "So how does this process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
     "duration": 89478.485,
-    "path": "/audio/read_config.wav"
+    "path": "audio/read_config.wav"
   },
   {
     "id": "write_logs",
-    "text": "But the moment it writes something — a log file, say — that never touches the image. The write lands in the container's own writable layer. Even changing an existing file first copies it up into that layer.",
+    "text": "But when it writes something — a log file, for example — the write lands in the container's writable layer. Even modifying an existing file copies it there first. That mechanism is copy-on-write, and it's what keeps the image pristine.",
     "duration": 89478.485,
-    "path": "/audio/write_logs.wav"
+    "path": "audio/write_logs.wav"
   },
   {
     "id": "container_summary",
     "text": "Same read-only image underneath, but every change stays isolated in the container's own layer. That is a container.",
     "duration": 89478.485,
-    "path": "/audio/container_summary.wav"
+    "path": "audio/container_summary.wav"
   },
   {
     "id": "run_breakdown",
-    "text": "Here's the first surprise: run isn't really one thing at all. It's three smaller steps rolled into one convenient command.",
+    "text": "So run isn't really a single operation. It's three smaller steps rolled into one convenient command.",
     "duration": 89478.485,
-    "path": "/audio/run_breakdown.wav"
+    "path": "audio/run_breakdown.wav"
   },
   {
     "id": "run_three_steps",
     "text": "First it pulls the image — if you don't already have it — then it creates a container from it, and finally it starts the process inside. Let's walk through each one.",
     "duration": 89478.485,
-    "path": "/audio/run_three_steps.wav"
+    "path": "audio/run_three_steps.wav"
   },
   {
     "id": "second_container",
     "text": "So far, that's a single container sitting on top of a read-only image. But what happens when we run a second one?",
     "duration": 89478.485,
-    "path": "/audio/second_container.wav"
+    "path": "audio/second_container.wav"
   },
   {
     "id": "shared_image",
-    "text": "Docker doesn't copy the image. It creates a brand-new container from it — a new process, and a new, empty writable layer — and both containers read from the very same image on disk.",
+    "text": "Docker doesn't copy the image — and that's the smart part. It creates a second container — a new process, with its own empty writable layer — and both containers read from the same image on disk.",
     "duration": 89478.485,
-    "path": "/audio/shared_image.wav"
+    "path": "audio/shared_image.wav"
   },
   {
     "id": "isolated_writes",
-    "text": "So when web-1 writes a log file, it lands only in web-1's own layer. web-2 never even sees it. Same shared image underneath — completely separate changes on top.",
+    "text": "So when web-1 writes a log file, it lands in web-1's own layer — and only there. web-2 can't see it. One shared image underneath, completely separate changes on top.",
     "duration": 89478.485,
-    "path": "/audio/isolated_writes.wav"
+    "path": "audio/isolated_writes.wav"
   },
   {
     "id": "scale_containers",
-    "text": "And that's the real beauty of it. Add a third container, or a tenth — nothing about the system underneath changes. It's always one shared image, with lightweight containers layered on top.",
+    "text": "And this is where that design really pays off. Add a third container, or a tenth — it's still one image on disk. Each new container costs only its thin, writable layer.",
     "duration": 89478.485,
-    "path": "/audio/scale_containers.wav"
+    "path": "audio/scale_containers.wav"
   },
   {
     "id": "namespaces_intro",
     "text": "Now, both of these containers are running on the same kernel — the host's. So how are they kept apart? The answer is namespaces.",
     "duration": 89478.485,
-    "path": "/audio/namespaces_intro.wav"
+    "path": "audio/namespaces_intro.wav"
   },
   {
     "id": "namespaces_definition",
     "text": "A namespace gives a container its own private view of just one kind of resource. There's one for process IDs, one for the network, one for filesystem mounts, and several more.",
     "duration": 89478.485,
-    "path": "/audio/namespaces_definition.wav"
+    "path": "audio/namespaces_definition.wav"
   },
   {
     "id": "pid_namespace",
     "text": "Take process IDs. Inside its own namespace, each container's main process is PID 1 — and neither container can see the other's processes at all.",
     "duration": 89478.485,
-    "path": "/audio/pid_namespace.wav"
+    "path": "audio/pid_namespace.wav"
   },
   {
     "id": "mount_namespace",
-    "text": "And the mount namespace is the trick that lets each container see its own stack — the shared image plus its own writable layer — as its entire root filesystem, starting at slash.",
+    "text": "And the mount namespace is what lets each container see its own stack — the shared image plus its own writable layer — as its entire root filesystem, starting at slash.",
     "duration": 89478.485,
-    "path": "/audio/mount_namespace.wav"
+    "path": "audio/mount_namespace.wav"
   },
   {
     "id": "cgroups_intro",
-    "text": "Now, keeping them apart is only half the story. The other half is stopping any one container from hogging everything. And that's the job of cgroups.",
+    "text": "Keeping containers apart is only half the story. The other half is making sure no single container can consume all of the host's resources. That's the job of cgroups.",
     "duration": 89478.485,
-    "path": "/audio/cgroups_intro.wav"
+    "path": "audio/cgroups_intro.wav"
   },
   {
     "id": "cgroups_definition",
-    "text": "A cgroup — short for control group — lets you set a hard cap on how much CPU and memory a container may use out of the host's total.",
+    "text": "A cgroup — short for control group — lets you set a hard cap on how much CPU and memory a container can use out of the host's total.",
     "duration": 89478.485,
-    "path": "/audio/cgroups_definition.wav"
+    "path": "audio/cgroups_definition.wav"
   },
   {
     "id": "cgroups_limits",
-    "text": "We can give web-2 a tighter limit, so no matter what it does, it can never starve web-1 — or bring down the host itself.",
+    "text": "We can give web-2 a tighter limit, so even at full load it can never starve web-1 — or take down the host itself.",
     "duration": 89478.485,
-    "path": "/audio/cgroups_limits.wav"
+    "path": "audio/cgroups_limits.wav"
   },
   {
     "id": "summary",
-    "text": "And that's the whole picture. One shared kernel, one shared image — but each container fenced off by namespaces, and kept in check by cgroups. That, in the end, is all a container really is.",
+    "text": "And that's the whole picture. One shared kernel, one shared image — each container isolated by its namespaces, and constrained by its cgroups. In the end, that's all a container really is.",
     "duration": 89478.485,
-    "path": "/audio/summary.wav"
+    "path": "audio/summary.wav"
   },
   {
     "id": "pull_together",
-    "text": "So — let's pull the whole thing back together.",
+    "text": "So, let's put the whole picture back together.",
     "duration": 89478.485,
-    "path": "/audio/pull_together.wav"
+    "path": "audio/pull_together.wav"
   },
   {
     "id": "closing_command",
-    "text": "docker run nginx still looks like one simple line. But now you know everything it quietly sets in motion.",
+    "text": "docker run nginx still looks like one simple line. But now you know everything it actually does.",
     "duration": 89478.485,
-    "path": "/audio/closing_command.wav"
+    "path": "audio/closing_command.wav"
   },
   {
     "id": "final_recap",
-    "text": "Pull the image, create the container, start the process — then fence it off with namespaces, and rein it in with cgroups.",
+    "text": "Pull the image, create the container, start the process — then isolate it with namespaces, and constrain it with cgroups.",
     "duration": 89478.485,
-    "path": "/audio/final_recap.wav"
+    "path": "audio/final_recap.wav"
   },
   {
     "id": "thanks",
-    "text": "That's what really happens, every single time you run a container. Thanks for watching.",
+    "text": "That's what happens, every time you run a container. Thanks for watching.",
     "duration": 89478.485,
-    "path": "/audio/thanks.wav"
+    "path": "audio/thanks.wav"
   }
 ]

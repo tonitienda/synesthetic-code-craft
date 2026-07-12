@@ -1,27 +1,18 @@
 [
   {
     "id": "intro_command",
-    "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
-    "totalDuration": 8,
-    "status": "ok"
+    "text": "If you've used Docker, you've probably typed something like this: docker run nginx.",
+    "totalDuration": 8
   },
   {
     "id": "pull_success",
-    "text": "You hit enter, and it just works. You wanted nginx, so Docker goes and gets it.",
-    "totalDuration": 6,
-    "status": "ok"
+    "text": "You press enter, Docker pulls the image, and seconds later nginx is running. This works really well.",
+    "totalDuration": 8
   },
   {
     "id": "what_is_run",
-    "text": "But have you ever stopped to ask what's really going on here? What does 'run' actually do?",
-    "totalDuration": 7,
-    "status": "ok"
-  },
-  {
-    "id": "splash_narration",
-    "text": "Let's follow what actually happens behind that one line.",
-    "totalDuration": 15.5,
-    "status": "edited"
+    "text": "But what does 'run' actually do? The word is a little vague, so let's break it down.",
+    "totalDuration": 20
   },
   {
     "id": "what_is_run_detail",
@@ -35,62 +26,62 @@
   },
   {
     "id": "host_machine",
-    "text": "And where does all of this happen? On your own machine — the host. Docker itself, and the terminal you type into, both run right there.",
+    "text": "All of this happens on your own machine — the host. Docker itself, and the terminal you're typing into, both run right there.",
     "totalDuration": 10
   },
   {
     "id": "check_locally",
-    "text": "The very first thing Docker does is check your own machine: do I already have this image?",
+    "text": "The first thing Docker does is check whether the image is already on your machine — a simple check that can save the whole download.",
     "totalDuration": 8
   },
   {
     "id": "pull_layers",
-    "text": "This time it doesn't. So it reaches out to the registry and pulls the image down onto your machine, layer by layer.",
+    "text": "This time, it doesn't. So Docker contacts the registry and pulls the image down onto your machine, layer by layer.",
     "totalDuration": 7
   },
   {
     "id": "pull_complete",
-    "text": "Once the last layer arrives, the image lives on your machine, ready to go. That's the pull step done.",
+    "text": "Once the last layer arrives, the image is on your machine, ready to use. That's the pull step complete.",
     "totalDuration": 7
   },
   {
     "id": "what_is_image",
-    "text": "But hold on — what exactly is this thing we just downloaded? What is an image?",
+    "text": "So what exactly did we just download? What is an image?",
     "totalDuration": 5
   },
   {
     "id": "image_definition",
-    "text": "An image is really just a frozen snapshot of a filesystem, stacked up in layers. It's completely inert — it can't do anything on its own. It just sits there.",
+    "text": "An image is a frozen snapshot of a filesystem, built up in layers. And it's completely inert — it can't do anything on its own. It's data, not a running process.",
     "totalDuration": 11
   },
   {
     "id": "layers_detail",
-    "text": "Each layer is one step in how the image was built: a base system at the bottom, then packages, then dependencies, and the application files right on top.",
+    "text": "Each layer is one step in how the image was built: a base system at the bottom, then packages, then dependencies, and the application files on top.",
     "totalDuration": 10.1
   },
   {
     "id": "layers_stacked",
-    "text": "Stacked together, those layers behave as one single, read-only filesystem. Add a little metadata — like which program to start — and that's an image. And notice: nothing is actually running yet.",
+    "text": "Stacked together, those layers behave as a single, read-only filesystem. Add some metadata — like which program to start — and that's an image. And so far, nothing is running.",
     "totalDuration": 12.8
   },
   {
     "id": "create_step",
-    "text": "Here's where create comes in. Docker takes that read-only image and lays a thin, writable layer right on top of it. The image plus that new layer — together, that's a container.",
+    "text": "This is where create comes in. Docker takes that read-only image and lays a thin, writable layer on top of it. The image plus that new layer — together, that's a container.",
     "totalDuration": 11
   },
   {
     "id": "start_step",
-    "text": "And then start brings it to life. It launches the image's main program — for nginx, that's the web server — as the very first process inside the container, PID 1.",
+    "text": "And then start launches the image's main program — for nginx, that's the web server — as the first process inside the container: PID 1.",
     "totalDuration": 11
   },
   {
     "id": "read_config",
-    "text": "So how does that process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
+    "text": "So how does this process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
     "totalDuration": 8.5
   },
   {
     "id": "write_logs",
-    "text": "But the moment it writes something — a log file, say — that never touches the image. The write lands in the container's own writable layer. Even changing an existing file first copies it up into that layer.",
+    "text": "But when it writes something — a log file, for example — the write lands in the container's writable layer. Even modifying an existing file copies it there first. That mechanism is copy-on-write, and it's what keeps the image pristine.",
     "totalDuration": 13
   },
   {
@@ -100,7 +91,7 @@
   },
   {
     "id": "run_breakdown",
-    "text": "Here's the first surprise: run isn't really one thing at all. It's three smaller steps rolled into one convenient command.",
+    "text": "So run isn't really a single operation. It's three smaller steps rolled into one convenient command.",
     "totalDuration": 7.5
   },
   {
@@ -115,17 +106,17 @@
   },
   {
     "id": "shared_image",
-    "text": "Docker doesn't copy the image. It creates a brand-new container from it — a new process, and a new, empty writable layer — and both containers read from the very same image on disk.",
+    "text": "Docker doesn't copy the image — and that's the smart part. It creates a second container — a new process, with its own empty writable layer — and both containers read from the same image on disk.",
     "totalDuration": 11.5
   },
   {
     "id": "isolated_writes",
-    "text": "So when web-1 writes a log file, it lands only in web-1's own layer. web-2 never even sees it. Same shared image underneath — completely separate changes on top.",
+    "text": "So when web-1 writes a log file, it lands in web-1's own layer — and only there. web-2 can't see it. One shared image underneath, completely separate changes on top.",
     "totalDuration": 11
   },
   {
     "id": "scale_containers",
-    "text": "And that's the real beauty of it. Add a third container, or a tenth — nothing about the system underneath changes. It's always one shared image, with lightweight containers layered on top.",
+    "text": "And this is where that design really pays off. Add a third container, or a tenth — it's still one image on disk. Each new container costs only its thin, writable layer.",
     "totalDuration": 11.5
   },
   {
@@ -145,47 +136,47 @@
   },
   {
     "id": "mount_namespace",
-    "text": "And the mount namespace is the trick that lets each container see its own stack — the shared image plus its own writable layer — as its entire root filesystem, starting at slash.",
+    "text": "And the mount namespace is what lets each container see its own stack — the shared image plus its own writable layer — as its entire root filesystem, starting at slash.",
     "totalDuration": 10.8
   },
   {
     "id": "cgroups_intro",
-    "text": "Now, keeping them apart is only half the story. The other half is stopping any one container from hogging everything. And that's the job of cgroups.",
+    "text": "Keeping containers apart is only half the story. The other half is making sure no single container can consume all of the host's resources. That's the job of cgroups.",
     "totalDuration": 9.3
   },
   {
     "id": "cgroups_definition",
-    "text": "A cgroup — short for control group — lets you set a hard cap on how much CPU and memory a container may use out of the host's total.",
+    "text": "A cgroup — short for control group — lets you set a hard cap on how much CPU and memory a container can use out of the host's total.",
     "totalDuration": 9
   },
   {
     "id": "cgroups_limits",
-    "text": "We can give web-2 a tighter limit, so no matter what it does, it can never starve web-1 — or bring down the host itself.",
+    "text": "We can give web-2 a tighter limit, so even at full load it can never starve web-1 — or take down the host itself.",
     "totalDuration": 8
   },
   {
     "id": "summary",
-    "text": "And that's the whole picture. One shared kernel, one shared image — but each container fenced off by namespaces, and kept in check by cgroups. That, in the end, is all a container really is.",
+    "text": "And that's the whole picture. One shared kernel, one shared image — each container isolated by its namespaces, and constrained by its cgroups. In the end, that's all a container really is.",
     "totalDuration": 13
   },
   {
     "id": "pull_together",
-    "text": "So — let's pull the whole thing back together.",
+    "text": "So, let's put the whole picture back together.",
     "totalDuration": 4
   },
   {
     "id": "closing_command",
-    "text": "docker run nginx still looks like one simple line. But now you know everything it quietly sets in motion.",
+    "text": "docker run nginx still looks like one simple line. But now you know everything it actually does.",
     "totalDuration": 7
   },
   {
     "id": "final_recap",
-    "text": "Pull the image, create the container, start the process — then fence it off with namespaces, and rein it in with cgroups.",
+    "text": "Pull the image, create the container, start the process — then isolate it with namespaces, and constrain it with cgroups.",
     "totalDuration": 9
   },
   {
     "id": "thanks",
-    "text": "That's what really happens, every single time you run a container. Thanks for watching.",
+    "text": "That's what happens, every time you run a container. Thanks for watching.",
     "totalDuration": 6
   }
 ]

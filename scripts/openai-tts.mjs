@@ -1,14 +1,43 @@
 #!/usr/bin/env node
 
-import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
-import {basename, dirname, join, relative} from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { basename, dirname, join, relative } from "node:path"
 
-const DEFAULT_OUT_DIR = 'artifacts/narration/openai-audio/audio';
-const DEFAULT_MODEL = 'gpt-4o-mini-tts';
-const DEFAULT_VOICE = 'alloy';
-const DEFAULT_FORMAT = 'wav';
-const DEFAULT_SPEED = 1;
-const DEFAULT_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
+const DEFAULT_OUT_DIR = "artifacts/narration/openai-audio/audio"
+const DEFAULT_MODEL = "gpt-4o-mini-tts"
+const DEFAULT_VOICE = "alloy"
+const DEFAULT_FORMAT = "wav"
+const DEFAULT_SPEED = 1
+const DEFAULT_ENDPOINT = "https://api.openai.com/v1/audio/speech"
+
+const PROMPT = `Voice Affect: Calm, low-key, and self-assured; a senior engineer explaining
+something at a whiteboard to a colleague they respect. Quiet confidence with
+no performance energy — never a "presenter" voice.
+
+Tone: Matter-of-fact and friendly, with a hint of dry understatement. Opinions
+are delivered plainly and owned personally ("I almost never use it in my
+code"), not dramatized. Approval sounds like a nod, not applause ("This works
+well." / "and that's the smart part").
+
+Pacing: Measured and even, on the slower side of conversational. Sentences are
+short and land one idea at a time; the speaker never rushes to the next point
+and trusts the listener to keep up. Slightly quicker through familiar setup,
+slightly slower on definitions and key terms.
+
+Emotion: Restrained throughout — engagement shows as steady interest, not
+excitement. A mild warming on valuation lines ("This works really well") and a
+touch of flatness on problems ("But this is where inheritance starts to have
+issues"), like calmly pointing at the flaw.
+
+Pronunciation: Clear and deliberate. Technical terms and commands (docker run,
+copy-on-write, PID 1, cgroup, namespace) are articulated precisely and given
+slight emphasis on first mention, as if gently underlining the word the viewer
+should remember.
+
+Pauses: Frequent, meaningful micro-pauses — after a term is introduced, before
+an answer to a rhetorical question ("So what is composition? … You've already
+been doing it."), and at the end of a completed idea, leaving room for the
+animation to land. Pauses do the emphasis work that intonation would normally do.`
 
 function usage() {
   console.log(`Usage: node scripts/openai-tts.mjs <narrations.json> [options]
@@ -34,8 +63,8 @@ Options:
   --help                    Show this help.
 
 Example:
-  OPENAI_API_KEY=... node scripts/openai-tts.mjs content/videos/example/narrations.json --out-dir artifacts/narration/example/audio --manifest artifacts/narration/example/narrations-audio.json --tone "Calm, precise, friendly." --speed 0.95
-`);
+  OPENAI_API_KEY=... node scripts/openai-tts.mjs content/videos/example/narrations.json --out-dir artifacts/narration/example/audio --manifest artifacts/narration/example/narrations-audio.json --tone "Calm, professional, friendly" --speed 0.95
+`)
 }
 
 function parseArgs(argv) {
@@ -43,7 +72,7 @@ function parseArgs(argv) {
     input: null,
     outDir: DEFAULT_OUT_DIR,
     manifest: null,
-    apiKey: process.env.OPENAI_API_KEY ?? '',
+    apiKey: process.env.OPENAI_API_KEY ?? "",
     model: null,
     voice: null,
     format: null,
@@ -51,84 +80,116 @@ function parseArgs(argv) {
     tone: null,
     limit: null,
     dryRun: false,
-  };
-  const positional = [];
+  }
+  const positional = []
 
   for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
+    const arg = argv[i]
 
-    if (arg === '--help' || arg === '-h') {
-      usage();
-      process.exit(0);
+    if (arg === "--help" || arg === "-h") {
+      usage()
+      process.exit(0)
     }
 
-    if (arg === '--dry-run') {
-      args.dryRun = true;
-      continue;
+    if (arg === "--dry-run") {
+      args.dryRun = true
+      continue
     }
 
-    if (['--out-dir', '--manifest', '--api-key', '--model', '--voice', '--format', '--speed', '--tone', '--limit'].includes(arg)) {
-      const value = argv[i + 1];
-      if (!value || value.startsWith('--')) {
-        throw new Error(`Missing value for ${arg}`);
+    if (
+      [
+        "--out-dir",
+        "--manifest",
+        "--api-key",
+        "--model",
+        "--voice",
+        "--format",
+        "--speed",
+        "--tone",
+        "--limit",
+      ].includes(arg)
+    ) {
+      const value = argv[i + 1]
+      if (!value || value.startsWith("--")) {
+        throw new Error(`Missing value for ${arg}`)
       }
-      const key = arg === '--out-dir' ? 'outDir' : arg.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-      args[key] = value;
-      i += 1;
-      continue;
+      const key =
+        arg === "--out-dir"
+          ? "outDir"
+          : arg
+              .slice(2)
+              .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
+      args[key] = value
+      i += 1
+      continue
     }
 
-    if (arg.startsWith('--')) {
-      throw new Error(`Unknown option: ${arg}`);
+    if (arg.startsWith("--")) {
+      throw new Error(`Unknown option: ${arg}`)
     }
 
-    positional.push(arg);
+    positional.push(arg)
   }
 
   if (positional.length !== 1) {
-    throw new Error('Expected exactly one narrations JSON input path.');
+    throw new Error("Expected exactly one narrations JSON input path.")
   }
 
-  args.input = positional[0];
-  args.limit = args.limit === null ? null : Number.parseInt(args.limit, 10);
+  args.input = positional[0]
+  args.limit = args.limit === null ? null : Number.parseInt(args.limit, 10)
   if (args.limit !== null && (!Number.isFinite(args.limit) || args.limit < 1)) {
-    throw new Error('--limit must be a positive integer.');
+    throw new Error("--limit must be a positive integer.")
   }
 
-  args.speed = args.speed === null ? null : Number.parseFloat(args.speed);
-  if (args.speed !== null && (!Number.isFinite(args.speed) || args.speed < 0.25 || args.speed > 4)) {
-    throw new Error('--speed must be a number from 0.25 to 4.0.');
+  args.speed = args.speed === null ? null : Number.parseFloat(args.speed)
+  if (
+    args.speed !== null &&
+    (!Number.isFinite(args.speed) || args.speed < 0.25 || args.speed > 4)
+  ) {
+    throw new Error("--speed must be a number from 0.25 to 4.0.")
   }
 
-  args.format = (args.format ?? DEFAULT_FORMAT).toLowerCase();
-  if (args.format !== 'wav') {
-    throw new Error('Duration manifest generation currently requires --format wav.');
+  args.format = (args.format ?? DEFAULT_FORMAT).toLowerCase()
+  if (args.format !== "wav") {
+    throw new Error(
+      "Duration manifest generation currently requires --format wav.",
+    )
   }
 
-  args.manifest = args.manifest ?? defaultManifestPath(args.outDir);
+  args.manifest = args.manifest ?? defaultManifestPath(args.outDir)
 
-  return args;
+  return args
 }
 
 function defaultManifestPath(outDir) {
-  if (basename(outDir) === 'audio') {
-    return join(dirname(outDir), 'narrations-audio.json');
+  if (basename(outDir) === "audio") {
+    return join(dirname(outDir), "narrations-audio.json")
   }
 
-  return join(outDir, 'narrations-audio.json');
+  return join(outDir, "narrations-audio.json")
 }
 
 function getSettings(data, args) {
-  const settings = data && !Array.isArray(data) && typeof data === 'object' ? data.settings ?? {} : {};
-  const speed = args.speed ?? numberSetting(settings.speed, DEFAULT_SPEED);
+  const settings =
+    data && !Array.isArray(data) && typeof data === "object"
+      ? (data.settings ?? {})
+      : {}
+  const speed = args.speed ?? numberSetting(settings.speed, DEFAULT_SPEED)
 
   if (!Number.isFinite(speed) || speed < 0.25 || speed > 4) {
-    throw new Error('settings.speed must be a number from 0.25 to 4.0.');
+    throw new Error("settings.speed must be a number from 0.25 to 4.0.")
   }
 
-  const responseFormat = (args.format ?? settings.format ?? settings.response_format ?? DEFAULT_FORMAT).toLowerCase();
-  if (responseFormat !== 'wav') {
-    throw new Error('Duration manifest generation currently requires wav output.');
+  const responseFormat = (
+    args.format ??
+    settings.format ??
+    settings.response_format ??
+    DEFAULT_FORMAT
+  ).toLowerCase()
+  if (responseFormat !== "wav") {
+    throw new Error(
+      "Duration manifest generation currently requires wav output.",
+    )
   }
 
   return {
@@ -137,72 +198,81 @@ function getSettings(data, args) {
     voice: args.voice ?? settings.voice ?? DEFAULT_VOICE,
     response_format: responseFormat,
     speed,
-    instructions: args.tone ?? settings.tone ?? settings.instructions ?? '',
-  };
+    instructions: args.tone ?? settings.tone ?? settings.instructions ?? PROMPT,
+  }
 }
 
 function numberSetting(value, fallback) {
-  if (value === undefined || value === null || value === '') {
-    return fallback;
+  if (value === undefined || value === null || value === "") {
+    return fallback
   }
 
-  return Number.parseFloat(value);
+  return Number.parseFloat(value)
 }
 
 function getNarrationItems(data) {
-  const rawItems = Array.isArray(data) ? data : data?.narrations;
+  const rawItems = Array.isArray(data) ? data : data?.narrations
 
   if (!Array.isArray(rawItems)) {
-    throw new Error('Input must be an array of {id, text} narration objects or an object with a narrations array.');
+    throw new Error(
+      "Input must be an array of {id, text} narration objects or an object with a narrations array.",
+    )
   }
 
-  const seenIds = new Set();
+  const seenIds = new Set()
 
   return rawItems.map((item, index) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) {
-      throw new Error(`Narration item ${index + 1} must be an object with id and text.`);
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error(
+        `Narration item ${index + 1} must be an object with id and text.`,
+      )
     }
 
-    const id = String(item.id ?? '').trim();
-    const text = normalizeText(item.text ?? '');
+    const id = String(item.id ?? "").trim()
+    const text = normalizeText(item.text ?? "")
 
     if (!id) {
-      throw new Error(`Narration item ${index + 1} is missing id.`);
+      throw new Error(`Narration item ${index + 1} is missing id.`)
     }
 
     if (!text) {
-      throw new Error(`Narration item ${id} is missing text.`);
+      throw new Error(`Narration item ${id} is missing text.`)
     }
 
     if (seenIds.has(id)) {
-      throw new Error(`Duplicate narration id: ${id}`);
+      throw new Error(`Duplicate narration id: ${id}`)
     }
 
-    seenIds.add(id);
-    return {id, text};
-  });
+    seenIds.add(id)
+    return { id, text }
+  })
 }
 
 function normalizeText(value) {
   return String(value)
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-    .map(line => line.trim())
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
     .filter(Boolean)
-    .join(' ')
-    .trim();
+    .join(" ")
+    .trim()
 }
 
 function sanitizeFilePart(value) {
-  return String(value).trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-|-$/g, '') || 'narration';
+  return (
+    String(value)
+      .trim()
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-|-$/g, "") || "narration"
+  )
 }
 
 function outputPath(outDir, item, format) {
-  return join(outDir, `${sanitizeFilePart(item.id)}.${format}`);
+  return join(outDir, `${sanitizeFilePart(item.id)}.${format}`)
 }
 
 function manifestPath(manifestFile, audioFile) {
-  return relative(dirname(manifestFile), audioFile).replace(/\\/g, '/');
+  return relative(dirname(manifestFile), audioFile).replace(/\\/g, "/")
 }
 
 function requestBody(settings, narration) {
@@ -212,119 +282,138 @@ function requestBody(settings, narration) {
     input: narration.text,
     response_format: settings.response_format,
     speed: settings.speed,
-    ...(settings.instructions ? {instructions: settings.instructions} : {}),
-  };
+    ...(settings.instructions ? { instructions: settings.instructions } : {}),
+  }
 }
 
 async function callOpenAi(endpoint, apiKey, body) {
   const response = await fetch(endpoint, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  });
+  })
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`OpenAI speech API failed (${response.status}): ${text}`);
+    const text = await response.text()
+    throw new Error(`OpenAI speech API failed (${response.status}): ${text}`)
   }
 
-  return Buffer.from(await response.arrayBuffer());
+  return Buffer.from(await response.arrayBuffer())
 }
 
 function wavDurationSeconds(buffer) {
-  if (buffer.toString('ascii', 0, 4) !== 'RIFF' || buffer.toString('ascii', 8, 12) !== 'WAVE') {
-    throw new Error('Generated audio is not a WAV file, so duration could not be read.');
+  if (
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WAVE"
+  ) {
+    throw new Error(
+      "Generated audio is not a WAV file, so duration could not be read.",
+    )
   }
 
-  let offset = 12;
-  let byteRate = null;
-  let dataSize = null;
+  let offset = 12
+  let byteRate = null
+  let dataSize = null
 
   while (offset + 8 <= buffer.length) {
-    const chunkId = buffer.toString('ascii', offset, offset + 4);
-    const chunkSize = buffer.readUInt32LE(offset + 4);
-    const chunkDataOffset = offset + 8;
+    const chunkId = buffer.toString("ascii", offset, offset + 4)
+    const chunkSize = buffer.readUInt32LE(offset + 4)
+    const chunkDataOffset = offset + 8
 
-    if (chunkId === 'fmt ') {
-      byteRate = buffer.readUInt32LE(chunkDataOffset + 8);
+    if (chunkId === "fmt ") {
+      byteRate = buffer.readUInt32LE(chunkDataOffset + 8)
     }
 
-    if (chunkId === 'data') {
-      dataSize = chunkSize;
-      break;
+    if (chunkId === "data") {
+      dataSize = chunkSize
+      break
     }
 
-    offset = chunkDataOffset + chunkSize + (chunkSize % 2);
+    offset = chunkDataOffset + chunkSize + (chunkSize % 2)
   }
 
   if (!byteRate || !dataSize) {
-    throw new Error('Could not find WAV fmt/data chunks for duration calculation.');
+    throw new Error(
+      "Could not find WAV fmt/data chunks for duration calculation.",
+    )
   }
 
-  return Math.round((dataSize / byteRate) * 1000) / 1000;
+  return Math.round((dataSize / byteRate) * 1000) / 1000
 }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const args = parseArgs(process.argv.slice(2))
 
   if (!existsSync(args.input)) {
-    throw new Error(`Input file not found: ${args.input}`);
+    throw new Error(`Input file not found: ${args.input}`)
   }
 
-  const data = JSON.parse(readFileSync(args.input, 'utf8'));
-  const settings = getSettings(data, args);
-  const narrations = getNarrationItems(data).slice(0, args.limit ?? undefined);
+  const data = JSON.parse(readFileSync(args.input, "utf8"))
+  const settings = getSettings(data, args)
+  const narrations = getNarrationItems(data).slice(0, args.limit ?? undefined)
 
   if (!args.dryRun && !args.apiKey) {
-    throw new Error('Missing OpenAI API key. Set OPENAI_API_KEY or pass --api-key.');
+    throw new Error(
+      "Missing OpenAI API key. Set OPENAI_API_KEY or pass --api-key.",
+    )
   }
 
   if (args.dryRun) {
     for (const narration of narrations) {
-      const out = outputPath(args.outDir, narration, settings.response_format);
-      const body = requestBody(settings, narration);
-      console.log(`[dry-run] ${narration.id} -> ${out}`);
-      console.log(JSON.stringify({...body, input: previewText(body.input)}, null, 2));
+      const out = outputPath(args.outDir, narration, settings.response_format)
+      const body = requestBody(settings, narration)
+      console.log(`[dry-run] ${narration.id} -> ${out}`)
+      console.log(
+        JSON.stringify({ ...body, input: previewText(body.input) }, null, 2),
+      )
     }
-    console.log(`[dry-run] manifest -> ${args.manifest}`);
-    return;
+    console.log(`[dry-run] manifest -> ${args.manifest}`)
+    return
   }
 
-  mkdirSync(args.outDir, {recursive: true});
-  mkdirSync(dirname(args.manifest), {recursive: true});
+  mkdirSync(args.outDir, { recursive: true })
+  mkdirSync(dirname(args.manifest), { recursive: true })
 
-  const manifestItems = [];
+  const manifestItems = []
 
   for (const narration of narrations) {
-    const body = requestBody(settings, narration);
-    const audioPath = outputPath(args.outDir, narration, settings.response_format);
-    const audio = await callOpenAi(settings.endpoint, args.apiKey, body);
-    const duration = wavDurationSeconds(audio);
+    const body = requestBody(settings, narration)
+    const audioPath = outputPath(
+      args.outDir,
+      narration,
+      settings.response_format,
+    )
+    const audio = await callOpenAi(settings.endpoint, args.apiKey, body)
+    const duration = wavDurationSeconds(audio)
 
-    writeFileSync(audioPath, audio);
+    writeFileSync(audioPath, audio)
     manifestItems.push({
       id: narration.id,
       text: narration.text,
       duration,
       path: manifestPath(args.manifest, audioPath),
-    });
-    console.log(`Wrote ${audioPath}`);
+    })
+    console.log(`Wrote ${audioPath}`)
   }
 
-  writeFileSync(args.manifest, `${JSON.stringify(manifestItems, null, 2)}\n`, 'utf8');
-  console.log(`Wrote ${args.manifest}`);
+  writeFileSync(
+    args.manifest,
+    `${JSON.stringify(manifestItems, null, 2)}\n`,
+    "utf8",
+  )
+  console.log(`Wrote ${args.manifest}`)
 }
 
 function previewText(text) {
-  return `${text.slice(0, 100)}${text.length > 100 ? '…' : ''}`;
+  return `${text.slice(0, 100)}${text.length > 100 ? "…" : ""}`
 }
 
 try {
-  await main();
+  await main()
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exit(1)
 }
