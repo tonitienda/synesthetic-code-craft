@@ -2,22 +2,26 @@
   {
     "id": "intro_command",
     "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
-    "totalDuration": 6.5
+    "totalDuration": 8,
+    "status": "ok"
   },
   {
     "id": "pull_success",
     "text": "You hit enter, and it just works. You wanted nginx, so Docker goes and gets it.",
-    "totalDuration": 6
+    "totalDuration": 6,
+    "status": "ok"
   },
   {
     "id": "what_is_run",
     "text": "But have you ever stopped to ask what's really going on here? What does 'run' actually do?",
-    "totalDuration": 7.5
+    "totalDuration": 7,
+    "status": "ok"
   },
   {
     "id": "splash_narration",
-    "text": "Let's slow it right down, and follow what actually happens behind that one line.",
-    "totalDuration": 18.5
+    "text": "Let's follow what actually happens behind that one line.",
+    "totalDuration": 15.5,
+    "status": "edited"
   },
   {
     "id": "what_is_run_detail",
@@ -27,17 +31,17 @@
   {
     "id": "registry_intro",
     "text": "Public images like nginx live in a registry — a shared library of images. By default, Docker looks in Docker Hub.",
-    "totalDuration": 8
+    "totalDuration": 9
   },
   {
     "id": "host_machine",
     "text": "And where does all of this happen? On your own machine — the host. Docker itself, and the terminal you type into, both run right there.",
-    "totalDuration": 9
+    "totalDuration": 10
   },
   {
     "id": "check_locally",
     "text": "The very first thing Docker does is check your own machine: do I already have this image?",
-    "totalDuration": 7
+    "totalDuration": 8
   },
   {
     "id": "pull_layers",

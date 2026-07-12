@@ -1,5 +1,10 @@
 import { Layout, Txt } from "@motion-canvas/2d"
-import { Reference, ThreadGenerator } from "@motion-canvas/core"
+import {
+  easeInCubic,
+  easeOutBack,
+  Reference,
+  ThreadGenerator,
+} from "@motion-canvas/core"
 import { LiftedCommandPhrase } from "../../../choreography"
 import { defaultTerminalTheme, Terminal } from "../../../components"
 import { LocalSystem, Registry } from "../../../components/registries"
@@ -56,4 +61,23 @@ export const colors = {
   bg: "#090b1a",
   muted: "#94a3b8",
   amber: "#facc15",
+}
+
+export // Flip the banner's middle token to the next phase of `run` — a little
+// split-flap roll: the word folds shut, swaps, and springs back open.
+function* rotatePhaseToken(
+  world: World,
+  next: string,
+  color: string,
+): ThreadGenerator {
+  const token = world.elements?.phaseToken
+
+  if (!token) {
+    return
+  }
+
+  yield* token.scale.y(0, 0.16, easeInCubic)
+  token.text(next)
+  token.fill(color)
+  yield* token.scale.y(1, 0.22, easeOutBack)
 }

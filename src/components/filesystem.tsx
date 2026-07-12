@@ -8,6 +8,27 @@ import {
   Reference,
 } from "@motion-canvas/core"
 
+// A persisted file that lives inside the writable layer after a write.
+export function createFileChip(text: string, color: string): Rect {
+  return (
+    <Rect
+      layout
+      alignItems={"center"}
+      justifyContent={"center"}
+      paddingLeft={12}
+      paddingRight={12}
+      height={34}
+      radius={8}
+      fill={color + "22"}
+      stroke={color + "aa"}
+      lineWidth={2}
+      opacity={0}
+    >
+      <Txt text={text} fontFamily={"monospace"} fontSize={20} fill={color} />
+    </Rect>
+  ) as Rect
+}
+
 class FileSystemLayer {
   node: Rect
   label: Txt

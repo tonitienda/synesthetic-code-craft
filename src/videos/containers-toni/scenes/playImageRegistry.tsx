@@ -62,7 +62,7 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   world.elements.phaseToken = liftedCommand.phrase.token("run")
 
   // First act of `run`: pull.
-  yield* rotatePhaseToken(world, "pull", colors.amber)
+  yield* rotatePhaseToken(world, "pull", Theme.text)
 
   const sourceCommand = terminal.command("docker run nginx")
 

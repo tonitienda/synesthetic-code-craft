@@ -71,10 +71,12 @@ export const playRunBreakdown = function* (world: World): ThreadGenerator {
 
   yield* runToken ? runToken.fill(colors.amber, 0.4) : waitFor(0)
 
+  yield* waitFor(3)
+
   yield* sequence(
-    0.35,
+    1.3,
     ...steps.map((card) =>
-      all(card.opacity(1, 0.5), card.scale(1, 0.5, easeOutBack)),
+      all(card.opacity(1, 1), card.scale(1, 1, easeOutBack)),
     ),
   )
 
@@ -83,4 +85,6 @@ export const playRunBreakdown = function* (world: World): ThreadGenerator {
     runToken ? runToken.fill(Theme.text, 0.4) : waitFor(0),
   )
   row.remove()
+
+  yield* waitFor(1)
 }

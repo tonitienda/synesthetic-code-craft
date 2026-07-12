@@ -9,10 +9,11 @@ import {
   World,
 } from "./utils"
 import { liftCommandPhrase } from "../../../choreography"
+import { Txt } from "@motion-canvas/2d"
 
 export const playIntro = function* (world: World): ThreadGenerator {
   // Narration starts and then we start showing elements
-  yield* waitFor(1)
+  yield* waitFor(2)
 
   const terminal = createTerminal({
     title: "local shell",
@@ -35,7 +36,7 @@ export const playIntro = function* (world: World): ThreadGenerator {
   yield* terminal.typeCommand("docker run nginx", 0.1)
   yield* terminal.run()
 
-  yield* waitFor(1)
+  yield* waitFor(1.5)
   yield* terminal.print("Unable to find image 'nginx:latest' locally", {
     kind: "muted",
   })
@@ -57,11 +58,11 @@ export const playIntro = function* (world: World): ThreadGenerator {
       "Digest: sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce",
       "Status: Downloaded newer image for nginx:latest",
     ].map((line, idx) =>
-      delay(idx * 0.2, terminal.print(line, { kind: "muted" })),
+      delay(idx * 0.3, terminal.print(line, { kind: "muted" })),
     ),
   )
 
-  yield* waitFor(1)
+  yield* waitFor(3)
 
   // 2. Grab the command handle from the terminal.
   const sourceCommand = terminal.command("docker run nginx")
@@ -91,4 +92,10 @@ export const playIntro = function* (world: World): ThreadGenerator {
   }
   world.elements.liftedCommand = liftedCommand
   world.elements.terminal = terminal
+
+  yield* all(
+    liftedCommand.phrase.restyle({ gap: 75 }, 1),
+    (liftedCommand.phrase.token("run") as Txt).fill("#f9c74f", 1),
+  )
+  yield* waitFor(8)
 }
