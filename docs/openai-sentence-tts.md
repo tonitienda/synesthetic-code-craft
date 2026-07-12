@@ -1,73 +1,82 @@
-# OpenAI sentence TTS workflow
+# OpenAI narration TTS workflow
 
-Use this workflow when you have narration split into sentences and want one generated audio file per sentence. Motion Canvas can then play each file at the right moment.
+Use this workflow when narration is split into stable `{id, text}` items and Motion Canvas should play one generated audio file per narration ID.
 
-Generated audio should live under `artifacts/narration/`, which is ignored by Git.
+Generated audio and manifests should live under `artifacts/narration/`, which is ignored by Git.
 
 ## Input file
 
-Create a JSON file with either a plain list of sentences:
+The expected input is a JSON array of narration objects:
 
 ```json
 [
-  "Backpropagation starts with a prediction.",
-  "Then it measures how wrong that prediction was."
+  {
+    "id": "intro_command",
+    "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx."
+  }
 ]
 ```
 
-Or use an object when you want one global set of voice settings in the same file:
+An object wrapper is also accepted when you want to keep global settings beside the narration list:
 
 ```json
 {
   "settings": {
     "model": "gpt-4o-mini-tts",
     "voice": "marin",
-    "format": "mp3",
+    "format": "wav",
     "speed": 0.95,
     "tone": "Calm, precise, friendly technical explainer."
   },
-  "sentences": [
-    "Backpropagation starts with a prediction.",
-    "Then it measures how wrong that prediction was."
+  "narrations": [
+    {
+      "id": "intro_command",
+      "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx."
+    }
   ]
 }
 ```
 
-Sentence objects are also accepted when you want stable output names:
+IDs must be unique. The generated audio filename is based on the ID, for example `intro_command.wav`.
 
-```json
-{
-  "sentences": [
-    {"id": "act1-001", "text": "Backpropagation starts with a prediction."}
-  ]
-}
-```
-
-## Generate audio
+## Generate audio and manifest
 
 ```bash
-OPENAI_API_KEY=... npm run narration:openai-tts -- path/to/sentences.json --out-dir artifacts/narration/my-video
+OPENAI_API_KEY=... npm run narration:openai-tts -- path/to/narrations.json --out-dir artifacts/narration/my-video/audio --manifest artifacts/narration/my-video/narrations-audio.json
 ```
 
-The script writes one file per sentence, for example:
+The script writes:
 
-```text
-artifacts/narration/my-video/001-sentence-001.mp3
-artifacts/narration/my-video/002-sentence-002.mp3
+1. a directory of downloaded audio files, and
+2. a manifest JSON mapping narration IDs to files and durations.
+
+Example manifest:
+
+```json
+[
+  {
+    "id": "intro_command",
+    "text": "If you've spent any time around Docker, you've almost certainly typed something like: docker run nginx.",
+    "duration": 1.2,
+    "path": "audio/intro_command.wav"
+  }
+]
 ```
+
+The `path` value is relative to the manifest file location. This keeps the manifest portable when the containing narration folder moves.
 
 Use `--dry-run` before spending API calls:
 
 ```bash
-npm run narration:openai-tts -- path/to/sentences.json --dry-run
+npm run narration:openai-tts -- path/to/narrations.json --dry-run
 ```
 
 ## Global settings
 
-All settings apply to every sentence. You can keep them in `settings` in the JSON file or override them from the command line:
+All settings apply to every narration item. You can keep them in `settings` in the JSON file or override them from the command line:
 
 ```bash
-npm run narration:openai-tts -- path/to/sentences.json --voice marin --speed 0.95 --tone "Calm, precise, friendly." --dry-run
+npm run narration:openai-tts -- path/to/narrations.json --voice marin --speed 0.95 --tone "Calm, precise, friendly." --dry-run
 ```
 
-Supported command-line settings are `--model`, `--voice`, `--format`, `--speed`, and `--tone`. The OpenAI speech API accepts `speed` values from `0.25` to `4.0`.
+Supported command-line settings are `--model`, `--voice`, `--speed`, and `--tone`. The script defaults to WAV output because it reads WAV metadata to write accurate durations into the manifest.
