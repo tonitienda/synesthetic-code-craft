@@ -33,14 +33,16 @@ import {
   createRegistry,
 } from "../../../components/registries"
 import {
+  colors,
   PADDING,
+  Theme,
   toWorldX,
   toWorldY,
   VIDEO_HEIGHT,
   VIDEO_WIDTH,
   World,
 } from "./utils"
-import { narrate, playNarration } from "./narration"
+import { narrate, playNarration, playNarrationVoice } from "./narration"
 import {
   containerColors,
   createContainerCard,
@@ -48,196 +50,8 @@ import {
   SharedImageBase,
 } from "../../../components/docker"
 import { playIntro } from "./intro"
-
-const Theme = {
-  highlight: "#facc15",
-  text: defaultTerminalTheme.text,
-}
-
-const playSplash = function* (world: World): ThreadGenerator {
-  const splash = createRef<Rect>()
-  world
-    .overlay()
-    .add(
-      <Rect
-        width={"100%"}
-        height={"100%"}
-        fill={colors.bg}
-        opacity={0}
-        ref={splash}
-      />,
-    )
-
-  // The channel's line-art bird sketches itself on, then sings the title into
-  // existence — colored ripples carrying each word in.
-  const bird = createLineBird()
-  bird.node.position([-420, -30])
-  bird.node.scale(1.15)
-  splash().add(bird.node)
-  bird.prepareDraw()
-
-  const words = [
-    { text: "Synesthetic", position: [255, -100], settle: colors.amber },
-    { text: "Code", position: [50, 40], settle: "#e5e7eb" },
-    { text: "Craft", position: [370, 40], settle: "#e5e7eb" },
-  ].map(({ text, position, settle }) => {
-    const node = (
-      <Txt
-        text={text}
-        fontSize={118}
-        fontWeight={800}
-        fill={colors.amber}
-        position={[position[0] - 36, position[1]]}
-        opacity={0}
-        letterSpacing={2}
-      />
-    ) as Txt
-    splash().add(node)
-    return { node, settle }
-  })
-  words[0].node.fill("#a78bfa")
-  words[1].node.fill("#38bdf8")
-  words[2].node.fill("#4ade80")
-
-  yield* splash().opacity(1, 0.8, easeInOutCubic)
-  yield* bird.draw()
-  yield* bird.blink()
-
-  yield* bird.tiltHead(-14, 0.35)
-  yield* all(
-    bird.sing({ spread: 2400, duration: 1.9, stagger: 0.28 }),
-    delay(
-      0.35,
-      sequence(
-        0.3,
-        ...words.map(({ node }) =>
-          all(node.opacity(1, 0.7), node.x(node.x() + 36, 0.7, easeOutCubic)),
-        ),
-      ),
-    ),
-  )
-  yield* all(
-    bird.tiltHead(0, 0.4),
-    ...words.map(({ node, settle }) => node.fill(settle, 1.2)),
-  )
-  yield* bird.blink()
-
-  yield* waitFor(0.4)
-  yield* all(
-    narrate(
-      world.narrator,
-      "So let's slow it right down, and follow what actually happens behind that one line.",
-      4,
-    ),
-    splash().opacity(0, 2),
-  )
-  splash().remove()
-
-  yield* waitFor(0.5)
-}
-
-const playImageRegistry = function* (world: World): ThreadGenerator {
-  const { liftedCommand, terminal } = world.elements ?? {}
-
-  if (!liftedCommand || !terminal) {
-    return
-  }
-
-  // The command doesn't leave — it docks in the top-left corner as a small
-  // persistent banner that will narrate which phase of `run` we're in. The
-  // terminal comes back too, but smaller: from here on it's a prop, not the
-  // protagonist.
-  yield* all(
-    liftedCommand.phrase.node.position([-710, -486], 1.2, easeInOutCubic),
-    liftedCommand.phrase.node.scale(0.5, 1.2, easeInOutCubic),
-    // The lift kept the terminal's tight token gap; at banner size the words
-    // fuse together, so open it up to a proper word space.
-    liftedCommand.phrase.node.gap(44, 1.2, easeInOutCubic),
-    terminal.node.opacity(1, 1),
-    terminal.node.scale(0.62, 1.2, easeInOutCubic),
-    terminal.node.position([-600, 40], 1.2, easeInOutCubic),
-  )
-
-  world.elements.phaseToken = liftedCommand.phrase.token("run")
-
-  // First act of `run`: pull.
-  yield* rotatePhaseToken(world, "pull", colors.amber)
-
-  const sourceCommand = terminal.command("docker run nginx")
-
-  if (!sourceCommand) {
-    return
-  }
-
-  const nginxToken = sourceCommand.token("nginx")
-
-  if (!nginxToken) {
-    return
-  }
-
-  yield* nginxToken.fill(Theme.highlight, 0.5)
-
-  // Create the Registry visual on the right.
-  const registry = createRegistry()
-  registry.node.position([
-    toWorldX(
-      VIDEO_WIDTH - registry.node.width() - PADDING,
-      registry.node.width(),
-    ),
-    toWorldY(PADDING, registry.node.height()),
-  ])
-  registry.node.opacity(0)
-  registry.node.scale(0.92)
-
-  // Breathe with a soft glow — pulse the border brighter and back — instead of
-  // scaling, so the panel never shimmers or nudges its neighbours.
-  world.cancellation.registryBreath = yield loop(Infinity, () =>
-    registry.node
-      .stroke("#94a3b8", 1.6, easeInOutCubic)
-      .to("#64748b", 1.6, easeInOutCubic),
-  )
-
-  world.stage().add(registry.node)
-
-  // // Create an overlay Docker-image object from the "nginx" token.
-  const nginxImage = createDockerImageBox("nginx")
-  world.overlay().add(nginxImage.node)
-
-  // // Start the box exactly over the title token.
-  // nginxImage.node.position(
-  //   scenePointFromAbsolute(nginxToken.absolutePosition()),
-  // )
-  nginxImage.node.opacity(0)
-  nginxImage.node.scale(0.8)
-  nginxImage.node.absolutePosition(registry.imageSlotPosition())
-
-  yield* all(
-    registry.node.opacity(1, 1),
-    registry.node.scale(1, 1, easeOutBack),
-    narrate(
-      world.narrator,
-      "Public images like nginx live in a registry — a shared library of images. By default, Docker looks in Docker Hub.",
-      7,
-    ),
-    delay(
-      3,
-      all(
-        nginxImage.node.opacity(1, 0.6),
-        nginxImage.node.scale(1, 0.8, easeOutBack),
-      ),
-    ),
-  )
-
-  yield* waitFor(1.5)
-
-  if (!world.elements) {
-    world.elements = {}
-  }
-  world.elements.registryImage = nginxImage
-  world.elements.registry = registry
-
-  yield* nginxToken.fill(Theme.text, 0.5)
-}
+import { playSplash } from "./splash"
+import { playImageRegistry } from "./playImageRegistry"
 
 const playPullImage = function* (world: World): ThreadGenerator {
   const { terminal, registryImage, registry } = world.elements ?? {}
@@ -398,12 +212,6 @@ const playPullImage = function* (world: World): ThreadGenerator {
 
   world.elements.localImage = localImage
   world.elements.localSystem = localSystem
-}
-
-const colors = {
-  bg: "#090b1a",
-  muted: "#94a3b8",
-  amber: "#facc15",
 }
 
 // Flip the banner's middle token to the next phase of `run` — a little
@@ -1322,6 +1130,9 @@ const playClosingScene = function* (world: World): ThreadGenerator {
 
 function* playMovie(world: World): ThreadGenerator {
   yield* playIntro(world)
+  yield* playSplash(world)
+  yield* playRunBreakdown(world)
+  yield* playImageRegistry(world)
 }
 
 export default makeScene2D(function* (view) {
@@ -1360,16 +1171,11 @@ export default makeScene2D(function* (view) {
     cancellation: {},
   }
 
-  yield* all(playMovie(world), playNarration(world))
+  yield* all(playMovie(world), playNarrationVoice(world))
 
   return
-  yield* playSplash(world)
-
-  // What does `run` actually do? -> pull + create + start.
-  yield* playRunBreakdown(world)
 
   // pull: find the image, download it from the registry.
-  yield* playImageRegistry(world)
 
   yield* playPullImage(world)
 

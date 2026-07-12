@@ -1,7 +1,7 @@
 import { Layout, Txt } from "@motion-canvas/2d"
 import { Reference, ThreadGenerator } from "@motion-canvas/core"
 import { LiftedCommandPhrase } from "../../../choreography"
-import { Terminal } from "../../../components"
+import { defaultTerminalTheme, Terminal } from "../../../components"
 import { LocalSystem, Registry } from "../../../components/registries"
 import {
   ContainerCard,
@@ -45,4 +45,15 @@ export type World = {
     heartA?: ThreadGenerator
     heartB?: ThreadGenerator
   }
+}
+
+export const Theme = {
+  highlight: "#facc15",
+  text: defaultTerminalTheme.text,
+}
+
+export const colors = {
+  bg: "#090b1a",
+  muted: "#94a3b8",
+  amber: "#facc15",
 }

@@ -1,14 +1,27 @@
 import { Txt } from "@motion-canvas/2d"
-import { Reference, waitFor } from "@motion-canvas/core"
+import {
+  PlaybackState,
+  Reference,
+  usePlayback,
+  waitFor,
+  sound,
+} from "@motion-canvas/core"
 import { World } from "./utils"
 import narrationsData from "../narrations.json"
+import narrationsVoiceData from "./narrations-audio.json"
 
 const NARRATION_ENABLED = true
+
+const narrations: Narration[] = narrationsVoiceData.map((narration, idx) => ({
+  text: narration.text,
+  totalDuration: narrationsData[idx].totalDuration,
+  sound: sound(narration.path),
+}))
 
 type Narration = {
   text: string
   totalDuration: number
-  path?: string
+  sound: ReturnType<typeof sound>
 }
 
 // This will be internal later on
@@ -37,18 +50,17 @@ export function* narrate(
 }
 
 export function* playNarration(world: World): Generator<any, void, any> {
-  for (const narration of narrationsData as Narration[]) {
+  for (const narration of narrations as Narration[]) {
     yield* narrate(world.narrator, narration.text, narration.totalDuration)
   }
 }
 export function* playNarrationVoice(world: World): Generator<any, void, any> {
-  for (const narration of narrationsData as Narration[]) {
-    if (narration.path) {
-      const audio = new Audio(narration.path)
-      audio.play()
-      yield* waitFor(narration.totalDuration)
-    } else {
-      yield* narrate(world.narrator, narration.text, narration.totalDuration)
+  const playback = usePlayback()
+
+  for (const narration of narrations as Narration[]) {
+    if (narration.sound && playback.state === PlaybackState.Playing) {
+      narration.sound.play()
     }
+    yield* waitFor(narration.totalDuration)
   }
 }

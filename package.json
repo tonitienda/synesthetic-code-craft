@@ -38,13 +38,13 @@
     "audio:mux": "node scripts/mux-narration-audio.mjs"
   },
   "dependencies": {
-    "@motion-canvas/2d": "^3.17.2",
-    "@motion-canvas/core": "^3.17.2",
-    "@motion-canvas/ffmpeg": "^1.1.0"
+    "@motion-canvas/2d": "^3.18.0-alpha.0",
+    "@motion-canvas/core": "^3.18.0-alpha.0",
+    "@motion-canvas/ffmpeg": "^3.18.0-alpha.0"
   },
   "devDependencies": {
-    "@motion-canvas/ui": "^3.17.2",
-    "@motion-canvas/vite-plugin": "^3.17.2",
+    "@motion-canvas/ui": "^3.18.0-alpha.0",
+    "@motion-canvas/vite-plugin": "^3.18.0-alpha.0",
     "typescript": "^5.2.2",
     "vite": "^4.0.0"
   }

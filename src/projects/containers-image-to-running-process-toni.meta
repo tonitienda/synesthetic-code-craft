@@ -23,6 +23,9 @@
     "exporter": {
       "name": "@motion-canvas/ffmpeg",
       "options": {
+        "fastStart": true,
+        "includeAudio": true,
+        "audioSampleRate": 48000,
         "fileType": "image/png",
         "quality": 100,
         "groupByScene": false
