@@ -172,23 +172,23 @@ The iterative loop above has a clean closed form, which is useful both for imple
 
 - `P` = payload mass
 - `Mp` = propellant mass
-- structure mass `S = α × Mp` (tanks/engines scale with the propellant they hold; `α ≈ 0.08–0.15` is a reasonable teaching value)
+- structure mass `S = α * Mp` (tanks/engines scale with the propellant they hold; `α ≈ 0.08–0.15` is a reasonable teaching value)
 - `R = e^(Δv / ve)` (the required mass ratio)
 
-Requiring `Δv = ve × ln(m0/mf)` with `m0 = P + S + Mp` and `mf = P + S` gives:
+Requiring `Δv = ve * ln(m0/mf)` with `m0 = P + S + Mp` and `mf = P + S` gives:
 
 ```text
-Mp = (R − 1) × P / (1 − α(R − 1))
+Mp = (R - 1) * P / (1 - α * (R - 1))
 ```
 
 Two properties of this formula are gold for the video:
 
-1. **The iterative loop is a geometric series.** Each pass of the naive simulation (“add propellant → that needs structure → that structure needs propellant → …”) adds another term with ratio `α(R − 1)`. If that ratio is below 1, the loop converges and the rocket closes; the animation can literally show the added mass chunks shrinking toward a finite total.
-2. **There is a wall.** When `α(R − 1) ≥ 1`, the series diverges: no amount of propellant makes the rocket work with that structure fraction and that engine. The simulation should end with the viewer pushing the payload/delta-v slider until the rocket grows without bound — the “impossible rocket” moment. This is not a rendering trick; it is exactly what the equation does.
+1. **The iterative loop is a geometric series.** Each pass of the naive simulation (“add propellant → that needs structure → that structure needs propellant → …”) adds another term with ratio `α * (R - 1)`. If that ratio is below 1, the loop converges and the rocket closes; the animation can literally show the added mass chunks shrinking toward a finite total.
+2. **There is a wall.** When `α * (R - 1) >= 1`, the series diverges: no amount of propellant makes the rocket work with that structure fraction and that engine. The simulation should end with the viewer pushing the payload/delta-v slider until the rocket grows without bound — the “impossible rocket” moment. This is not a rendering trick; it is exactly what the equation does.
 
 Worked example for concreteness (single stage, `ve = 3.5 km/s`):
 
-- `Δv = 9.4 km/s` (a realistic LEO price tag, see below) → `R = e^(9.4/3.5) ≈ 14.7`, so `R − 1 ≈ 13.7`.
+- `Δv = 9.4 km/s` (a realistic LEO price tag, see below) → `R = e^(9.4/3.5) ≈ 14.7`, so `R - 1 ≈ 13.7`.
 - The rocket only closes if `α < 1/13.7 ≈ 0.073` — the structure must be under ~7% of the propellant mass, which is thinner than a soda can proportionally. This is why single-stage-to-orbit is brutally hard, and it sets up the staging act.
 
 The visual should avoid implying that real rockets are sized by one naive loop only. Real design includes thrust, engine count, structural margins, aerodynamic loads, manufacturing limits, trajectory optimization, recovery requirements, and mission orbit.
@@ -275,7 +275,7 @@ The equation then applies stage by stage, with each stage contributing part of t
 Use the same engine (`ve = 3.5 km/s`) and the same job (9.4 km/s to LEO):
 
 - **Single stage:** needs mass ratio `e^(9.4/3.5) ≈ 14.7`, i.e. about **93% of liftoff mass must be propellant**. The remaining ~7% must cover *all* tanks, engines, structure, and payload — at realistic structure fractions there is essentially nothing left for payload.
-- **Two stages, splitting the job ~in half (4.7 km/s each):** each stage needs mass ratio `e^(4.7/3.5) ≈ 3.8`, i.e. about **74% propellant per stage**. Each stage keeps a comfortable ~26% for structure and everything it carries. Because the second stage’s “payload” is small and the first stage’s dead weight is discarded halfway, the same total delta-v now closes with room for real payload.
+- **Two stages, splitting the job ~in half (4.7 km/s each):** each stage needs mass ratio `e^(4.7/3.5) ≈ 3.8`, i.e. about **74% of the total mass at the start of that stage’s burn must be propellant**. Note the reference point: that 74% is measured against everything the stage is pushing — its own hardware *plus* the payload and any upper stages riding on top — not against the stage hardware alone (an isolated stage is still typically ~90% propellant, ~10% structure by itself). The comfortable ~26% left over covers structure *and* everything being carried. Because the second stage’s “payload” is small and the first stage’s dead weight is discarded halfway, the same total delta-v now closes with room for real payload.
 
 The multiplication insight worth stating aloud: total mass ratio multiplies across stages (3.8 × 3.8 ≈ 14.7 — the same total), but the *structure* penalty does not carry all the way to orbit. Staging doesn’t cheat the rocket equation; it stops paying the equation’s price for hardware that has finished its job.
 
@@ -398,7 +398,7 @@ Good visual primitives for later phases:
 - Avoid implying two stages is a law of nature. It is a very common practical solution; three stages, boosters, and single-stage concepts exist.
 - Avoid implying a real rocket sizing tool is as simple as the proposed payload cascade simulation. Present the loop as a teaching model.
 - The Falcon 9 MECO speed/altitude figures vary noticeably by mission profile and booster recovery mode (droneship vs return-to-launch-site vs expendable); present them as “very roughly” and prefer relative claims (“most speed comes from stage 2”) over exact telemetry values.
-- The structure-scales-with-propellant assumption (`S = α × Mp`) is a simplification; real structural mass depends on geometry, materials, thrust loads, and engine count. Keep `α` framed as a teaching knob.
+- The structure-scales-with-propellant assumption (`S = α * Mp`) is a simplification; real structural mass depends on geometry, materials, thrust loads, and engine count. Keep `α` framed as a teaching knob.
 - The loss figures (gravity ~1.0–1.5 km/s, drag ~0.1–0.15 km/s) are typical magnitudes from standard astronautics references, not universal constants; always attach “roughly.”
 
 ## Sources
