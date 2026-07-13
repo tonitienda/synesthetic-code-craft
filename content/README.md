@@ -36,6 +36,10 @@ docs/phases.md
 
 Potential future topics are collected in [`future-video-ideas.md`](future-video-ideas.md). Treat this file as an idea backlog only: before implementation, promote a selected idea into its own `content/videos/<video-slug>/` folder and move it through the phase gates.
 
+## Active early-stage videos
+
+- [`videos/rocket-science-really-is-rocket-science/`](videos/rocket-science-really-is-rocket-science/) — specs and research for a beginner launch-physics video focused on escape velocity, the rocket equation, payload mass cascade, engine impulse, gravity turn, and staging.
+
 ## Folder structure
 
 ```text
