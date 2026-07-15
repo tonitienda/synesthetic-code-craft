@@ -3,6 +3,7 @@ import {
   easeInCubic,
   easeOutBack,
   Reference,
+  SoundBuilder,
   ThreadGenerator,
 } from "@motion-canvas/core"
 import { LiftedCommandPhrase } from "../../../choreography"
@@ -29,6 +30,7 @@ export type World = {
   background: Reference<Layout>
   stage: Reference<Layout>
   overlay: Reference<Layout>
+  music?: SoundBuilder
   elements: {
     liftedCommand?: LiftedCommandPhrase
     /** The middle token of the docked command banner — rotates run/pull/create/start. */

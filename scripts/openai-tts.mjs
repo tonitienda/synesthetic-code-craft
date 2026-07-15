@@ -10,34 +10,17 @@ const DEFAULT_FORMAT = "wav"
 const DEFAULT_SPEED = 1
 const DEFAULT_ENDPOINT = "https://api.openai.com/v1/audio/speech"
 
-const PROMPT = `Voice Affect: Calm, low-key, and self-assured; a senior engineer explaining
-something at a whiteboard to a colleague they respect. Quiet confidence with
-no performance energy — never a "presenter" voice.
+const PROMPT = `Voice Affect: Calm, low-key, self-assured — a senior engineer explaining at a whiteboard to a respected colleague. Quiet confidence, no presenter energy.
 
-Tone: Matter-of-fact and friendly, with a hint of dry understatement. Opinions
-are delivered plainly and owned personally ("I almost never use it in my
-code"), not dramatized. Approval sounds like a nod, not applause ("This works
-well." / "and that's the smart part").
+Tone: Matter-of-fact and friendly, with dry understatement. Opinions stated plainly and owned personally. Approval sounds like a nod, not applause ("This works really well").
 
-Pacing: Measured and even, on the slower side of conversational. Sentences are
-short and land one idea at a time; the speaker never rushes to the next point
-and trusts the listener to keep up. Slightly quicker through familiar setup,
-slightly slower on definitions and key terms.
+Pacing: Measured and even, on the slower side of conversational. Short sentences, one idea at a time; never rush. Slow down slightly on definitions and key terms.
 
-Emotion: Restrained throughout — engagement shows as steady interest, not
-excitement. A mild warming on valuation lines ("This works really well") and a
-touch of flatness on problems ("But this is where inheritance starts to have
-issues"), like calmly pointing at the flaw.
+Emotion: Restrained; steady interest, not excitement. Mild warmth on praise, calm flatness on problems.
 
-Pronunciation: Clear and deliberate. Technical terms and commands (docker run,
-copy-on-write, PID 1, cgroup, namespace) are articulated precisely and given
-slight emphasis on first mention, as if gently underlining the word the viewer
-should remember.
+Pronunciation: Clear and deliberate. Technical terms (docker run, copy-on-write, PID 1, cgroup, namespace) articulated precisely, with slight emphasis on first mention.
 
-Pauses: Frequent, meaningful micro-pauses — after a term is introduced, before
-an answer to a rhetorical question ("So what is composition? … You've already
-been doing it."), and at the end of a completed idea, leaving room for the
-animation to land. Pauses do the emphasis work that intonation would normally do.`
+Pauses: Frequent micro-pauses — after introducing a term, before answering a rhetorical question, and at the end of each idea, leaving room for the animation. Pauses, not intonation, carry the emphasis.`
 
 function usage() {
   console.log(`Usage: node scripts/openai-tts.mjs <narrations.json> [options]

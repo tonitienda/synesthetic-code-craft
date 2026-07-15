@@ -3,6 +3,14 @@ import type {Player, Plugin} from '@motion-canvas/core';
 import narrationsData from './narrations.json';
 import narrationsVoiceData from './scenes/narrations-audio.json';
 
+type NarrationVoiceManifestItem = {
+  id: string;
+  path?: string;
+  timelineStart?: number;
+  timelineEnd?: number;
+  totalDuration?: number;
+};
+
 type NarrationSegment = {
   id: string;
   start: number;
@@ -13,24 +21,27 @@ type NarrationSegment = {
 const segments: NarrationSegment[] = (() => {
   let cursor = 0;
 
-  return narrationsVoiceData
+  return (narrationsVoiceData as NarrationVoiceManifestItem[])
     .map((narration, index) => {
-      const duration = narrationsData[index]?.totalDuration ?? 0;
+      const fallbackDuration = narrationsData[index]?.totalDuration ?? 0;
+      const totalDuration = narration.totalDuration ?? fallbackDuration;
+      const start = narration.timelineStart ?? cursor;
+      const end = narration.timelineEnd ?? start + totalDuration;
       const path = narration.path;
 
-      if (!path || duration <= 0) {
-        cursor += Math.max(duration, 0);
+      if (!path || end <= start) {
+        cursor = Math.max(cursor, end, start + Math.max(totalDuration, 0));
         return null;
       }
 
       const segment = {
         id: narration.id,
-        start: cursor,
-        end: cursor + duration,
+        start,
+        end,
         path,
       };
 
-      cursor = segment.end;
+      cursor = Math.max(cursor, segment.end);
       return segment;
     })
     .filter((segment): segment is NarrationSegment => segment !== null);

@@ -14,7 +14,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 ## Candidate topics
 
-### 1. How water reaches your home
+### 01. How water reaches your home
 
 **Working question:** How does clean water get from the city system into a tap, and why does it come out with pressure?
 
@@ -30,7 +30,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** everyone uses plumbing daily, but most people have only a vague mental model of what is behind the wall.
 
-### 2. How hot and cold water work
+### 02. How hot and cold water work
 
 **Working question:** Why can one handle mix hot and cold water, and what is actually happening behind the tap?
 
@@ -46,7 +46,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** it pairs a familiar everyday interaction with hidden mechanical logic.
 
-### 3. Rocket science is rocket science
+### 03. Rocket science is rocket science
 
 **Working question:** Why is reaching orbit so unforgiving, and why does a little more payload demand so much more rocket?
 
@@ -63,7 +63,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** it has a strong title, high curiosity, and a clean mathematical core that can be made visual.
 
-### 4. More rockets: why SpaceX needs to load so much fuel in orbit to reach the Moon
+### 04. More rockets: why SpaceX needs to load so much fuel in orbit to reach the Moon
 
 **Working question:** If a spacecraft is already in orbit, why does going to the Moon still require so much propellant and orbital refueling?
 
@@ -79,7 +79,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** it connects a current public space topic to the deeper rocket equation from the previous video.
 
-### 5. Conway’s Law: how committees invent software architecture
+### 05. Conway’s Law: how committees invent software architecture
 
 **Working question:** Why do systems so often look like the organizations that built them?
 
@@ -95,7 +95,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** it appeals to software viewers while touching management, sociology, and product design.
 
-### 6. OOP is not a silver bullet
+### 06. OOP is not a silver bullet
 
 **Working question:** What does object-oriented programming solve, what does it confuse, and why should we separate value, reference, and identity?
 
@@ -111,7 +111,7 @@ The creator is currently strongest in software topics, but the channel should al
 
 **Why it may work:** the creator has domain strength here, and the topic can generate thoughtful discussion without becoming a rant.
 
-### 7. LLMs and agents: what is really happening in a session
+### 07. LLMs and agents: what is really happening in a session
 
 **Working question:** When you chat with an LLM agent, what are context, GPUs, cache, tools, and sessions actually doing?
 
@@ -127,6 +127,14 @@ The creator is currently strongest in software topics, but the channel should al
 **Visual promise:** show a conversation as a growing context tape feeding a model, with side channels to tools, files, caches, and session state.
 
 **Why it may work:** it is timely, close to the creator’s software expertise, and useful for both technical and semi-technical audiences.
+
+### 08 - Terraform
+
+### 09 - Kubernetes
+
+### 10 - 2FA
+
+### 11. How plants really are power plants
 
 ## Follow-up clustering
 

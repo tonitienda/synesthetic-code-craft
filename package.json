@@ -30,6 +30,8 @@
     "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive",
     "screenshot:frame": "node scripts/capture-motion-canvas-frame.mjs",
     "narration:openai-tts": "node scripts/openai-tts.mjs",
+    "narration:openai-tts:cohesive": "node scripts/openai-tts-cohesive.mjs",
+    "narration:extract-segment": "node scripts/extract-narration-segment.mjs",
     "start:containers:toni": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process-toni.ts vite",
     "start:splash": "MOTION_CANVAS_PROJECT=./src/projects/brand-splash.ts vite",
     "narrate:generate": "node scripts/generate-narration-simple.mjs",

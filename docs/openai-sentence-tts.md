@@ -80,3 +80,29 @@ npm run narration:openai-tts -- path/to/narrations.json --voice marin --speed 0.
 ```
 
 Supported command-line settings are `--model`, `--voice`, `--speed`, and `--tone`. The script defaults to WAV output because it reads WAV metadata to write accurate durations into the manifest.
+
+## Cohesive full-pass generation
+
+Use the cohesive generator when you want one more natural narration pass, but still need per-segment files for Motion Canvas timing work:
+
+```bash
+OPENAI_API_KEY=... npm run narration:openai-tts:cohesive -- path/to/narrations.json --out-dir artifacts/narration/my-video/audio --manifest artifacts/narration/my-video/narrations-audio.json --master artifacts/narration/my-video/narration-master.wav
+```
+
+This mode:
+
+1. stitches all narration text into one multi-paragraph script,
+2. generates one master WAV from OpenAI TTS,
+3. writes the stitched text beside it,
+4. tries to align paragraph boundaries from a transcription pass, and
+5. splits the master WAV back into per-ID clips and a standard `narrations-audio.json` manifest.
+
+If transcript alignment fails, the script falls back to duration-based splitting. That fallback works best when your input items already define `totalDuration` values, as in `src/videos/containers-toni/narrations.json`.
+
+Use `--no-transcribe` when you explicitly want duration-only splitting:
+
+```bash
+OPENAI_API_KEY=... npm run narration:openai-tts:cohesive -- path/to/narrations.json --no-transcribe
+```
+
+Use the original `narration:openai-tts` script when you are still heavily iterating on timing and want each clip to be regenerated independently. Use the cohesive variant once prosody and whole-script flow matter more than per-line speed.

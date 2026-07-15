@@ -7,12 +7,15 @@ import {
   sequence,
   ThreadGenerator,
   waitFor,
+  sound,
 } from "@motion-canvas/core"
 import { colors, World } from "./utils"
 import { Rect, Txt } from "@motion-canvas/2d"
 import { createLineBird } from "../../../components"
 
 export const playSplash = function* (world: World): ThreadGenerator {
+  world.music?.gain(2)
+
   const splash = createRef<Rect>()
   world
     .overlay()

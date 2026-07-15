@@ -56,6 +56,12 @@ export function* playNarration(world: World): Generator<any, void, any> {
 }
 export function* playNarrationVoice(world: World): Generator<any, void, any> {
   const playback = usePlayback()
+  const music = sound("/audio/nuer self - Dawn - Instrumental version.mp3")
+
+  world.music = music
+
+  music.gain(-0.5)
+  music.play()
 
   for (const narration of narrations as Narration[]) {
     if (narration.sound && playback.state === PlaybackState.Playing) {

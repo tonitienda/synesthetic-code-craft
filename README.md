@@ -59,6 +59,13 @@ npm run narration:openai-tts -- path/to/narrations.json --dry-run
 OPENAI_API_KEY=... npm run narration:openai-tts -- path/to/narrations.json --out-dir artifacts/narration/video/audio --manifest artifacts/narration/video/narrations-audio.json --tone "Calm, precise, friendly." --speed 0.95
 ```
 
+When narration flow matters more than raw iteration speed, use the cohesive variant instead. It generates one full narration pass first, writes the master WAV and stitched text, then splits the result back into per-segment files. It tries to align the cuts from a transcription pass and falls back to target durations when needed.
+
+```bash
+npm run narration:openai-tts:cohesive -- path/to/narrations.json --dry-run
+OPENAI_API_KEY=... npm run narration:openai-tts:cohesive -- path/to/narrations.json --out-dir artifacts/narration/video/audio --manifest artifacts/narration/video/narrations-audio.json --master artifacts/narration/video/narration-master.wav
+```
+
 See `docs/openai-sentence-tts.md` for the expected narration JSON shape, output manifest shape, and global voice settings.
 
 ## Preview screenshots
