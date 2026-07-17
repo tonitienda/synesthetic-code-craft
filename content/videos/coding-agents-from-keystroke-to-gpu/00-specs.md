@@ -1,6 +1,6 @@
 ---
 type: specs
-status: in-progress
+status: ready
 depends_on: []
 ---
 
