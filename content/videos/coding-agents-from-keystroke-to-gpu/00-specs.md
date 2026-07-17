@@ -48,9 +48,9 @@ English for now. Wording should remain simple enough to rewrite in Spanish later
 
 ## Target duration
 
-Target: 8–12 minutes.
+Target: 12–18 minutes; up to 20 is acceptable.
 
-This topic has more layers than the containers video; clarity is more important than keeping it short. If needed, it could split into two videos later (agent loop vs inference internals), but the default is one video that keeps the inference side at mental-model depth.
+(Updated 2026-07 during treatment review: the original 8–12 target was relaxed. The main goal is that the concepts are genuinely clear to engineers who use coding agents — no hyper-basic explanations needed, but the deep model-side concepts (attention, prefill/decode, both caches) must be properly explained, not compressed to fit a runtime. One video, not a split.)
 
 ## Scope
 
@@ -64,7 +64,7 @@ The video should explain, at a high level:
 - the agent loop: model requests a tool → harness executes it → result appended to context → repeat until done
 - tools as the model's only hands: the model never executes anything itself
 - the harness: the program around the model (agent loop, tool execution, permission gating, hooks, context management, UI rendering)
-- hooks: harness-level interception points around tool calls (deterministic scripts, not model behavior)
+- hooks and permission gating: passing mention only (see Decisions — 2026-07 scope reduction). The demo session runs with auto-approved permissions and no hooks; one line acknowledges that real harnesses put a policy layer at the tool-call boundary
 - cache, both meanings:
   - prompt cache (API level): prefix matching over the re-sent conversation, why it makes the loop affordable
   - KV cache (inference level): attention keys/values, why generation doesn't restart from scratch for every token
@@ -97,7 +97,7 @@ Do not explain:
 - **Agent:** model + loop + tools. The looping program that turns single predictions into multi-step work.
 - **Harness:** the program around the model — it owns the loop, executes tools, enforces permissions, runs hooks, manages context, renders UI.
 - **Tool call:** the model emitting a structured request ("run this command"); the harness deciding whether and how to execute it.
-- **Hook:** a user-configured script the harness runs at fixed points (e.g., before/after a tool call). Deterministic policy, outside the model.
+- **Hook:** (demoted 2026-07 — mention-only, no longer a taught concept) a user-configured script the harness runs at fixed points. Covered properly in a future harness-focused video.
 - **Prompt cache:** API-level reuse of an already-processed conversation prefix; the reason re-sending everything each turn is viable.
 - **KV cache:** inference-level reuse of attention state during generation; the reason token N+1 doesn't reprocess tokens 1..N.
 - **Prefill vs decode:** the prompt is processed in one parallel pass; the response is generated one token at a time.
@@ -174,12 +174,13 @@ This video should test whether the framework can handle:
 - **Latency anatomy is a required concept**, likely the closing beat — it ties the whole architecture back to what the user already feels.
 - **Skills get a one-line mention** as a harness extension point (on-demand instruction packages that become context when loaded); the full explanation is deferred to a dedicated Skills + MCP video.
 - Both caches must be covered and explicitly disambiguated — this is a headline teaching point, not a footnote.
+- **Policy layer reduced to a mention (2026-07, treatment review).** The tool-call flow (prompt → model → tool call request → execution → result appended → model) is shown in full, but the demo session runs with auto-approved permissions and no hooks. One line acknowledges that real harnesses place a policy layer (permission prompts, hooks, sandboxes) at the tool-call boundary. Rationale: the video's focus is "on the other side of the fence" (model, serving, caches), the audience is engineers who will understand the elision, and the reclaimed time protects the deep acts. Hooks/permissions get a future harness-focused video.
 
 ## Open questions
 
 - How deep to go on sampling (temperature, top-p)? Current lean: one line ("the model picks from a probability distribution"), no parameter tour.
 - Whether to show a real tokenizer output for a code snippet (probably yes — code tokenizes memorably: whitespace, camelCase splits).
-- Whether the permission prompt and a hook firing deserve their own beat each, or share one "harness as policy layer" beat.
+- ~~Whether the permission prompt and a hook firing deserve their own beat each, or share one "harness as policy layer" beat.~~ Resolved 2026-07: neither — see Decisions (policy layer reduced to a mention).
 - How to visualize attention without drifting into architecture-lecture territory — one scene ("the new token looks back at everything before it") or a recurring motif reused when the KV cache is explained.
 
 ## Gate status
