@@ -68,8 +68,6 @@ One coding task carries the whole video: **"fix the failing test."**
 
 It is small enough to hold in the head, and it naturally produces the full loop: run the tests (tool call), read the failure (tool result), edit a file (another tool call), run the tests again, report success (plain text, loop exits). Every architectural concept gets a concrete moment in this one task.
 
-## Act structure
-
 ## Act 1 — Cold open: the rhythm you already know
 
 ### Purpose
@@ -216,7 +214,7 @@ One reassuring line: batched requests share hardware, not context — each seque
 
 ### What to avoid
 
-No vendor-specific infrastructure claims — this is "how LLM serving generically works." No PagedAttention or KV-memory paging detail. The batch is the star of this act; the front door is a establishing shot.
+No vendor-specific infrastructure claims — this is "how LLM serving generically works." No PagedAttention or KV-memory paging detail. The batch is the star of this act; the front door is an establishing shot.
 
 ## Act 6 — The floor: inside one prediction
 
