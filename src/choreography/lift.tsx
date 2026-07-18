@@ -14,6 +14,7 @@ export type LiftAnimation = Generator<any, void, any>
 
 export interface LiftableCommandPhrase {
   node: Layout
+  anchorNode?: Layout
   snapshot(): CommandPhraseSnapshot
   hide(duration?: number): LiftAnimation
   show?(duration?: number): LiftAnimation
@@ -43,6 +44,7 @@ export function liftTxt(
 ): LiftedCommandPhrase {
   const source: LiftableCommandPhrase = {
     node: txt,
+    anchorNode: txt,
     snapshot: () => ({
       text: txt.text(),
       fontSize: txt.fontSize(),
@@ -60,6 +62,7 @@ export function liftCommandPhrase(
 ): LiftedCommandPhrase {
   const sourceSnapshot = source.snapshot()
   const phrase = createCommandPhrase(sourceSnapshot, options.phrase)
+
   const to = resolvePoint(options.to)
   const duration = options.duration ?? 0.75
   const sourceFadeDuration = options.sourceFadeDuration ?? 0.12
@@ -73,10 +76,9 @@ export function liftCommandPhrase(
   if (options.from) {
     phrase.node.position(resolvePoint(options.from))
   } else {
-    // Place the overlay clone at the source node's world-space location.
-    // Using `position(source.absolutePosition())` mixes coordinate spaces and can
-    // make the lifted phrase appear from the bottom/right of the scene.
-    phrase.node.absolutePosition(source.node.absolutePosition())
+    phrase.node.absolutePosition(
+      (source.anchorNode ?? source.node).absolutePosition(),
+    )
   }
 
   function* animation() {

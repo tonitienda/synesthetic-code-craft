@@ -163,5 +163,10 @@
     "id": "thanks",
     "text": "That's what happens — every single time you run a container. Thanks for watching.",
     "totalDuration": 6.5
+  },
+  {
+    "id": "what_is_run_detail",
+    "text": "When you execute docker run nginx, Docker does three things: it pulls the image, creates a container, and starts the process inside.",
+    "totalDuration": 11.5
   }
 ]

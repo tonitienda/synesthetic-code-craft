@@ -78,6 +78,7 @@ export type TerminalThread = ThreadGenerator
 export interface TerminalCommandHandle {
   command: string
   node: Layout
+  anchorNode?: Layout
   snapshot(): CommandPhraseSnapshot
   token(tokenText: string, occurrence?: number): Txt | undefined
   hide(duration?: number): TerminalThread
@@ -88,6 +89,7 @@ interface TerminalCommandLine {
   kind: "command"
   command: string
   rowRef: Reference<Layout>
+  commandRef: Reference<Layout>
   promptRef: Reference<Txt>
   cursorRef: Reference<Txt>
   tokens: TerminalToken[]
@@ -223,8 +225,11 @@ export class Terminal {
     yield* all(this.node.opacity(1, duration), this.node.scale(1, duration))
   }
 
-  *exit(duration = 0.25) {
-    yield* all(this.node.opacity(0, duration), this.node.scale(0.96, duration))
+  *exit(duration = 0.25, targetScale = 0.96) {
+    yield* all(
+      this.node.opacity(0, duration),
+      this.node.scale(targetScale, duration),
+    )
   }
 
   *focus(duration = 0.25) {
@@ -400,6 +405,7 @@ export class Terminal {
 
   private addCommandLine(command: string): TerminalCommandLine {
     const rowRef = createRef<Layout>()
+    const commandRef = createRef<Layout>()
     const promptRef = createRef<Txt>()
     const cursorRef = createRef<Txt>()
     const tokenRefs: Reference<Txt>[] = []
@@ -409,6 +415,7 @@ export class Terminal {
       kind: "command",
       command,
       rowRef,
+      commandRef,
       promptRef,
       cursorRef,
       tokens,
@@ -436,21 +443,23 @@ export class Terminal {
         />
 
         <Layout layout direction={"row"} gap={8} alignItems={"center"}>
-          {tokens.map((token, index) => {
-            const tokenRef = createRef<Txt>()
-            tokenRefs[index] = tokenRef
+          <Layout ref={commandRef} layout direction={"row"} gap={8} alignItems={"center"}>
+            {tokens.map((token, index) => {
+              const tokenRef = createRef<Txt>()
+              tokenRefs[index] = tokenRef
 
-            return (
-              <Txt
-                key={`${token.text}-${index}`}
-                ref={tokenRef}
-                text={""}
-                fontFamily={"monospace"}
-                fontSize={this.fontSize}
-                fill={this.colorForToken(token)}
-              />
-            )
-          })}
+              return (
+                <Txt
+                  key={`${token.text}-${index}`}
+                  ref={tokenRef}
+                  text={""}
+                  fontFamily={"monospace"}
+                  fontSize={this.fontSize}
+                  fill={this.colorForToken(token)}
+                />
+              )
+            })}
+          </Layout>
           <Txt
             ref={cursorRef}
             text={"▌"}
@@ -524,6 +533,7 @@ export class Terminal {
     return {
       command: line.command,
       node: line.rowRef(),
+      anchorNode: line.commandRef(),
       snapshot: () => ({
         text: line.command,
         fontFamily: "monospace",

@@ -84,7 +84,7 @@ export function createLocalsystem(): LocalSystem {
       layout
       direction={"column"}
       justifyContent={"space-between"}
-      width={900}
+      width={"100%"}
       height={200}
       radius={28}
       fill={"#0f172a"}

@@ -19,7 +19,7 @@ export const playIntro = function* (world: World): ThreadGenerator {
     title: "local shell",
     width: VIDEO_WIDTH / 2 - PADDING * 2,
     height: VIDEO_HEIGHT - PADDING * 2,
-    fontSize: 30,
+    fontSize: 25,
     typingDelay: 0.1,
   })
 
@@ -79,11 +79,10 @@ export const playIntro = function* (world: World): ThreadGenerator {
     duration: 2,
     restyle: {
       fontSize: 76,
-      //gap: 18,
     },
   })
 
-  yield* all(liftedCommand.animation, terminal.exit(0.7))
+  yield* all(liftedCommand.animation, delay(0.2, terminal.exit(2, 1)))
 
   yield* waitFor(0.4)
 

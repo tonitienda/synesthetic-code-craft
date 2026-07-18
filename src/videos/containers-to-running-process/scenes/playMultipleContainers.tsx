@@ -56,8 +56,8 @@ export const playMultipleContainers = function* (
   const topEdgeY = baseLocal.y - roH / 2
   const cardHeight = 320
   const cardCenterY = topEdgeY - cardHeight / 2
-  const cardWidth = 372
-  const splitX = cardWidth / 2 + 12 // half a card + half the gap between them
+  const cardWidth = "45%"
+  const splitX = "50%" // half a card + half the gap between them
 
   // web-1 begins AS the single container: one full-width box straddling the
   // whole base. Cross-fade the old panel into it so the moment reads as "the
@@ -90,16 +90,16 @@ export const playMultipleContainers = function* (
   yield* all(
     A.node.width(cardWidth, 0.9, easeInOutCubic),
     A.node
-      .x(baseLocal.x - splitX - 14, 0.7, easeOutCubic)
-      .to(baseLocal.x - splitX, 0.35, easeInOutCubic),
+      .x(baseLocal.x - 500, 0.7, easeOutCubic)
+      .to(baseLocal.x - 514, 0.35, easeInOutCubic),
     delay(
       0.15,
       all(
         B.node.opacity(1, 0.75),
         B.node.scale(1, 0.9, easeOutBack),
         B.node
-          .x(baseLocal.x + splitX + 14, 0.7, easeOutCubic)
-          .to(baseLocal.x + splitX, 0.35, easeInOutCubic),
+          .x(baseLocal.x + 514, 0.7, easeOutCubic)
+          .to(baseLocal.x + 500, 0.35, easeInOutCubic),
       ),
     ),
     // The base glows once to say: both of these rest on the one shared image.

@@ -144,7 +144,7 @@ beats:
     act: act-3
     title: "One long sequence, not turns"
     purpose: "Break the chat-UI framing before tokens are introduced."
-    key_idea: "The model does not experience turns; it reads one long token sequence. The chat layout is a rendering choice of the harness."
+    key_idea: "The turns are real — the harness sends a request per lap and reacts to each response — but within one request the model receives the whole conversation flattened into one long token sequence and writes a continuation. The model is not the other participant in a chat; it is handed the full transcript, every time, and asked what comes next."
     visual_hint: "Contrast shot: left, the familiar chat bubbles; right, the same content as one continuous unbroken document. The bubbles' borders dissolve into the single column."
     transition_to_next: "State what the server will do with this document after responding: nothing."
 

@@ -13,7 +13,6 @@ import {
 import { containerColors } from "../../../components/docker"
 import { World, colors, rotatePhaseToken } from "./utils"
 import { Circle, Layout, Rect, Txt } from "@motion-canvas/2d"
-import { narrate } from "./playNarration"
 import { createFileChip } from "../../../components/filesystem"
 
 type WritableLayer = {
@@ -165,11 +164,6 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* all(
     imageFs.titleRef().text("container", 0.6),
     imageFs.titleRef().fill(containerColors.writable, 0.6),
-    narrate(
-      world.narrator,
-      "Here's where create comes in. Docker takes that read-only image and lays a thin, writable layer right on top of it. The image plus that new layer — together, that's a container.",
-      9,
-    ),
     delay(
       0.6,
       all(
@@ -187,17 +181,13 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* rotatePhaseToken(world, "start", colors.amber)
 
   const process = createProcessBox("nginx", "PID 1")
+  process.node.width(imageFs.layersContainer().width())
   process.node.scale(0.8)
   imageFs.layersContainer().insert(process.node, 0)
 
   yield* all(
     process.node.opacity(1, 0.5),
     process.node.scale(1, 0.5, easeOutBack),
-    narrate(
-      world.narrator,
-      "And then start brings it to life. It launches the image's main program — for nginx, that's the web server — as the very first process inside the container, PID 1.",
-      9,
-    ),
   )
 
   // Unlike the inert image, the process is alive — it breathes by pulsing its
@@ -211,11 +201,6 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* waitFor(0.6)
 
   // 3) READ — config is read from the read-only image layer.
-  yield* narrate(
-    world.narrator,
-    "So how does that process use its filesystem? When it needs its configuration, it reads it straight from the read-only image underneath.",
-    7,
-  )
   yield* flow(
     world,
     readonlyNode,
@@ -228,11 +213,6 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* waitFor(0.4)
 
   // 4) WRITE — logs are written to the writable layer, never the image.
-  yield* narrate(
-    world.narrator,
-    "But the moment it writes something — a log file, say — that never touches the image. The write lands in the container's own writable layer. Even changing an existing file first copies it up into that layer.",
-    9,
-  )
   yield* flow(
     world,
     process.node,

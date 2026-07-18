@@ -1,0 +1,331 @@
+If you work with a coding agent, you know this rhythm. Maybe better than you realize.
+
+You type a request: fix the failing test. You press enter. For a moment, nothing.
+
+Then words begin to stream in.
+
+A command runs, and the terminal goes quiet while your tests execute.
+
+Then more streaming. A shorter pause. Another command. And finally, the answer arrives, word by word.
+
+Pause, stream, silence, stream. You've watched this hundreds of times.
+
+Here's the claim of this video: nothing in that rhythm is accidental.
+
+Every pause and every burst is caused by a specific piece of machinery. By the end, you'll be able to name all of them.
+
+So let's rewind to the moment before enter. And start with a basic question: what is the thing in your terminal, actually?
+
+It's a program. Not a metaphorical one — an ordinary program. And it has a name: the harness.
+
+The harness draws the interface. It keeps the conversation on screen. It reads your keystrokes.
+
+And when you press enter, it does something almost anticlimactic. It makes an HTTPS request to an API.
+
+On the other side of that API is the model. And it pays to be precise about what that is.
+
+The model is a frozen set of numeric weights. Hundreds of billions of numbers, loaded onto GPUs in a datacenter.
+
+It doesn't remember. It doesn't learn. It doesn't act.
+
+It performs exactly one operation: given a sequence of tokens, produce a probability distribution over the next one.
+
+And nothing that happens during your session changes those weights. The model arrived frozen, and it stays frozen.
+
+So hold this picture in your mind. On one side, your machine, running the harness. On the other, a shared datacenter, holding the model.
+
+Between them, a boundary: the API.
+
+The model never touches your machine. The harness never predicts a word.
+
+Everything in this video is these two taking turns across that line.
+
+So — what exactly crosses it when you press enter?
+
+You typed one line. The harness sends a document.
+
+Into a single request go, in order — first, the tool definitions. Descriptions of what the harness offers to do: run a command, read a file, edit a file.
+
+Then the system prompt — the harness's standing instructions.
+
+Then your project's instruction files. CLAUDE.md, AGENTS.md, Cursor rules. Different names, same mechanism.
+
+If you use skills or MCP servers, those are more of the same — content the harness adds here.
+
+Then the full message history, every previous turn. And at the very bottom, your one line.
+
+What you typed is a tiny slice of what the model reads.
+
+One subtlety worth getting right.
+
+The back-and-forth is real. The harness really will send many requests, and react to each response.
+
+But within a single request, the model doesn't receive your message. It receives the whole conversation.
+
+Your messages, its own earlier replies, tool results — flattened into one long sequence, laid end to end.
+
+The model reads that transcript from the top, and writes a continuation.
+
+So the model is less like the other person in a chat, and more like a reader. Handed the entire transcript, every time, and asked: what comes next?
+
+Now, the fact the whole architecture hinges on: the API is stateless.
+
+The model reads everything, responds, and keeps nothing. There is no session on the other side.
+
+Next turn, the harness will send everything again — one message longer.
+
+The model has no memory. The harness carries the memory for it.
+
+And if that sounds wasteful — re-sending the entire conversation, every single turn — good. It should.
+
+Hold that objection. It gets a proper answer later.
+
+There's one more transformation before the model can read anything. Because the model doesn't read text.
+
+On the server, the document is chopped into tokens: chunks of a few characters. Each token maps to a number. What the model receives is a sequence of integers.
+
+Tokenize a line of code, and the boundaries fall in strange places.
+
+A common word comes out as one token. A name like formatPrice splits in the middle. The indentation stands alone.
+
+The tokenizer is a fixed dictionary, built before training, where frequent strings get short encodings.
+
+Different models split text differently. The point is the phenomenon, not the exact cuts.
+
+And tokens aren't trivia. They're the unit of everything.
+
+Price: so much per million tokens, with input and output priced differently.
+
+The context window: a token budget that everything in the document competes for.
+
+Speed: tokens per second.
+
+Every limit you've hit, and every invoice you've paid, was counting these.
+
+So the request crosses the boundary.
+
+First, an ordinary front door: authentication, rate limits, validation. The same machinery as any large API.
+
+Then it's routed to an inference cluster. There, the model's weights sit sharded across several GPUs, working as one unit. A frontier model doesn't fit on one.
+
+And here's the part most mental models leave out: you do not have a GPU. You have a place in line for a shared one.
+
+GPUs are only efficient when they process many sequences at once. So the server runs many users' requests in the same batch.
+
+Modern schedulers do this at the granularity of single tokens. It's called continuous batching.
+
+After every generation step, finished requests leave the batch, and waiting requests join.
+
+Your tokens decode side by side with strangers' tokens, step by step.
+
+If the cluster is busy, your request waits in the queue first. That wait reaches you as extra time before the first word.
+
+One reassurance: what's shared is hardware, not context. Each sequence attends only to its own tokens.
+
+Now we've reached the floor. One prediction, from the inside.
+
+It starts with a lookup. Each token ID is found in a table, and becomes a vector — a long list of numbers.
+
+That vector is the model's working representation. From here on, nothing is text.
+
+One grounding intuition: directions in that space encode usage. Tokens that behave similarly sit near each other.
+
+The vectors then flow up through a stack of layers. Dozens of them, all with the same shape.
+
+Each layer refines every token's vector, using two ingredients.
+
+Attention moves information between tokens. A small feed-forward network transforms each token's vector on its own.
+
+Both matter. We'll follow attention — because attention is the one whose consequences you can feel.
+
+Here's the core of it. As each token is processed, it publishes two things that stick around.
+
+A key: a small summary that lets later tokens find it.
+
+And a value: the information it offers if it is found.
+
+Keys and values. Keep those two words close — they come back.
+
+Now a new token arrives to be processed. It forms a query: what am I looking for?
+
+That query is compared against every previous token's key.
+
+The matches are weighted. And the matching values are blended into the new token's vector.
+
+This happens in every layer, for every token.
+
+It's how a variable declared four hundred tokens ago reaches the line being written right now.
+
+Two properties of this look-back are worth pinning down.
+
+First: it only looks backward. A token can see everything before it, and nothing after it. The model reads left to right, like you.
+
+Second: it has a cost. Producing each new token means comparing against everything before it. And that work grows as the context grows.
+
+That is mechanically why long contexts cost compute — and money.
+
+As for how the model learned what to put in those keys and values — that's the training story. A different video.
+
+Here, the weights are frozen, and this machinery runs as-is, on every token of every session.
+
+At the top of the stack, the final vector is projected onto the vocabulary. A score for every possible next token — on the order of a hundred thousand candidates — forming a probability distribution.
+
+A sampler picks one. Usually a likely one. Not always the top one.
+
+That choice is where the knob you know as temperature lives.
+
+And that's the whole act. One forward pass. One token. That is the model's entire repertoire.
+
+Everything else in this video is arrangement around it.
+
+But your response will be thousands of tokens. Thousands of passes. How is that not impossibly slow?
+
+Start with the prompt. Its thousands of tokens don't need to be generated. They already exist.
+
+So the model processes all of them in one wide, parallel pass. Every prompt token flows through the layers at the same time.
+
+And along the way — the crucial side effect — every one of them publishes its keys and values.
+
+This pass is called prefill. Compute-heavy, but parallel. It is the main body of that pause before the first word.
+
+All those published keys and values are kept, per token, per layer, in GPU memory.
+
+That store has a name you've likely seen on pricing pages and in blog posts: the KV cache.
+
+Literally, the cache of keys and values. And you now know exactly what those objects are.
+
+When the model predicts the next token, its query runs against the stored keys, and blends the stored values. Nothing about the past is recomputed.
+
+Without this store, every new token would redo the attention work for the entire sequence. The cost of generating would explode as the response grew.
+
+With the cache full, generation proper begins. This phase is called decode.
+
+One forward pass produces one token. That token's key and value join the cache. The next pass begins.
+
+It is serial by nature: the next token cannot be computed until the current one exists. And it sets the tokens-per-second you watch in your terminal.
+
+It's also why the two phases feel so different. Prefill saturates the GPU's compute. Decode is limited by how fast the weights and the cache can be read from memory.
+
+Each decoded token is converted back to text, and pushed over the open connection the moment it exists.
+
+So the word-by-word streaming in your terminal is not a loading animation. It is the true cadence of generation. One forward pass per word-piece, delivered as it's made.
+
+Two labels to hold for later. The pause before the first word is queue plus prefill. The streaming speed is the decode rate.
+
+Now — let's read what these particular tokens streamed back.
+
+Because this time, they don't spell an answer. They spell something structured: a tool call.
+
+A tool's name, with JSON arguments. Run npm test.
+
+And the response ends with a stop reason that says, in effect: I'm not done. I need this executed.
+
+It has to ask, because the model cannot run anything. No shell, no filesystem, no access to your machine.
+
+It can emit a request, and stop. Everything that happens next is the harness.
+
+The harness runs npm test, locally, on your machine.
+
+And that's the first long silence from the opening rhythm. Your tests running, while the model isn't running at all.
+
+One honest aside: in a real harness, a policy layer sits exactly at this point — permission prompts, hooks, sandboxes — deciding whether and how each call runs.
+
+Our session is auto-approved end to end, because this video's interest lies on the other side of the fence.
+
+The tests finish: one failure. The formatted price comes back with one decimal digit instead of two.
+
+The harness wraps that output as a tool result, and appends it to the history.
+
+And then it does the almost-comic thing. It sends the entire conversation again.
+
+The full descent — tokens, queue, prefill, decode — runs again, with the failure log now sitting in the context.
+
+And this is the word the video owes you. This is the agent.
+
+Not a mind — a loop.
+
+The model proposes. The harness executes. The result goes back into the context. Repeat, until the model answers in plain text and stops asking.
+
+From the API's point of view, there is no session at all. Only a series of independent, ever-growing requests.
+
+The loop — and with it, the agent — lives entirely in the harness.
+
+The remaining laps go quickly, because you've already taken this trip slowly.
+
+Lap two: with the failure log in context, the model emits the next tool call. Edit src/format.js, to format the price with two decimals. The harness applies the edit.
+
+Lap three: run the tests again. All tests pass.
+
+Lap four: the model streams a plain-text summary of the fix — no tool call this time — and the loop comes to rest.
+
+Every lap, the same flow. Prompt in, tool call out, execution, result appended, prompt in again.
+
+Now stop and consider what that cost.
+
+By the final lap, the context is enormous. Tool definitions, system prompt, project instructions, every turn, two full test logs.
+
+And the harness re-sent all of it, on every lap. Real tasks run dozens of laps.
+
+So: does the GPU redo prefill over that whole document, every single time?
+
+No. And you already know every piece of the reason.
+
+Consider what the harness sends. This turn's request begins with exactly last turn's request. Same tool definitions, same system prompt, same history. New content only at the end.
+
+The server exploits that. It checks each incoming request against prefixes it has seen recently — an exact, in-order match.
+
+When it finds one, it skips recomputing the matched prefix entirely, and prefills only the new tail.
+
+This is the prompt cache. And you feel it in two places.
+
+Cached input is billed at roughly an order of magnitude below fresh input. And on warm turns, the first word arrives almost immediately.
+
+The agent loop — full history, re-sent dozens of times — is only economically viable because of this.
+
+But what does "kept warm" physically mean? You already know the answer.
+
+What the server keeps for that prefix is its KV cache. The keys and values that every prefix token published when it was first processed.
+
+So the two caches are one mechanism at two timescales.
+
+The KV cache is the attention memory built during a single generation. The prompt cache is that same memory, kept alive between requests, for a prefix that hasn't changed.
+
+That's the practical picture. The prefix behavior and the pricing are documented; the exact internals are each vendor's own.
+
+One property of that cache explains a surprising amount of harness design. The match is exact, and it runs from the start.
+
+Change one early byte — a timestamp in the system prompt, a reordered tool definition — and everything after that point goes cold. It reprocesses at full price.
+
+That is why harnesses keep system prompts frozen, append to history instead of editing it, and put stable content first.
+
+The cache's lifetime is short — minutes, refreshed on each use. And that's enough, because loop iterations arrive seconds apart.
+
+And one final harness duty, in one line: the context window is finite, so on long sessions the harness also curates it — summarizing old turns, dropping stale tool output. A story for another video.
+
+And now, the opening rhythm again. But this time, you can read it.
+
+The pause before the first word: network, queue, prefill.
+
+Long on the first turn, when everything is cold and the system prompt is huge. Short on every later turn: warm prefix, tiny tail.
+
+The fluent streaming: decode. One forward pass per token, at a roughly steady rate.
+
+And those silent gaps in the middle of the answer? That's the harness, running tools on your machine.
+
+The model isn't thinking during those silences. It isn't running at all. Its next request hasn't even been sent.
+
+So here is the whole machine.
+
+The model is frozen weights that predict the next token. One forward pass, one look-back over everything before, one sampled token.
+
+The harness is the program that carries the memory, runs the tools, and enforces the rules.
+
+The agent is the loop between them.
+
+Everything is denominated in tokens. And the two caches are why the loop is affordable.
+
+How those frozen weights came to be — that's the training story, for another video.
+
+For now, you have what this video promised: the rhythm you feel every day is the architecture, felt from the outside.
+
+Thanks for watching.

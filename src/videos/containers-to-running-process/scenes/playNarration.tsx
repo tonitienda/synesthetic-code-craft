@@ -12,13 +12,33 @@ import narrationsVoiceData from "./narrations-audio.json"
 
 const NARRATION_ENABLED = true
 
-const narrations: Narration[] = narrationsVoiceData.map((narration, idx) => ({
-  text: narration.text,
-  totalDuration: narrationsData[idx].totalDuration,
-  sound: sound(narration.path),
-}))
+const narrationsVoiceDataMap: Record<string, any> = narrationsVoiceData.reduce(
+  (acc, narration) => {
+    acc[narration.id] = narration
+    return acc
+  },
+  {} as Record<string, any>,
+)
+
+const narrationsDataMap: Record<string, any> = narrationsData.reduce(
+  (acc, narration) => {
+    acc[narration.id] = narration
+    return acc
+  },
+  {} as Record<string, any>,
+)
+
+const narrations: Narration[] = Object.values(narrationsVoiceDataMap).map(
+  (narration) => ({
+    id: narration.id,
+    text: narration.text,
+    totalDuration: narrationsDataMap[narration.id]?.totalDuration ?? 0,
+    sound: sound(narration.path),
+  }),
+)
 
 type Narration = {
+  id: string
   text: string
   totalDuration: number
   sound: ReturnType<typeof sound>
@@ -58,12 +78,18 @@ export function* playNarrationVoice(world: World): Generator<any, void, any> {
   const playback = usePlayback()
 
   for (const narration of narrations as Narration[]) {
+    //console.log(`Playing narration: "${narration.id}"`)
     // const isPlaying =
     //   playback.state === PlaybackState.Playing ||
     //   playback.state === PlaybackState.Presenting
     // if (narration.sound && isPlaying) {
     narration.sound.play()
     // }
+    if (narration.totalDuration === 0) {
+      console.warn(
+        `Narration "${narration.id}" has a total duration of 0. This may indicate a missing or incorrect entry in the narrations.json file.`,
+      )
+    }
     yield* waitFor(narration.totalDuration)
   }
 }

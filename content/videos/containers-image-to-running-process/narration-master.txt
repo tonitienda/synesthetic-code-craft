@@ -1,0 +1,65 @@
+If you've used Docker, you've probably typed something like this: docker run nginx.
+
+You press enter, a few lines scroll past, and seconds later nginx is up and serving requests. This works really well — so well that most of us never look underneath.
+
+But today, let's look underneath. What does run actually do?
+
+Behind the scenes, docker run does three things, in order. It pulls an image. It creates a container from that image. And it starts a process inside. Pull, create, start — that's the whole plot. Let's follow it step by step.
+
+The story takes place in two locations. The first is your own machine — Docker calls it the host. That's where you're typing, where Docker is running, and where your container is about to live.
+
+The second is the registry: a shared library of images out on the internet. Public images like nginx live there, and unless you say otherwise, Docker looks in Docker Hub.
+
+Step one, the pull, is simply moving the image from one place to the other. But before downloading anything, Docker checks whether the image is already on the host — maybe from an earlier run. If it is, there's nothing to do.
+
+This time, it isn't. So Docker contacts the registry and downloads the image onto your machine, layer by layer.
+
+When the last layer arrives, the pull is complete. The image now lives on the host.
+
+Which raises an obvious question: what exactly did we just download? What is an image?
+
+An image is a snapshot of a filesystem, frozen in layers. And it's completely inert — it can't do anything on its own. It's data, not a running program.
+
+Each layer records one step of how the image was built: a base system at the bottom, then packages, then dependencies, and the application files on top.
+
+Stacked together, those layers behave as a single, read-only filesystem. Add a little metadata — like which program to start — and that's the entire image. So far, nothing is running.
+
+That's what step two is for: create. Docker takes the read-only image and lays one thin, writable layer on top of it. The image, plus that writable layer — that is a container.
+
+And step three, start, launches the image's main program — for nginx, the web server — as the very first process inside the container: process ID one.
+
+Now watch how that process uses its filesystem, because this is the elegant part. When it reads something — its configuration, say — it reads straight through to the read-only image underneath.
+
+But when it writes something — a log file, for example — the write lands in the container's own writable layer. Even modifying an existing file copies it into that layer first. This mechanism is called copy-on-write, and it means the image underneath is never touched.
+
+So that's the whole command. Pull the image, if you don't already have it. Create a container, by adding a writable layer. Start the main program inside. Three steps, hiding behind one word.
+
+And understanding those steps buys us something, because now we can ask a more interesting question: what happens if you run a second container from the same image?
+
+Here's the part I like: Docker doesn't copy the image. It creates a second container — a new process, with its own empty writable layer — and both containers read from the very same image on disk.
+
+Let's give them names: web-1 and web-2. When web-1 writes a log file, that file lands in web-1's layer — and only there. web-2 can't see it at all. One shared image underneath, completely separate changes on top.
+
+And that design is why containers scale so well. Add a third container, or a tenth — it's still just one image on disk. Each new container costs nothing more than its own thin, writable layer.
+
+But this raises the deepest question in the whole story. web-1 and web-2 are, in the end, just processes — running side by side on the same operating system kernel: the host's. So what actually keeps them apart? The answer comes in two parts.
+
+The first part is namespaces. A namespace gives a container its own private view of one kind of resource. There's one for process IDs, one for the network, one for filesystem mounts — and a few more.
+
+Take process IDs. Inside its own namespace, each container sees its main process as PID one, and it cannot see the other container's processes at all. As far as web-1 is concerned, web-2 doesn't exist.
+
+And the mount namespace is what lets each container treat its own small stack — the shared image plus its own writable layer — as its entire filesystem, starting at the root.
+
+So namespaces keep containers from seeing each other. The second part of the answer is about sharing fairly: making sure no container can consume everything the host has. That job belongs to cgroups.
+
+A cgroup — short for control group — puts a hard cap on how much CPU and memory a container can use out of the host's total.
+
+So we can give web-2 a tighter limit, and even at full load it can never starve web-1 — or bring the host down with it.
+
+And with that, the picture is complete. One shared kernel. One shared image. Each container isolated by its namespaces, and constrained by its cgroups. Strip away the mystery, and a container is simply an ordinary process — with a private view of the system, and a limit on what it can use.
+
+So let's come back to where we started: docker run nginx. It still looks like one simple line — but now you can see everything behind it.
+
+Pull the image. Create the container. Start the process. Then isolate it with namespaces, and constrain it with cgroups.
+
+That's what happens — every single time you run a container. Thanks for watching.
