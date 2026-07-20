@@ -39,33 +39,29 @@ function* rotatePhaseToken(
 }
 
 export const playImageRegistry = function* (world: World): ThreadGenerator {
-  const { liftedCommand } = world.elements ?? {}
+  const { liftedCommand, terminal } = world.elements ?? {}
 
-  if (!liftedCommand) {
+  if (!liftedCommand || !terminal) {
     return
   }
 
-  // The command doesn't leave — it docks in the top-left corner as a small
-  // persistent banner that will narrate which phase of `run` we're in. The
-  // terminal comes back too, but smaller: from here on it's a prop, not the
-  // protagonist.
+  const targetHeight = terminal.node.height() / 2
+  const targetWidth = terminal.node.width() / 2
+
   yield* all(
-    liftedCommand.phrase.node.position([-710, -486], 1.2, easeInOutCubic),
-    liftedCommand.phrase.node.scale(0.5, 1.2, easeInOutCubic),
-    // The lift kept the terminal's tight token gap; at banner size the words
-    // fuse together, so open it up to a proper word space.
-    liftedCommand.phrase.node.gap(44, 1.2, easeInOutCubic),
+    liftedCommand.phrase.node.opacity(0, 1.2),
+    terminal.node.opacity(1, 1.2),
+  )
+  yield* all(
+    liftedCommand.phrase.node.opacity(0, 1.2),
+    delay(0.2, terminal.node.y(targetHeight - PADDING, 1, easeOutBack)),
+    delay(0.2, terminal.node.x(-targetWidth + PADDING, 1, easeOutBack)),
+
+    delay(0.2, terminal.node.scale(0.5, 1, easeOutBack)),
   )
 
-  const nginxToken = liftedCommand.phrase.token("nginx") as Txt | undefined
-
-  if (!nginxToken) {
-    return
-  }
-
-  yield* nginxToken.fill(Theme.highlight, 0.4)
-
-  world.elements.phaseToken = liftedCommand.phrase.token("run")
+  // TODO - Draw line separating Local from Remote locations
+  yield* waitFor(1.5)
 
   // Create the Registry visual on the right.
   const registry = createRegistry()

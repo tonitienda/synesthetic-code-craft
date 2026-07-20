@@ -16,15 +16,15 @@ export const playIntro = function* (world: World): ThreadGenerator {
   yield* waitFor(2)
 
   const terminal = createTerminal({
-    title: "local shell",
-    width: VIDEO_WIDTH / 2 - PADDING * 2,
-    height: VIDEO_HEIGHT - PADDING * 2,
+    title: "terminal",
+    width: VIDEO_WIDTH / 1.5,
+    height: VIDEO_HEIGHT / 1.5,
     fontSize: 25,
     typingDelay: 0.1,
   })
 
-  terminal.node.y(toWorldY(PADDING, terminal.node.height()))
-  terminal.node.x(toWorldX(PADDING, terminal.node.width()))
+  terminal.node.y(0)
+  terminal.node.x(0)
   terminal.node.opacity(0)
 
   world.stage().add(terminal.node)
@@ -90,11 +90,11 @@ export const playIntro = function* (world: World): ThreadGenerator {
     world.elements = {}
   }
   world.elements.liftedCommand = liftedCommand
-  terminal.node.remove()
 
   yield* all(
     liftedCommand.phrase.restyle({ gap: 75 }, 1),
     (liftedCommand.phrase.token("run") as Txt).fill("#f9c74f", 1),
   )
   yield* waitFor(8)
+  world.elements.terminal = terminal
 }

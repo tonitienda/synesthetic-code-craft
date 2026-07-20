@@ -68,6 +68,116 @@ OPENAI_API_KEY=... npm run narration:openai-tts:cohesive -- path/to/narrations.j
 
 See `docs/openai-sentence-tts.md` for the expected narration JSON shape, output manifest shape, and global voice settings.
 
+## Scripts reference
+
+The repository also includes a set of direct Node scripts under `scripts/`. Some of them are general-purpose tools used by the current workflow; a few older ones are still useful for experiments but are hard-coded to the legacy `src/videos/containers-toni/` setup.
+
+### Current workflow scripts
+
+- `scripts/timeline-to-say.mjs`
+  Converts a Markdown timeline or fenced `narration-yaml` block into a macOS `say`-compatible text file.
+  Usage:
+  `node scripts/timeline-to-say.mjs [timeline.md] --out <say.txt> [--audio <out.aiff>] [--voice Samantha] [--rate 160] [--speak] [--no-timeline-pauses]`
+  Typical use:
+  `npm run narration:containers`
+
+- `scripts/openai-tts.mjs`
+  Generates one OpenAI TTS `.wav` per narration item and writes a `narrations-audio.json` manifest with durations and relative paths.
+  Usage:
+  `OPENAI_API_KEY=... node scripts/openai-tts.mjs <narrations.json> --out-dir <audio-dir> --manifest <narrations-audio.json> [--model gpt-4o-mini-tts] [--voice alloy] [--speed 1] [--tone "..."] [--limit N] [--dry-run]`
+  Use this when per-segment iteration speed matters more than perfect cross-segment flow.
+
+- `scripts/openai-tts-cohesive.mjs`
+  Generates a full stitched narration pass first, then splits it back into per-segment files. This gives more natural pacing across adjacent lines than fully independent segment generation.
+  Usage:
+  `OPENAI_API_KEY=... node scripts/openai-tts-cohesive.mjs <narrations.json> --out-dir <audio-dir> --manifest <narrations-audio.json> [--master <master.wav>] [--full-text <master.txt>] [--reuse-master] [--no-transcribe] [--transcribe-model gpt-4o-mini-transcribe] [--limit N] [--dry-run]`
+  Use this when narration flow matters more than raw iteration speed.
+
+- `scripts/extract-narration-segment.mjs`
+  Cuts one segment back out of a master narration file using the `start` and `duration` fields from a manifest.
+  Usage:
+  `node scripts/extract-narration-segment.mjs <narrations-audio.json> <narration-master.wav> <segment-id> [output-dir]`
+  Useful for repairing a single segment after a cohesive narration run.
+
+- `scripts/capture-motion-canvas-frame.mjs`
+  Starts a Vite preview server for a specific Motion Canvas project, seeks Studio to a timestamp, and captures a PNG with headless Chromium.
+  Usage:
+  `node scripts/capture-motion-canvas-frame.mjs <project-file> <timestamp-seconds> [output.png]`
+  Example:
+  `npm run screenshot:frame -- src/projects/containers-image-to-running-process.ts 35 artifacts/screenshots/containers/035s.png`
+  Requirements:
+  Chromium or Chrome installed, or `CHROME=/path/to/browser`.
+
+- `scripts/generate-video-screenshots.mjs`
+  Generates placeholder preview PNGs for one or more video slugs under `artifacts/screenshots/<slug>/`.
+  Usage:
+  `node scripts/generate-video-screenshots.mjs <video-slug> [...]`
+  Typical use:
+  `npm run screenshots:backpropagation`
+  Note:
+  This script generates synthetic preview images, not true rendered Motion Canvas frames.
+
+### Legacy or experimental narration helpers
+
+These scripts still work, but they are currently hard-coded to the older `src/videos/containers-toni/narrations.json` and `public/narrations/` paths. Treat them as utilities for experiments or migration work unless you first generalize their inputs.
+
+- `scripts/generate-narration-simple.mjs`
+  Creates silent `.wav` placeholders with the target durations from the legacy narrations file.
+  Usage:
+  `node scripts/generate-narration-simple.mjs`
+  Use this for timing tests when you want silence, not speech.
+
+- `scripts/generate-narration-audio.mjs`
+  Generates legacy narration audio either as silence placeholders or with `espeak`.
+  Usage:
+  `node scripts/generate-narration-audio.mjs [--use-espeak]`
+  Without `--use-espeak`, it creates silent placeholders.
+
+- `scripts/generate-narration-say.mjs`
+  Uses macOS `say` to generate one `.wav` file per legacy narration segment.
+  Usage:
+  `node scripts/generate-narration-say.mjs [--voice Samantha] [--rate 150]`
+  Requirements:
+  macOS `say` and `ffmpeg`.
+
+- `scripts/generate-narration-say-timed.mjs`
+  Uses macOS `say`, then pads each file with silence so it matches the configured target duration.
+  Usage:
+  `node scripts/generate-narration-say-timed.mjs [--voice Alex] [--rate 160]`
+  Requirements:
+  macOS `say` and `ffmpeg`.
+
+- `scripts/mux-narration-audio.mjs`
+  Concatenates the legacy narration files and muxes them into an `.mp4`.
+  Usage:
+  `node scripts/mux-narration-audio.mjs <input.mp4> [output.mp4]`
+  Requirements:
+  `ffmpeg`.
+
+- `scripts/debug-narration-audio.mjs`
+  Checks the legacy narration directory for missing files, reports durations, and tests whether concatenation works.
+  Usage:
+  `node scripts/debug-narration-audio.mjs`
+  Requirements:
+  `ffmpeg`.
+
+### Which script to use
+
+- For Markdown or phase content to `say` text:
+  use `scripts/timeline-to-say.mjs`
+- For current OpenAI per-segment narration generation:
+  use `scripts/openai-tts.mjs`
+- For current OpenAI cohesive narration generation:
+  use `scripts/openai-tts-cohesive.mjs`
+- For extracting or repairing one cohesive segment:
+  use `scripts/extract-narration-segment.mjs`
+- For real frame captures from a Motion Canvas project:
+  use `scripts/capture-motion-canvas-frame.mjs`
+- For quick placeholder preview PNGs:
+  use `scripts/generate-video-screenshots.mjs`
+- For older `containers-toni` narration experiments:
+  use the legacy scripts only after confirming their hard-coded paths match what you want
+
 ## Preview screenshots
 
 Binary screenshots are not committed. Pull requests that touch Motion Canvas projects, scenes, or video folders run the `Motion Canvas previews` workflow, which builds the project, generates PNG preview frames for changed video folders, and uploads them as the `motion-canvas-screenshots` artifact.

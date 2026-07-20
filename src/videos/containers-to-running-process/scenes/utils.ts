@@ -32,6 +32,7 @@ export type World = {
   overlay: Reference<Layout>
   music?: SoundBuilder
   elements: {
+    terminal?: Terminal
     liftedCommand?: LiftedCommandPhrase
     /** The middle token of the docked command banner — rotates run/pull/create/start. */
     phaseToken?: Txt
