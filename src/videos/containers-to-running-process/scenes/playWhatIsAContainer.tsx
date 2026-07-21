@@ -3,9 +3,8 @@ import {
   all,
   delay,
   easeOutBack,
+  easeOutCubic,
   waitFor,
-  loop,
-  easeInOutCubic,
   cancel,
   createRef,
   Reference,
@@ -14,61 +13,16 @@ import { containerColors } from "../../../components/docker"
 import { World, colors, rotatePhaseToken } from "./utils"
 import { Circle, Layout, Rect, Txt } from "@motion-canvas/2d"
 import { createFileChip } from "../../../components/filesystem"
+import {
+  breathe,
+  flowSignal,
+  impact,
+  spreadLayer,
+} from "../../../choreography"
 
 type WritableLayer = {
   node: Rect
   chipsRow: Reference<Layout>
-}
-
-// A small monospace "packet" that travels between the process and a layer to
-// represent a single read or write of a specific file.
-function createPacket(text: string, color: string): Rect {
-  return (
-    <Rect
-      layout
-      alignItems={"center"}
-      justifyContent={"center"}
-      paddingLeft={16}
-      paddingRight={16}
-      height={40}
-      radius={10}
-      fill={"#020617ee"}
-      stroke={color}
-      lineWidth={2}
-      shadowColor={color + "55"}
-      shadowBlur={16}
-      opacity={0}
-    >
-      <Txt text={text} fontFamily={"monospace"} fontSize={22} fill={color} />
-    </Rect>
-  ) as Rect
-}
-
-// Send a packet from one node to another along an eased path, then clean it up.
-function* flow(
-  world: World,
-  from: Layout,
-  to: Layout,
-  label: string,
-  color: string,
-  pulseTarget: boolean,
-): ThreadGenerator {
-  const packet = createPacket(label, color)
-  world.overlay().add(packet)
-  packet.absolutePosition(from.absolutePosition())
-  packet.scale(0.9)
-
-  yield* packet.opacity(1, 0.2)
-  yield* packet.absolutePosition(to.absolutePosition(), 0.8, easeInOutCubic)
-
-  if (pulseTarget) {
-    yield* to.scale(1.05, 0.15).to(1, 0.2)
-  } else {
-    yield* waitFor(0.15)
-  }
-
-  yield* packet.opacity(0, 0.3)
-  packet.remove()
 }
 
 // A warm, amber "read-write" layer that stacks on top of the read-only image.
@@ -108,7 +62,11 @@ function createWritableLayer(width: number, height: number): WritableLayer {
 }
 
 // The container's main process, drawn as a live "pill" with a status dot.
-function createProcessBox(name: string, pid: string): { node: Rect } {
+function createProcessBox(
+  name: string,
+  pid: string,
+): { node: Rect; dot: Circle } {
+  const dotRef = createRef<Circle>()
   const node = (
     <Rect
       layout
@@ -127,7 +85,7 @@ function createProcessBox(name: string, pid: string): { node: Rect } {
       shadowBlur={20}
       opacity={0}
     >
-      <Circle size={16} fill={containerColors.process} />
+      <Circle ref={dotRef} size={16} fill={containerColors.process} />
       <Txt
         text={name}
         fontFamily={"monospace"}
@@ -138,7 +96,7 @@ function createProcessBox(name: string, pid: string): { node: Rect } {
     </Rect>
   ) as Rect
 
-  return { node }
+  return { node, dot: dotRef() }
 }
 
 export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
@@ -156,77 +114,97 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   yield* rotatePhaseToken(world, "create", colors.amber)
 
   // 1) CREATE — a container is the image plus a thin writable layer on top.
-  // Re-badge the image panel as a "container" and stack the writable layer in.
+  // Re-badge the image panel as a "container" and grow the writable membrane in.
   const writable = createWritableLayer(barWidth, barHeight)
   writable.node.height(0)
+  writable.node.opacity(0)
   imageFs.layersContainer().insert(writable.node, 0)
 
   yield* all(
     imageFs.titleRef().text("container", 0.6),
     imageFs.titleRef().fill(containerColors.writable, 0.6),
+    // A membrane, not a curtain: it beads at the centre, spreads sideways, then
+    // rises to full height with a slight overshoot, pressing the image below.
     delay(
-      0.6,
-      all(
-        // easeOutBack overshoots the target height slightly, so the new layer
-        // "snaps" into place instead of gliding in.
-        writable.node.height(barHeight, 0.9, easeOutBack),
-        writable.node.opacity(1, 0.7),
-      ),
+      0.5,
+      spreadLayer({
+        layer: writable.node,
+        finalWidth: barWidth,
+        finalHeight: barHeight,
+        below: readonlyNode,
+        duration: 1.1,
+      }),
     ),
   )
 
   yield* waitFor(0.5)
 
-  // 2) START — the container's main process comes to life as PID 1.
+  // 2) START — the container's main process ignites into life as PID 1.
   yield* rotatePhaseToken(world, "start", colors.amber)
 
   const process = createProcessBox("nginx", "PID 1")
   process.node.width(imageFs.layersContainer().width())
-  process.node.scale(0.8)
+  process.node.scale(0.6)
   imageFs.layersContainer().insert(process.node, 0)
 
+  // Ignition: the pill inflates from its centre while one green ring expands
+  // toward the container boundary and the status dot fires a single strong beat.
+  process.dot.shadowColor(containerColors.process)
+  process.dot.shadowBlur(0)
   yield* all(
-    process.node.opacity(1, 0.5),
+    process.node.opacity(1, 0.4),
     process.node.scale(1, 0.5, easeOutBack),
+    impact({
+      overlay: world.overlay(),
+      at: process.node.absolutePosition(),
+      color: containerColors.process,
+      size: process.node.width(),
+    }),
+    process.dot.scale(1.9, 0.16, easeOutCubic).to(1, 0.3, easeOutBack),
+    process.dot.shadowBlur(26, 0.16, easeOutCubic).to(8, 0.4),
   )
 
-  // Unlike the inert image, the process is alive — it breathes by pulsing its
-  // green outline brighter and back, rather than by changing size.
-  const processBreath = yield loop(Infinity, () =>
-    process.node
-      .stroke("#6ee7b7", 0.9, easeInOutCubic)
-      .to(containerColors.process, 0.9, easeInOutCubic),
-  )
+  // Then it settles into a restrained "alive" breathing outline — pulsing the
+  // green stroke brighter and back, never scaling.
+  const processBreath = yield breathe(process.node, {
+    from: "#6ee7b7",
+    to: containerColors.process,
+    period: 0.9,
+  })
 
   yield* waitFor(0.6)
 
-  // 3) READ — config is read from the read-only image layer.
-  yield* flow(
-    world,
-    readonlyNode,
-    process.node,
-    "read  /etc/nginx/nginx.conf",
-    containerColors.readonly,
-    false,
-  )
+  // 3) READ — config is read from the read-only image layer. The layer releases
+  // it, and the process absorbs it with a cyan glow-mix (not a uniform scale).
+  yield* flowSignal({
+    overlay: world.overlay(),
+    from: readonlyNode,
+    to: process.node,
+    label: "read  /etc/nginx/nginx.conf",
+    color: containerColors.readonly,
+    absorb: true,
+    releaseSource: true,
+  })
 
   yield* waitFor(0.4)
 
-  // 4) WRITE — logs are written to the writable layer, never the image.
-  yield* flow(
-    world,
-    process.node,
-    writable.node,
-    "write  /var/log/nginx/access.log",
-    containerColors.writable,
-    true,
-  )
-
-  // The write persists: the file now lives in the writable layer.
+  // 4) WRITE — logs are written to the writable layer, never the image. The
+  // write packet does not vanish: it morphs into the persistent access.log chip,
+  // so the file is visibly the thing that was just written.
   const chip = createFileChip("access.log", containerColors.writable)
-  chip.scale(0.8)
+  chip.opacity(0)
   writable.chipsRow().add(chip)
-  yield* all(chip.opacity(1, 0.4), chip.scale(1, 0.4, easeOutBack))
+
+  yield* flowSignal({
+    overlay: world.overlay(),
+    from: process.node,
+    to: writable.node,
+    label: "write  /var/log/nginx/access.log",
+    color: containerColors.writable,
+    absorb: true,
+    morphTo: chip,
+    morphText: "access.log",
+  })
 
   yield* waitFor(1)
 

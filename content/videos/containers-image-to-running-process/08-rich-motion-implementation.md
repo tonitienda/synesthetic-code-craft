@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: ready
 phase: implementation-guidance
 video: containers-image-to-running-process
 ---
@@ -49,37 +49,42 @@ Do not scatter long chains of raw tweens across every scene. Introduce reusable 
 Suggested API direction:
 
 ```ts
-yield* impact({
-  node: localImage.node,
-  surface: localSystem.slot(),
-  intensity: 0.7,
-})
+yield *
+  impact({
+    node: localImage.node,
+    surface: localSystem.slot(),
+    intensity: 0.7,
+  })
 
-yield* transferRibbon({
-  from: registryImage.node,
-  to: localImage.node,
-  tone: "image",
-  preservesSource: true,
-})
+yield *
+  transferRibbon({
+    from: registryImage.node,
+    to: localImage.node,
+    tone: "image",
+    preservesSource: true,
+  })
 
-yield* spreadLayer({
-  layer: writable.node,
-  over: readonlyNode,
-  origin: "center",
-})
+yield *
+  spreadLayer({
+    layer: writable.node,
+    over: readonlyNode,
+    origin: "center",
+  })
 
-yield* flowSignal({
-  from: readonlyNode,
-  to: process.node,
-  label: "read /etc/nginx/nginx.conf",
-  tone: "readonly",
-  absorb: true,
-})
+yield *
+  flowSignal({
+    from: readonlyNode,
+    to: process.node,
+    label: "read /etc/nginx/nginx.conf",
+    tone: "readonly",
+    absorb: true,
+  })
 
-yield* morphInto({
-  source: writePacket,
-  target: accessLogChip,
-})
+yield *
+  morphInto({
+    source: writePacket,
+    target: accessLogChip,
+  })
 
 const breathing = breathe(process.node, {
   property: "stroke",

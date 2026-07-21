@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "containers",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:containers", "--", "--port", "9003"],
+      "port": 9003
+    },
+    {
       "name": "containers-toni",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start:containers:toni"],

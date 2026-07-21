@@ -11,8 +11,9 @@ import {
   easeOutCubic,
   delay,
 } from "@motion-canvas/core"
-import { createDockerImageBox } from "../../../components/docker"
+import { containerColors, createDockerImageBox } from "../../../components/docker"
 import { createLocalsystem } from "../../../components/registries"
+import { impact, transferRibbon } from "../../../choreography"
 import {
   PADDING,
   rotatePhaseToken,
@@ -123,6 +124,18 @@ export const playPullImage = function* (world: World): ThreadGenerator {
 
   world.overlay().add(localImage.node)
 
+  // Pull = flow: a soft cyan ribbon copies the image out of the registry and
+  // into the host. The registry copy stays put — this reads as a copy, not a
+  // move — and the ribbon's final segment snaps into the destination slot.
+  yield* transferRibbon({
+    overlay: world.overlay(),
+    from: registryImage.node.absolutePosition(),
+    to: [cx, cy],
+    color: containerColors.readonly,
+    width: 14,
+    duration: 1,
+  })
+
   // Drop the image like it's falling into water: accelerate down, plunge just
   // past the resting spot, squash on impact, then bob back up and settle.
   yield* all(
@@ -141,15 +154,24 @@ export const playPullImage = function* (world: World): ThreadGenerator {
     ),
   )
 
-  // ...then let it bob gently, as if floating on the surface.
-  const landedY = localImage.node.y()
-  // world.cancellation.imageFloat = yield loop(Infinity, () =>
-  //   localImage.node
-  //     .y(landedY + 5, 1.6, easeInOutCubic)
-  //     .to(landedY - 5, 1.6, easeInOutCubic),
-  // )
+  // The host receives the impact: one soft ripple through the panel, a brief
+  // border brighten, and a shallow press of the image into the slot. Both the
+  // moving object and the receiving surface react.
+  yield* all(
+    impact({
+      overlay: world.overlay(),
+      at: [cx, cy],
+      color: containerColors.readonly,
+      size: localSystem.slot().width(),
+      surface: localSystem.node,
+    }),
+    chain(
+      localImage.node.position.y(localImage.node.y() + 5, 0.12, easeOutCubic),
+      localImage.node.position.y(localImage.node.y(), 0.28, easeOutBack),
+    ),
+  )
 
-  yield* waitFor(3)
+  yield* waitFor(1.5)
   // yield* all(
   // //  pullLine.textRef().fill(Theme.text, 0.5),
   //   // The terminal has done its one honest job: showing the pull. `docker run`
