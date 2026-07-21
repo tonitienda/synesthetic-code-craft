@@ -1,10 +1,18 @@
 import { Circle, Layout, Rect, Txt } from "@motion-canvas/2d"
-import { all, createRef, waitFor } from "@motion-canvas/core"
+import {
+  all,
+  chain,
+  createRef,
+  easeOutBack,
+  easeOutCubic,
+  waitFor,
+} from "@motion-canvas/core"
 import type { Reference, ThreadGenerator } from "@motion-canvas/core"
 import type {
   CommandPhraseSnapshot,
   CommandPhraseTokenKind,
 } from "./commandPhrase"
+import { GlassWindow } from "./glass"
 
 export type TerminalPrintKind =
   | "normal"
@@ -57,6 +65,7 @@ export interface TerminalRunOptions {
   duration?: number
   afterDelay?: number
   dimCommand?: boolean
+  wobble?: number
 }
 
 export interface TerminalHighlightOptions {
@@ -104,9 +113,9 @@ interface TerminalOutputLine {
 }
 
 export const defaultTerminalTheme: TerminalTheme = {
-  background: "#020617",
-  header: "#0f172a",
-  headerFocus: "#334155",
+  background: "#020617dc",
+  header: "#0f172acc",
+  headerFocus: "#334155cc",
   border: "#334155",
   borderFocus: "#64748b",
   text: "#e2e8f0",
@@ -127,11 +136,10 @@ export function createTerminal(options: TerminalOptions = {}) {
 }
 
 export class Terminal {
-  public readonly node: Rect
+  public readonly node: GlassWindow
 
-  private readonly frameRef = createRef<Rect>()
-  private readonly bodyRef = createRef<Layout>()
-  private readonly topBarRef = createRef<Rect>()
+  private readonly bodyNode: Layout
+  private readonly topBarNode: Rect
   private readonly theme: TerminalTheme
   private readonly width: number
   private readonly height: number
@@ -158,64 +166,49 @@ export class Terminal {
     this.lineGap = options.lineGap ?? 14
     this.typingDelay = options.typingDelay ?? 0.035
 
-    this.node = (
-      <Rect
-        ref={this.frameRef}
-        width={this.width}
-        height={this.height}
-        radius={options.radius ?? 26}
-        fill={this.theme.background}
-        stroke={this.theme.border}
-        lineWidth={3}
-        clip
-      >
-        <Layout
-          layout
-          direction={"column"}
-          width={this.width}
-          height={this.height}
-          offsetX={-1}
-          offsetY={-1}
-          x={() => -this.frameRef().width() / 2}
-          y={() => -this.frameRef().height() / 2}
-        >
-          <Rect
-            layout
-            ref={this.topBarRef}
-            direction={"row"}
-            gap={10}
-            alignItems={"center"}
-            justifyContent={"start"}
-            width={this.width}
-            height={this.headerHeight}
-            paddingLeft={22}
-            fill={this.theme.header}
-          >
-            <Circle size={13} fill={this.theme.error} opacity={0.9} />
-            <Circle size={13} fill={this.theme.warning} opacity={0.9} />
-            <Circle size={13} fill={this.theme.success} opacity={0.9} />
-            <Txt
-              text={this.title}
-              fontSize={18}
-              fill={this.theme.muted}
-              marginLeft={16}
-            />
-          </Rect>
+    this.node = new GlassWindow({
+      width: this.width,
+      height: this.height,
+      radius: options.radius ?? 26,
+      background: this.theme.background,
+      border: this.theme.border,
+      borderWidth: 3,
+      shadowColor: "#38bdf824",
+      shadowBlur: 28,
+      headerHeight: this.headerHeight,
+      headerBackground: this.theme.header,
+      headerProps: {
+        gap: 10,
+        paddingLeft: 22,
+      },
+      bodyProps: {
+        gap: this.lineGap,
+        alignItems: "stretch",
+        justifyContent: "start",
+        padding: this.padding,
+      },
+      shockwaveColor: this.theme.prompt,
+    })
+    this.topBarNode = this.node.header
+    this.bodyNode = this.node.body
 
-          <Layout
-            ref={this.bodyRef}
-            layout
-            direction={"column"}
-            gap={this.lineGap}
-            alignItems={"stretch"}
-            justifyContent={"start"}
-            width={this.width}
-            height={this.height - this.headerHeight}
-            padding={this.padding}
-          />
-        </Layout>
-      </Rect>
-    ) as Rect
+    this.topBarNode.add(
+      <Circle size={13} fill={this.theme.error} opacity={0.9} />,
+    )
+    this.topBarNode.add(
+      <Circle size={13} fill={this.theme.warning} opacity={0.9} />,
+    )
+    this.topBarNode.add(
+      <Circle size={13} fill={this.theme.success} opacity={0.9} />,
+    )
+    this.topBarNode.add(
+      <Txt
+        text={this.title}
+        fontSize={18}
+        fill={this.theme.muted}
+        marginLeft={16}
+      />,
+    )
   }
 
   *enter(duration = 0.35) {
@@ -234,17 +227,17 @@ export class Terminal {
 
   *focus(duration = 0.25) {
     yield* all(
-      this.frameRef().stroke(this.theme.borderFocus, duration),
-      this.topBarRef().fill(this.theme.headerFocus, duration),
-      this.frameRef().lineWidth(5, duration),
+      this.node.stroke(this.theme.borderFocus, duration),
+      this.topBarNode.fill(this.theme.headerFocus, duration),
+      this.node.lineWidth(5, duration),
     )
   }
 
   *unfocus(duration = 0.25) {
     yield* all(
-      this.frameRef().stroke(this.theme.border, duration),
-      this.topBarRef().fill(this.theme.header, duration),
-      this.frameRef().lineWidth(3, duration),
+      this.node.stroke(this.theme.border, duration),
+      this.topBarNode.fill(this.theme.header, duration),
+      this.node.lineWidth(3, duration),
     )
   }
 
@@ -287,12 +280,20 @@ export class Terminal {
     const duration = options.duration ?? 0.16
     const afterDelay = options.afterDelay ?? 0.18
     const opacity = (options.dimCommand ?? false) ? 0.72 : 1
+    const totalDuration = duration + afterDelay
 
     yield* all(
       this.activeCommand.cursorRef().opacity(0, duration),
       this.activeCommand.rowRef().opacity(opacity, duration),
+      chain(
+        this.activeCommand.rowRef().scale.y(0.96, duration, easeOutCubic),
+        this.activeCommand.rowRef().scale.y(1, afterDelay, easeOutBack),
+      ),
+      this.node.shockwave({
+        duration: totalDuration,
+        wobble: options.wobble ?? 0.45,
+      }),
     )
-    yield* waitFor(afterDelay)
   }
 
   *print(text: string, options: TerminalPrintOptions = {}) {
@@ -422,7 +423,7 @@ export class Terminal {
       tokenRefs,
     }
 
-    this.bodyRef().add(
+    this.bodyNode.add(
       <Layout
         ref={rowRef}
         layout
@@ -501,7 +502,7 @@ export class Terminal {
       textRef,
     }
 
-    this.bodyRef().add(
+    this.bodyNode.add(
       <Layout
         ref={rowRef}
         layout

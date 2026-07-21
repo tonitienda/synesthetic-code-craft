@@ -54,8 +54,8 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   )
   yield* all(
     liftedCommand.phrase.node.opacity(0, 1.2),
-    delay(0.2, terminal.node.y(targetHeight - PADDING, 1, easeOutBack)),
-    delay(0.2, terminal.node.x(-targetWidth + PADDING, 1, easeOutBack)),
+    delay(0.2, terminal.node.y(targetHeight - PADDING * 2, 1, easeOutBack)),
+    delay(0.2, terminal.node.x(-targetWidth + PADDING * 2, 1, easeOutBack)),
 
     delay(0.2, terminal.node.scale(0.5, 1, easeOutBack)),
   )

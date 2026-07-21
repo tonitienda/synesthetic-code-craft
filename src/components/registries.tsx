@@ -1,5 +1,6 @@
 import { Layout, Rect, Txt } from "@motion-canvas/2d"
 import { createRef, Reference, Vector2 } from "@motion-canvas/core"
+import { GlassRectangle } from "./glass"
 
 export type Registry = {
   node: Rect
@@ -17,20 +18,19 @@ export function createRegistry(): Registry {
   const slot = createRef<Rect>()
 
   const node = (
-    <Rect
+    <GlassRectangle
       layout
       direction={"column"}
       justifyContent={"space-evenly"}
       width={900}
       height={200}
       radius={28}
-      fill={"#0f172a"}
-      stroke={"#64748b"}
-      lineWidth={3}
+      border={"#94a3b899"}
+      borderWidth={3}
       padding={24}
       gap={22}
-      shadowColor={"#00000066"}
-      shadowBlur={24}
+      shadowColor={"#38bdf81f"}
+      shadowBlur={28}
     >
       <Layout
         layout
@@ -58,12 +58,13 @@ export function createRegistry(): Registry {
           width={230}
           height={100}
           radius={20}
-          stroke={"#334155"}
+          stroke={"#ffffff24"}
           lineWidth={3}
-          fill={"#020617"}
+          fill={"#020617a8"}
+          opacity={0}
         />
       </Layout>
-    </Rect>
+    </GlassRectangle>
   ) as Rect
 
   return {
@@ -80,20 +81,19 @@ export function createLocalsystem(): LocalSystem {
   const title = createRef<Txt>()
 
   const node = (
-    <Rect
+    <GlassRectangle
       layout
       direction={"column"}
       justifyContent={"space-between"}
       width={"100%"}
       height={200}
       radius={28}
-      fill={"#0f172a"}
-      stroke={"#64748b"}
-      lineWidth={3}
+      border={"#94a3b899"}
+      borderWidth={3}
       padding={24}
       gap={22}
-      shadowColor={"#00000066"}
-      shadowBlur={24}
+      shadowColor={"#38bdf81f"}
+      shadowBlur={28}
     >
       <Layout
         layout
@@ -123,12 +123,13 @@ export function createLocalsystem(): LocalSystem {
           width={230}
           height={100}
           radius={20}
-          stroke={"#334155"}
+          stroke={"#ffffff24"}
           lineWidth={3}
-          fill={"#020617"}
+          fill={"#020617a8"}
+          opacity={0}
         />
       </Layout>
-    </Rect>
+    </GlassRectangle>
   ) as Rect
 
   return {

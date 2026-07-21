@@ -11,7 +11,10 @@ import {
   easeOutCubic,
   delay,
 } from "@motion-canvas/core"
-import { containerColors, createDockerImageBox } from "../../../components/docker"
+import {
+  containerColors,
+  createDockerImageBox,
+} from "../../../components/docker"
 import { createLocalsystem } from "../../../components/registries"
 import { impact, transferRibbon } from "../../../choreography"
 import {
@@ -48,13 +51,11 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   // Tall enough to hold the terminal (docked into its left half in a moment),
   // with the image slot pushed to the right half to make room for it.
   localSystem.node.height(740)
+  localSystem.node.width(VIDEO_WIDTH - PADDING * 2)
   localSystem.slot().margin.left(500)
 
   localSystem.node.position([
-    toWorldX(
-      VIDEO_WIDTH - localSystem.node.width() - PADDING,
-      localSystem.node.width(),
-    ),
+    0,
     toWorldY(
       VIDEO_HEIGHT - PADDING - localSystem.node.height(),
       localSystem.node.height(),
@@ -74,7 +75,7 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   //     .to("#64748b", 1.6, easeInOutCubic),
   // )
 
-  world.stage().add(localSystem.node)
+  world.background().add(localSystem.node)
 
   // The host panel wraps the terminal as it appears: the terminal glides into
   // the panel's left half while the box materialises around it — no words

@@ -1,5 +1,6 @@
 import { Txt, Rect, Circle, Layout } from "@motion-canvas/2d"
 import { createRef, Reference } from "@motion-canvas/core"
+import { GlassRectangle } from "./glass"
 
 export type DockerImage = {
   node: Rect
@@ -15,7 +16,7 @@ export const containerColors = {
 
 export function createDockerImageBox(label: string): DockerImage {
   const node = (
-    <Rect
+    <GlassRectangle
       layout
       direction={"column"}
       alignItems={"center"}
@@ -23,9 +24,9 @@ export function createDockerImageBox(label: string): DockerImage {
       width={220}
       height={86}
       radius={18}
-      fill={"#0f172acc"}
-      stroke={"#7dd3fc99"}
-      lineWidth={3}
+      background={"#0f172ad6"}
+      border={"#7dd3fc99"}
+      borderWidth={3}
       shadowColor={"#38bdf833"}
       shadowBlur={14}
     >
@@ -36,7 +37,7 @@ export function createDockerImageBox(label: string): DockerImage {
         fill={"#e0f2fe"}
       />
       <Txt text={"Docker Image"} fontSize={20} fill={"#7dd3fc"} marginTop={4} />
-    </Rect>
+    </GlassRectangle>
   ) as Rect
 
   return {
@@ -65,7 +66,7 @@ export function createContainerCard(name: string): ContainerCard {
   const writableRef = createRef<Rect>()
 
   const node = (
-    <Rect
+    <GlassRectangle
       layout
       direction={"column"}
       alignItems={"stretch"}
@@ -75,9 +76,9 @@ export function createContainerCard(name: string): ContainerCard {
       height={320}
       padding={22}
       radius={22}
-      fill={"#0b1220cc"}
-      stroke={"#94a3b8aa"}
-      lineWidth={3}
+      background={"#0b1220d8"}
+      border={"#94a3b8aa"}
+      borderWidth={3}
       shadowColor={"#00000066"}
       shadowBlur={22}
       opacity={0}
@@ -146,7 +147,7 @@ export function createContainerCard(name: string): ContainerCard {
         />
         <Layout ref={chipsRow} layout direction={"row"} gap={8} />
       </Rect>
-    </Rect>
+    </GlassRectangle>
   ) as Rect
 
   return {
