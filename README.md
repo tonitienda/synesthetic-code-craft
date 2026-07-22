@@ -9,6 +9,7 @@ Motion Canvas project for building multiple YouTube-ready educational videos wit
 - `backpropagation-basics` — a beautiful first explainer covering perceptrons, deeper networks, and backpropagation.
 - `containers-image-to-running-process` — explains how container images become bounded running processes. The implementation is paced as a multi-act animated explainer rather than a short static slide deck.
 - `containers-image-to-running-process-alive` — alternative containers implementation focused on more dynamic, visually continuous container explanations while respecting the approved scene-timeline duration.
+- `showcase-experiments` — a silent material and motion lab covering surfaces, integrated combinations, neural graphs, token caches, propulsion, liquid flow, authored-versus-Matter.js physical interactions, and a Motion Canvas/Three.js hybrid study.
 
 ## Quick start
 
@@ -25,6 +26,7 @@ npm run start:deep-dive
 npm run start:backpropagation
 npm run start:containers
 npm run start:containers:alive
+npm run start:showcase-experiments
 ```
 
 ## Build
@@ -36,6 +38,7 @@ npm run build:deep-dive
 npm run build:backpropagation
 npm run build:containers
 npm run build:containers:alive
+npm run build:showcase-experiments
 ```
 
 ## Narration exports

@@ -12,6 +12,8 @@
     "build:intro": "tsc && MOTION_CANVAS_PROJECT=./src/projects/youtube-intro.ts vite build",
     "build:deep-dive": "tsc && MOTION_CANVAS_PROJECT=./src/projects/youtube-deep-dive.ts vite build",
     "build:patterns": "tsc && MOTION_CANVAS_PROJECT=./src/projects/patterns.ts vite build",
+    "start:showcase-experiments": "MOTION_CANVAS_PROJECT=./src/projects/showcase-experiments.ts vite",
+    "build:showcase-experiments": "tsc && MOTION_CANVAS_PROJECT=./src/projects/showcase-experiments.ts vite build",
     "start:backpropagation": "MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite",
     "build:backpropagation": "tsc && MOTION_CANVAS_PROJECT=./src/projects/backpropagation-basics.ts vite build",
     "screenshots": "node scripts/generate-video-screenshots.mjs",
@@ -27,6 +29,7 @@
     "screenshots:containers": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process",
     "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive",
     "screenshot:frame": "node scripts/capture-motion-canvas-frame.mjs",
+    "screenshots:showcase-experiments": "node scripts/generate-video-screenshots.mjs showcase-experiments",
     "narration:openai-tts": "node scripts/openai-tts.mjs",
     "narration:openai-tts:cohesive": "node scripts/openai-tts-cohesive.mjs",
     "narration:extract-segment": "node scripts/extract-narration-segment.mjs",
@@ -39,11 +42,15 @@
   "dependencies": {
     "@motion-canvas/2d": "^3.18.0-alpha.0",
     "@motion-canvas/core": "^3.18.0-alpha.0",
-    "@motion-canvas/ffmpeg": "^3.18.0-alpha.0"
+    "@motion-canvas/ffmpeg": "^3.18.0-alpha.0",
+    "matter-js": "^0.20.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@motion-canvas/ui": "^3.18.0-alpha.0",
     "@motion-canvas/vite-plugin": "^3.18.0-alpha.0",
+    "@types/matter-js": "^0.20.2",
+    "@types/three": "^0.185.1",
     "typescript": "^5.2.2",
     "vite": "^4.0.0"
   }

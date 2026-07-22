@@ -99,11 +99,13 @@ server.stderr.on("data", (chunk) => process.stderr.write(chunk))
 
 try {
   await waitForServer(port)
-  const url = `http://127.0.0.1:${port}/?agentPreview=1&ts=${seconds}`
+  const url = `http://127.0.0.1:${port}/?present=1&agentPreview=1&ts=${seconds}`
   const capture = run(browser, [
     "--headless=new",
-    "--disable-gpu",
     "--no-sandbox",
+    "--enable-webgl",
+    "--use-angle=swiftshader",
+    "--enable-unsafe-swiftshader",
     "--hide-scrollbars",
     "--window-size=1280,720",
     `--screenshot=${output}`,

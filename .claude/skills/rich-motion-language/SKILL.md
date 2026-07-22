@@ -11,6 +11,10 @@ and to keep objects alive and continuous across transitions. Derived from the co
 video brief (`content/videos/containers-image-to-running-process/08-rich-motion-implementation.md`)
 and implemented as reusable helpers in **`src/choreography/richMotion.tsx`**.
 
+The material, shape, physics, and dimensional-rendering experiments live under
+**`src/videos/showcase-experiments/`**. Treat their conclusions below as project
+defaults, not as a requirement to reuse every experimental implementation.
+
 ## The rule that governs everything
 
 > Every rich animation must reinforce a concept. If an effect does not communicate
@@ -36,6 +40,66 @@ Assign every recurring object a consistent physical behaviour, then never break 
 
 The metaphors transfer: for backprop, the *loss* is the active surface, *gradients* are
 directional flows, *weights* are the packaged material that gets nudged.
+
+## Lessons from the material and shape experiments
+
+### Material identity is behaviour first, surface treatment second
+
+- Viewers read mass, elasticity, adhesion, and responsiveness primarily from motion.
+  Texture, gradients, and highlights support that identity but cannot rescue generic
+  movement.
+- Combine materials inside one coherent object: a structural base plus a membrane,
+  coating, inset, illuminated core, or edge treatment. Two unrelated rectangles stacked
+  together do not read as a material combination.
+- Use a consistent light direction across the visual system. The current default is a
+  soft upper-left key, a restrained cool rim, and a darker lower-right falloff.
+- Glossy Bubble/Gel surfaces use a broad **curved specular arc**, a small secondary glint,
+  and a directional lowlight. Avoid large circular white spots: they look pasted on.
+- Keep highlights near a surface edge and away from important copy. Highlights describe
+  curvature; they are not decoration and should not become permanent animated sweeps.
+
+### Prefer 2.5D for the project’s illustrated technical language
+
+The rocket comparison established this default order:
+
+1. **2D diagram** — use when topology, labels, and state changes carry the idea.
+2. **2.5D vector object** — use when volume helps recognition but the object should remain
+   aligned with the rest of the Motion Canvas language.
+3. **True 3D hero object** — use only when perspective, occlusion, or spatial rotation is
+   itself explanatory and a 2.5D comparison has shown a material benefit.
+
+Three.js produces more realistic volume and lighting, but realism alone is not a reason to
+use it. For this project, the 2.5D rocket is more stylistically coherent than the Three.js
+rocket. Default to the 2.5D version unless the shot needs to teach spatial construction,
+orientation, or hidden geometry.
+
+Build convincing 2.5D objects with:
+
+- one continuous outer silhouette instead of a rectangle plus a detached triangle;
+- overlapping front/side planes and clear occlusion order;
+- elliptical rims or cross-sections where cylinders must read as round;
+- attached fins, pipes, nozzles, and joints that share contours with the main body;
+- two or three restrained value bands from the shared light direction;
+- small perspective asymmetry rather than arbitrary rotation.
+
+If true 3D is approved, keep it hybrid: render only the hero object in Three.js and retain
+Motion Canvas for labels, paths, particles, transitions, and timing. Motion Canvas signals
+must drive all Three.js transforms and lights; never start an independent
+`requestAnimationFrame` loop.
+
+### Use simulation selectively
+
+- Matter.js is useful for gravity, impacts, collisions, stacking, and rigid-body momentum
+  when physical uncertainty reinforces the concept.
+- It is not the default for semantic UI motion or exact layout. Simulated rotation and
+  rebound can make a component feel careless when the scene needs a precise landing.
+- Bubble split/join is authored rather than simulated: stretch, show an adhesion bridge,
+  overshoot once, recoil once, then settle at the exact target with zero rotation. This
+  reads stickier than an underdamped rigid-body constraint.
+- When Matter.js is appropriate, precompute a fixed-step timeline (currently 60 Hz) and
+  sample it from Motion Canvas. Matter must not own playback or rendering.
+- Curved connectors are the project default. Angular elbows imply routing or circuitry and
+  should be used only when that meaning is intentional.
 
 ## 2. The five motion families
 
@@ -119,6 +183,18 @@ a removed node. Idle "breathing" resets **colour**, not scale.
   the video without a narration reason. Narration runs on its own concurrent timeline, so
   keep each scene's net duration roughly constant (trim a trailing `waitFor` to pay for a
   new effect).
+- **Three.js bounds.** A WebGL-backed Motion Canvas component needs explicit width and
+  height (for example, extend `Rect`, not an unbounded `Node`). Otherwise parent caching
+  can clip part of the 3D canvas even though Three.js rendered it correctly.
+- **Three.js compositing.** Render to a transparent WebGL canvas, draw it during the Motion
+  Canvas node's `draw()` call, and let Motion Canvas signals control camera, mesh, light,
+  and thrust values. This preserves deterministic seeking and frame export.
+- **WebGL preview.** Headless Chromium must have WebGL enabled; the repository screenshot
+  helper uses software WebGL for deterministic local captures. A build can pass even when
+  a browser cannot create a WebGL context, so inspect at least one runtime frame.
+- **Cost of 3D.** Three.js substantially increases the project bundle and introduces a
+  second rendering vocabulary. Keep the bridge reusable, but keep the number of 3D shots
+  small.
 
 ## Verifying (important gotcha)
 
@@ -137,5 +213,7 @@ See `docs/agent-motion-canvas-preview.md` and the `motion-canvas-video` skill.
 ## Non-goals
 
 Don't rewrite narration, change the educational sequence, replace the design system
-wholesale, add smoke/particles/3D, jelly-ify every box, or leave permanent wobble on static
-elements. Human review controls phase transitions — never mark a video phase "ready".
+wholesale, add realistic smoke or dense particles, default to 3D for visual polish,
+jelly-ify every box, or leave permanent wobble on static elements. A bounded 3D hero shot
+is acceptable only under the decision ladder above. Human review controls phase
+transitions — never mark a video phase "ready".
