@@ -1,50 +1,7 @@
-import { Layout, Txt, Rect } from "@motion-canvas/2d"
-import {
-  all,
-  easeOutBack,
-  sequence,
-  ThreadGenerator,
-  waitFor,
-} from "@motion-canvas/core"
-import { defaultTerminalTheme } from "../../../components"
-import { colors, World } from "./utils"
-
-const Theme = {
-  highlight: "#facc15",
-  text: defaultTerminalTheme.text,
-}
-
-function createStepCard(name: string, gloss: string): Rect {
-  return (
-    <Rect
-      layout
-      direction={"column"}
-      alignItems={"center"}
-      justifyContent={"center"}
-      gap={14}
-      width={380}
-      height={190}
-      paddingLeft={20}
-      paddingRight={20}
-      radius={20}
-      fill={"#0f172acc"}
-      stroke={colors.amber + "99"}
-      lineWidth={3}
-      shadowColor={"#00000055"}
-      shadowBlur={18}
-      opacity={0}
-    >
-      <Txt
-        text={`docker ${name}`}
-        fontFamily={"monospace"}
-        fontSize={32}
-        fill={colors.amber}
-        fontWeight={700}
-      />
-      <Txt text={gloss} fontSize={23} fill={"#cbd5e1"} />
-    </Rect>
-  ) as Rect
-}
+import { Txt } from "@motion-canvas/2d"
+import { ThreadGenerator, waitFor } from "@motion-canvas/core"
+import { colors, Theme, World } from "./utils"
+import { createPhaseRail } from "./phaseRail"
 
 export const playRunBreakdown = function* (world: World): ThreadGenerator {
   const { liftedCommand } = world.elements ?? {}
@@ -55,36 +12,25 @@ export const playRunBreakdown = function* (world: World): ThreadGenerator {
 
   const runToken = liftedCommand.phrase.token("run") as Txt | undefined
 
-  const steps = [
-    createStepCard("pull", "download image layers"),
-    createStepCard("create", "add a writable layer"),
-    createStepCard("start", "launch the process"),
-  ]
-  steps.forEach((card) => card.scale(0.85))
-
-  const row = (
-    <Layout layout direction={"row"} gap={44} y={210}>
-      {steps}
-    </Layout>
-  ) as Layout
-  world.overlay().add(row)
+  // `docker run` is really three steps. Teach them as cards, then graduate the
+  // same cards into the persistent breadcrumb that will track where we are for
+  // the rest of the video.
+  const rail = createPhaseRail()
+  world.overlay().add(rail.node)
+  world.elements.phaseRail = rail
 
   yield* runToken ? runToken.fill(colors.amber, 0.4) : waitFor(0)
 
   yield* waitFor(3)
 
-  yield* sequence(
-    1.3,
-    ...steps.map((card) =>
-      all(card.opacity(1, 1), card.scale(1, 1, easeOutBack)),
-    ),
-  )
+  yield* rail.reveal()
 
-  yield* all(
-    row.opacity(0, 0.6),
-    runToken ? runToken.fill(Theme.text, 0.4) : waitFor(0),
-  )
-  row.remove()
+  yield* waitFor(1)
+
+  // The cards collapse up into the compact rail; the `run` token relaxes back to
+  // its resting colour now that its three parts are on screen as the map.
+  yield* rail.dock()
+  yield* runToken ? runToken.fill(Theme.text, 0.4) : waitFor(0)
 
   yield* waitFor(1)
 }

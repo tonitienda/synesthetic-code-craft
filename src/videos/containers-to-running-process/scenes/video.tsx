@@ -5,6 +5,7 @@ import {
   chain,
   createRef,
   easeInOutCubic,
+  easeOutBack,
   easeOutCubic,
   loop,
   ThreadGenerator,
@@ -42,7 +43,17 @@ function* playMovie(world: World): ThreadGenerator {
 export default makeScene2D(function* (view) {
   view.fill(colors.bg)
 
+  // The shared environment is layered, not flat, so the whole video reads as one
+  // lit physical space rather than a slide backdrop:
+  //   1. a deep drifting field (the void)
+  //   2. a key-light glow from the upper-left (the project's light direction) —
+  //      this is what gives every flat vector object a sense of volume (2.5D)
+  //   3. a slow breathing luminosity (the world is *alive*, pulsing light not size)
+  //   4. a vignette that frames the content and deepens the corners
   const atmosphere = createRef<Rect>()
+  const depthGlow = createRef<Rect>()
+  const pulseGlow = createRef<Rect>()
+  const vignette = createRef<Rect>()
   const background = createRef<Layout>()
   const stage = createRef<Layout>()
   const overlay = createRef<Layout>()
@@ -59,12 +70,86 @@ export default makeScene2D(function* (view) {
     ],
   })
 
+  // The key light. Anchored upper-left so it agrees with the light direction the
+  // material system uses on every object. Its centre drifts in gentle parallax
+  // against the base field, which is what actually sells the depth.
+  const depthGradient = new Gradient({
+    type: "radial",
+    from: [-300, -360],
+    to: [-300, -360],
+    fromRadius: 0,
+    toRadius: 1500,
+    stops: [
+      { offset: 0, color: "#1c2c52" },
+      { offset: 0.42, color: "#111d36" },
+      { offset: 1, color: "#0a1020" },
+    ],
+  })
+
+  // A broad, soft central bloom whose *brightness* breathes. This is the world's
+  // living pulse — luminosity, never scale — so nothing on stage is nudged.
+  const pulseGradient = new Gradient({
+    type: "radial",
+    from: [0, -40],
+    to: [0, -40],
+    fromRadius: 120,
+    toRadius: 1180,
+    stops: [
+      { offset: 0, color: "#2a3a63" },
+      { offset: 0.5, color: "#16223f" },
+      { offset: 1, color: "#0a102000" },
+    ],
+  })
+
+  // Darkens the corners to hold the eye toward centre stage and add depth.
+  const vignetteGradient = new Gradient({
+    type: "radial",
+    from: [0, 0],
+    to: [0, 0],
+    fromRadius: 720,
+    toRadius: 1500,
+    stops: [
+      { offset: 0, color: "#03050e00" },
+      { offset: 1, color: "#03050ecc" },
+    ],
+  })
+
   view.add(
     <Rect
       ref={atmosphere}
       width={"100%"}
       height={"100%"}
       fill={backgroundGradient}
+      opacity={0}
+    />,
+  )
+  view.add(
+    <Rect
+      ref={depthGlow}
+      width={"100%"}
+      height={"100%"}
+      fill={depthGradient}
+      opacity={0}
+      scale={0.92}
+      compositeOperation={"screen"}
+    />,
+  )
+  view.add(
+    <Rect
+      ref={pulseGlow}
+      width={"100%"}
+      height={"100%"}
+      fill={pulseGradient}
+      opacity={0}
+      compositeOperation={"screen"}
+    />,
+  )
+  view.add(
+    <Rect
+      ref={vignette}
+      width={"100%"}
+      height={"100%"}
+      fill={vignetteGradient}
       opacity={0}
     />,
   )
@@ -97,28 +182,46 @@ export default makeScene2D(function* (view) {
     cancellation: {},
   }
 
-  // A single softly drifting field: enough movement to keep the frame from
-  // feeling dead, but with no identifiable background objects.
-  const gradientMotion = yield loop(Infinity, () =>
+  // One coherent field motion: the base void and the key light drift in opposite
+  // phase, so the two planes shear past each other and the frame gains depth from
+  // parallax rather than from any identifiable background object.
+  const fieldMotion = yield loop(Infinity, () =>
     chain(
       all(
         backgroundGradient.from([-820, -760], 12, easeInOutCubic),
         backgroundGradient.to([1160, 500], 12, easeInOutCubic),
+        depthGradient.from([-220, -280], 12, easeInOutCubic),
+        depthGradient.to([-220, -280], 12, easeInOutCubic),
       ),
       all(
         backgroundGradient.from([-1120, -680], 12, easeInOutCubic),
         backgroundGradient.to([1020, 620], 12, easeInOutCubic),
+        depthGradient.from([-300, -360], 12, easeInOutCubic),
+        depthGradient.to([-300, -360], 12, easeInOutCubic),
       ),
     ),
   )
 
+  // Breathing light for the world itself: a slow luminosity swell, low amplitude,
+  // so it reads as "alive" without ever shimmering or pushing neighbours.
+  const pulseBreath = yield loop(Infinity, () =>
+    pulseGlow()
+      .opacity(0.28, 5, easeInOutCubic)
+      .to(0.55, 5, easeInOutCubic),
+  )
+
   yield* all(
+    // Ignition: the world comes alive as the process starts — the field rises,
+    // the key light blooms in and settles elastically, the vignette closes in.
     atmosphere().opacity(1, 1.4, easeOutCubic),
+    depthGlow().opacity(0.9, 1.4, easeOutCubic),
+    depthGlow().scale(1, 1.6, easeOutBack),
+    vignette().opacity(1, 1.6, easeOutCubic),
     playMovie(world),
     playNarrationVoice(world),
     playSoundtrack(world),
   )
-  cancel(gradientMotion)
+  cancel(fieldMotion, pulseBreath)
 
   yield* waitFor(2)
 })

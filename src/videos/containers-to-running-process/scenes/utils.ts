@@ -1,7 +1,5 @@
 import { Layout, Txt } from "@motion-canvas/2d"
 import {
-  easeInCubic,
-  easeOutBack,
   Reference,
   SoundBuilder,
   ThreadGenerator,
@@ -25,6 +23,18 @@ export const toWorldX = (x: number, width: number) =>
 export const toWorldY = (y: number, height: number) =>
   y - VIDEO_HEIGHT / 2 + height / 2
 
+/**
+ * The persistent phase breadcrumb (pull → create → start). Built once in the
+ * run-breakdown scene and driven by `rotatePhaseToken` as the video advances.
+ */
+export type PhaseRail = {
+  node: Layout
+  reveal: () => ThreadGenerator
+  dock: () => ThreadGenerator
+  activate: (name: string) => ThreadGenerator
+  retract: () => ThreadGenerator
+}
+
 export type World = {
   narrator: Reference<Txt>
   background: Reference<Layout>
@@ -34,8 +44,8 @@ export type World = {
   elements: {
     terminal?: Terminal
     liftedCommand?: LiftedCommandPhrase
-    /** The middle token of the docked command banner — rotates run/pull/create/start. */
-    phaseToken?: Txt
+    /** Persistent pull → create → start breadcrumb; lights the current phase. */
+    phaseRail?: PhaseRail
     registry?: Registry
     localSystem?: LocalSystem // We will need a different type here for the fs layers, etc
     registryImage?: DockerImage
@@ -65,21 +75,19 @@ export const colors = {
   amber: "#facc15",
 }
 
-export // Flip the banner's middle token to the next phase of `run` — a little
-// split-flap roll: the word folds shut, swaps, and springs back open.
+export // Advance the phase breadcrumb to the next step of `run`: light the named
+// step (pull / create / start) and settle the previous one as completed. An
+// unknown name (e.g. the `run` umbrella) just closes out the last active step.
 function* rotatePhaseToken(
   world: World,
   next: string,
-  color: string,
+  _color: string,
 ): ThreadGenerator {
-  const token = world.elements?.phaseToken
+  const rail = world.elements?.phaseRail
 
-  if (!token) {
+  if (!rail) {
     return
   }
 
-  yield* token.scale.y(0, 0.16, easeInCubic)
-  token.text(next)
-  token.fill(color)
-  yield* token.scale.y(1, 0.22, easeOutBack)
+  yield* rail.activate(next)
 }

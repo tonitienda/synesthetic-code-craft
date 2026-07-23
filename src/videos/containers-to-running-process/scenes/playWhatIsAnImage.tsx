@@ -4,6 +4,7 @@ import {
   all,
   easeInOutCubic,
   chain,
+  waitFor,
 } from "@motion-canvas/core"
 import { createFileSystemLayers } from "../../../components/filesystem"
 import { World, VIDEO_HEIGHT, PADDING, toWorldY } from "./utils"
@@ -22,7 +23,11 @@ export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
   //   cancel(world.cancellation.imageFloat)
   // }
 
-  const localSystemTargetHeight = VIDEO_HEIGHT - PADDING * 2
+  // Reserve a strip along the very top for the phase breadcrumb; the host panel
+  // grows to start just *under* it (its title comes along), leaving plenty of
+  // room below for the containers, layers, and the cgroup budget bar.
+  const RAIL_STRIP = 140
+  const localSystemTargetHeight = VIDEO_HEIGHT - PADDING - RAIL_STRIP
 
   // The terminal has already bowed out after the pull, so the host panel can
   // take centre stage. Slide it to the middle and grow it to fill the frame, so
@@ -35,7 +40,7 @@ export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
     localSystem.node.x(focusX, 2, easeInOutCubic),
     localImage.node.x(focusX, 2, easeInOutCubic),
     localSystem.node.height(localSystemTargetHeight, 2),
-    localSystem.node.y(toWorldY(PADDING, localSystemTargetHeight), 2),
+    localSystem.node.y(toWorldY(RAIL_STRIP, localSystemTargetHeight), 2),
   )
 
   yield* all(
@@ -74,7 +79,11 @@ export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
   )
   yield* all(fsLayers.appear(0.5))
 
-  yield* all(fsLayers.collapse("image fs (read-only)", 3))
+  // Keep the image's ordered filesystem layers visible. They are presented as
+  // one read-only filesystem view, but the image layers themselves still exist
+  // and remain independently reusable; flattening them here teaches the wrong
+  // model. Preserve the old hold so narration and downstream timing stay put.
+  yield* waitFor(3)
 
   world.elements.imageFs = fsLayers
 }

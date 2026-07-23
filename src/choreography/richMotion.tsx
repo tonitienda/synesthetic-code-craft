@@ -219,6 +219,69 @@ export function* spreadLayer(opts: {
   opts.layer.height(opts.finalHeight)
 }
 
+/**
+ * DRAG / GEL SLIDE — moving an *elastic* object (a bubble, a membrane, packaged
+ * gel) so it reads as sticky and massy rather than a rigid slab teleporting.
+ * The body loads with a stretch along the direction of travel, slides while
+ * stretched (leading edge ahead, trailing edge lagging), overshoots the mark a
+ * touch, then the trailing edge "catches up" as a single squash before it
+ * settles on the exact target. Zero rotation.
+ *
+ * Only for objects whose identity is elastic — never the rigid base image, the
+ * kernel, or storage. Restraint: stretch stays < 8%, settle 0.3–0.5s. Uses only
+ * post-layout transforms (scale/position on a free node), so it never reflows a
+ * layout's siblings.
+ */
+export function* dragMove(
+  node: Layout,
+  to: WorldPoint,
+  opts?: {
+    duration?: number
+    /** Peak stretch along the travel axis, as a fraction (default 0.06). */
+    stretch?: number
+    axis?: "x" | "y" | "auto"
+    /** Overshoot past the target along travel, in px (default derived). */
+    overshoot?: number
+    settle?: number
+  },
+): ThreadGenerator {
+  const d = opts?.duration ?? 0.9
+  const stretch = opts?.stretch ?? 0.06
+  const settle = opts?.settle ?? 0.34
+  const from = node.position()
+  const [tx, ty] = toXY(to)
+  const dx = tx - from.x
+  const dy = ty - from.y
+  const len = Math.hypot(dx, dy) || 1
+  const axis = opts?.axis ?? (Math.abs(dx) >= Math.abs(dy) ? "x" : "y")
+  const overshootPx = opts?.overshoot ?? Math.min(len * 0.05, 12)
+  const ox = tx + (dx / len) * overshootPx
+  const oy = ty + (dy / len) * overshootPx
+
+  // Stretch along the axis of motion, thin slightly across it (constant volume).
+  const stretchVec: [number, number] =
+    axis === "x" ? [1 + stretch, 1 - stretch * 0.6] : [1 - stretch * 0.6, 1 + stretch]
+  // The arrival squash: compress along travel, bulge across — the trailing edge
+  // piling into the leading edge as it stops.
+  const squashVec: [number, number] =
+    axis === "x" ? [1 - stretch * 0.7, 1 + stretch * 0.5] : [1 + stretch * 0.5, 1 - stretch * 0.7]
+
+  // Load: the body stretches along the pull before the far edge lets go.
+  yield* node.scale(stretchVec, d * 0.2, easeOutCubic)
+  // Travel: it slides while stretched, overshooting the mark slightly.
+  yield* node.position([ox, oy], d * 0.62, easeInOutCubic)
+  // Arrive: the trailing edge catches up (one squash) and it settles exactly.
+  yield* all(
+    node.position([tx, ty], settle, easeOutBack),
+    chain(
+      node.scale(squashVec, settle * 0.4, easeOutCubic),
+      node.scale(1, settle * 0.6, easeOutBack),
+    ),
+  )
+  node.position([tx, ty])
+  node.scale(1)
+}
+
 export type LabeledPacket = { node: Rect; label: Txt }
 
 /**

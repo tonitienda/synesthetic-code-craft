@@ -2,16 +2,25 @@ import {
   ThreadGenerator,
   all,
   delay,
+  easeInOutCubic,
   easeOutBack,
   easeOutCubic,
   waitFor,
   cancel,
   createRef,
+  createSignal,
   Reference,
+  SimpleSignal,
 } from "@motion-canvas/core"
 import { containerColors } from "../../../components/docker"
-import { World, colors, rotatePhaseToken } from "./utils"
-import { Circle, Layout, Rect, Txt } from "@motion-canvas/2d"
+import {
+  World,
+  colors,
+  rotatePhaseToken,
+  VIDEO_WIDTH,
+  VIDEO_HEIGHT,
+} from "./utils"
+import { Circle, Layout, Line, Node, Rect, Txt } from "@motion-canvas/2d"
 import { createFileChip } from "../../../components/filesystem"
 import {
   breathe,
@@ -24,6 +33,14 @@ type WritableLayer = {
   node: Rect
   chipsRow: Reference<Layout>
 }
+
+const PROCESS_HEIGHT = 78
+const STACK_GAP = 12
+// A little slack on top of the exact reserve, so the six-item stack (process +
+// writable + four read-only layers) never sits flush against the panel edges.
+// Without it the reserved height equals the content to the pixel and font-metric
+// rounding can tip the top layer into an overflow.
+const STACK_HEADROOM = 48
 
 // A warm, amber "read-write" layer that stacks on top of the read-only image.
 function createWritableLayer(width: number, height: number): WritableLayer {
@@ -76,7 +93,7 @@ function createProcessBox(
       justifyContent={"center"}
       paddingLeft={28}
       paddingRight={28}
-      height={78}
+      height={PROCESS_HEIGHT}
       radius={999}
       fill={containerColors.processSoft}
       stroke={containerColors.process}
@@ -99,6 +116,111 @@ function createProcessBox(
   return { node, dot: dotRef() }
 }
 
+// The "top face" of the stack: the single, flat filesystem the process actually
+// sees. It is deliberately neutral (cool slate, not amber or blue) because it is
+// neither the writable layer nor any one read-only layer — it is the unified view
+// overlayfs synthesises from all of them.
+//
+// It is drawn as a true perspective rotate-about-x. The face hinges on its NEAR
+// (bottom) edge — the edge shared with the stack's top — and a single `tilt`
+// signal drives the whole rotation: tilt 0 = standing head-on to the viewer (a
+// flat rectangle), tilt 1 = laid back so we look down onto its top surface.
+//
+// The trick that keeps this cheap: under a pure rotate-about-x every horizontal
+// row of the surface stays a horizontal line on screen — it only rises, converges
+// toward the centreline, and foreshortens. So each row is placed with a plain
+// per-row affine transform (a y-offset + a non-uniform scale), and the outline is
+// a four-point trapezoid. No homography, no WebGL — just reactive signals.
+type PerspectiveFace = { node: Node; tilt: SimpleSignal<number> }
+function createPerspectiveFace(width: number): PerspectiveFace {
+  const tilt = createSignal(0)
+
+  const PAD_TOP = 40
+  const PAD_BOTTOM = 40
+  const PAD_LEFT = 54
+  const GAP = 16
+  const rows = [
+    { text: "/", fontSize: 40, fill: "#0f172a", weight: 700, indent: 0, h: 50 },
+    { text: "📁  bin", fontSize: 30, fill: "#1e293b", indent: 44, h: 40 },
+    { text: "📁  etc", fontSize: 30, fill: "#1e293b", indent: 44, h: 40 },
+    { text: "📁  home", fontSize: 30, fill: "#1e293b", indent: 44, h: 40 },
+    { text: "📁  usr", fontSize: 30, fill: "#1e293b", indent: 44, h: 40 },
+    { text: "📁  var", fontSize: 30, fill: "#1e293b", indent: 44, h: 40 },
+    { text: "📄  nginx.conf", fontSize: 30, fill: "#475569", indent: 44, h: 40 },
+  ]
+
+  // Total surface height, and each row's centre measured in local "up from the
+  // hinge" units (u = 0 at the near/bottom edge, u = H at the far/top edge).
+  const contentH =
+    rows.reduce((sum, r) => sum + r.h, 0) + GAP * (rows.length - 1)
+  const H = PAD_TOP + PAD_BOTTOM + contentH
+  let cursor = H - PAD_TOP
+  const rowU = rows.map((r) => {
+    const centre = cursor - r.h / 2
+    cursor -= r.h + GAP
+    return centre
+  })
+
+  // Perspective: tilt back by up to THETA_MAX; a point u units up the surface
+  // recedes to depth u·sinθ, so it projects at scale s = D/(D + depth). The far
+  // edge is therefore narrower (converges toward the centreline) and the vertical
+  // spacing compresses by cosθ·s — the two cues a shear could never give.
+  const THETA_MAX = (66 * Math.PI) / 180
+  const D = 2.4 * H
+  const theta = () => tilt() * THETA_MAX
+  const sAt = (u: number) => D / (D + u * Math.sin(theta()))
+  // Projected height (up from the hinge) of a point u units up the surface.
+  const yUp = (u: number) => u * Math.cos(theta()) * sAt(u)
+
+  const bgPoints = () => {
+    const sTop = sAt(H)
+    const yTop = yUp(H)
+    const hw = width / 2
+    return [
+      [-hw, 0], // near-left (hinge)
+      [hw, 0], // near-right (hinge)
+      [hw * sTop, -yTop], // far-right (converged)
+      [-hw * sTop, -yTop], // far-left (converged)
+    ]
+  }
+
+  // The node's origin is the hinge (near edge centre); rows live above it at
+  // negative y. Positioned/foreshortened reactively so the whole face rotates as
+  // one when `tilt` changes.
+  const node = (
+    <Node opacity={0}>
+      <Line
+        points={bgPoints}
+        closed
+        radius={14}
+        fill={"#e8eef7"}
+        stroke={"#7dd3fc"}
+        lineWidth={3}
+        shadowColor={"#7dd3fc66"}
+        shadowBlur={44}
+      />
+      {rows.map((r, i) => (
+        <Node
+          y={() => -yUp(rowU[i])}
+          scale={() => [sAt(rowU[i]), Math.cos(theta()) * sAt(rowU[i])]}
+        >
+          <Txt
+            text={r.text}
+            fontFamily={"monospace"}
+            fontSize={r.fontSize}
+            fontWeight={r.weight}
+            fill={r.fill}
+            offsetX={-1}
+            x={-width / 2 + PAD_LEFT + r.indent}
+          />
+        </Node>
+      ))}
+    </Node>
+  ) as Node
+
+  return { node, tilt }
+}
+
 export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   const { imageFs } = world.elements ?? {}
 
@@ -109,6 +231,14 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   const readonlyNode = imageFs.layers[0].node
   const barWidth = readonlyNode.width()
   const barHeight = readonlyNode.height()
+  const panelHeight = imageFs.node.height()
+  const panelBottom = imageFs.node.y() + panelHeight / 2
+  // Reserve room for both additions made in this scene: the writable layer and
+  // the process pill. Keeping the bottom edge fixed makes the panel grow into
+  // the free space above instead of pushing the persistent image stack down.
+  const expandedPanelHeight =
+    panelHeight + barHeight + PROCESS_HEIGHT + STACK_GAP * 2 + STACK_HEADROOM
+  const expandedPanelY = panelBottom - expandedPanelHeight / 2
 
   // The banner rolls on to the second act of `run`.
   yield* rotatePhaseToken(world, "create", colors.amber)
@@ -121,6 +251,8 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   imageFs.layersContainer().insert(writable.node, 0)
 
   yield* all(
+    imageFs.node.height(expandedPanelHeight, 1.1, easeOutCubic),
+    imageFs.node.y(expandedPanelY, 1.1, easeOutCubic),
     imageFs.titleRef().text("container", 0.6),
     imageFs.titleRef().fill(containerColors.writable, 0.6),
     // A membrane, not a curtain: it beads at the centre, spreads sideways, then
@@ -207,6 +339,92 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   })
 
   yield* waitFor(1)
+
+  // 5) OVERLAYFS — the process has no idea any of this layering exists. Tilt the
+  // whole stack back so we look down onto its top surface, and reveal the single
+  // flat filesystem overlayfs synthesises: read-only layers + writable layer,
+  // merged into one "/". This is the process's-eye view.
+  const stack = imageFs.layersContainer()
+  const panelTop = imageFs.node.y() - imageFs.node.height() / 2
+
+  // Treat the stack as one 3D block. The layers are its FRONT face: it only
+  // foreshortens (no shear), so it stays a clean rectangle — never a staircase.
+  // The merged filesystem is the block's TOP face: the SAME width, hinged on the
+  // stack's top edge, shearing back so we look down onto it as the block tilts.
+  const STACK_TILT_SCALE_Y = 0.46
+
+  // Measure the upright stack once (scale.y === 1) so the top face can be pinned
+  // to its top edge and stay glued there throughout the tilt. absolutePosition of
+  // a layout child is top-left origin; the overlay is centre origin, so convert
+  // by subtracting half the frame (see coordinate-space notes).
+  const stackAbs = stack.absolutePosition()
+  const stackCenterX = stackAbs.x - VIDEO_WIDTH / 2
+  const stackCenterY = stackAbs.y - VIDEO_HEIGHT / 2
+  const stackHeight = stack.height()
+  // The stack foreshortens about its centre, so its live top edge is
+  // centre − halfHeight·scaleY. The top face's bottom (hinge) edge tracks this.
+  const stackTopEdgeY = () =>
+    stackCenterY - (stackHeight / 2) * stack.scale.y()
+
+  const face = createPerspectiveFace(barWidth)
+  face.node.x(stackCenterX)
+  face.node.y(stackTopEdgeY) // reactive: the hinge follows the stack's top edge
+  face.tilt(1) // start laid flat onto the stack, hidden — revealed by opacity
+  face.node.opacity(0)
+  world.overlay().add(face.node)
+
+  const mergedCaption = (
+    <Txt
+      text={"overlayfs · one merged filesystem"}
+      fontFamily={"monospace"}
+      fontSize={26}
+      fill={"#94a3b8"}
+      opacity={0}
+      position={[imageFs.node.x(), panelTop + 40]}
+    />
+  ) as Txt
+  world.overlay().add(mergedCaption)
+
+  // Tilt the block back: the front face (layers) foreshortens in place while the
+  // top face opens upward off the shared edge — settling to a clear looking-down
+  // angle so we read it as the top surface of a 3D block, catching the light.
+  yield* all(
+    stack.scale.y(STACK_TILT_SCALE_Y, 1.1, easeInOutCubic),
+    stack.opacity(0.7, 1.1, easeInOutCubic),
+    delay(
+      0.35,
+      all(
+        face.node.opacity(1, 0.85, easeOutCubic),
+        face.tilt(0.72, 0.95, easeOutCubic),
+        mergedCaption.opacity(1, 0.8),
+      ),
+    ),
+  )
+
+  // Complete the rotation until the merged filesystem faces us head-on: the
+  // trapezoid straightens into a flat, full-height rectangle (tilt → 0), while the
+  // layered front face keeps rotating away — foreshortening down and dimming to a
+  // faint sliver — so all that squarely faces the viewer is the one filesystem the
+  // process sees, with the layers still hinted underneath.
+  yield* all(
+    face.tilt(0, 1.0, easeInOutCubic),
+    stack.scale.y(0.12, 1.0, easeInOutCubic),
+    stack.opacity(0.22, 1.0, easeInOutCubic),
+  )
+
+  yield* waitFor(3)
+
+  // Fold back to normal: the top face rotates back down onto the shared edge and
+  // the layers stand up again, ready for the container to be multiplied.
+  yield* all(
+    face.node.opacity(0, 0.6, easeOutCubic),
+    face.tilt(1, 0.6, easeInOutCubic),
+    mergedCaption.opacity(0, 0.5),
+    stack.scale.y(1, 1.0, easeInOutCubic),
+    stack.opacity(1, 1.0, easeInOutCubic),
+  )
+  face.node.remove()
+  mergedCaption.remove()
 
   // Land the point: same image, isolated changes.
   yield* all(

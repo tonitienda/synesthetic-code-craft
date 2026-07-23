@@ -17,14 +17,14 @@ export const playCgroups = function* (world: World): ThreadGenerator {
 
   const cg1 = "#38bdf8"
   const cg2 = "#f472b6"
-  // The track must sit INSIDE the host panel (900 wide, top edge at y≈-516,
-  // title row down to y≈-456), so keep it narrower than the panel and below
-  // the title — otherwise it crosses the panel border and collides with the
-  // "Your machine — the host" label.
+  // The track must sit INSIDE the host panel and below its title. The host now
+  // grows to start under the top breadcrumb strip (top edge at y≈-400), so the
+  // bar rides ~116px lower than it used to — still narrower than the panel so it
+  // never crosses the border.
   const trackW = 800
   const trackH = 56
-  const trackRestY = -390
-  const captionRestY = -436
+  const trackRestY = -274
+  const captionRestY = -320
 
   const seg1 = (<Rect width={0} height={trackH} fill={cg1} />) as Rect
   const seg2 = (<Rect width={0} height={trackH} fill={cg2} />) as Rect

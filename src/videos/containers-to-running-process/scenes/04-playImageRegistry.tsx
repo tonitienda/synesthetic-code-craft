@@ -1,17 +1,12 @@
 import {
   all,
   delay,
-  easeInCubic,
-  easeInOutCubic,
   easeOutBack,
-  loop,
   ThreadGenerator,
   waitFor,
 } from "@motion-canvas/core"
 import {
-  colors,
   PADDING,
-  Theme,
   toWorldX,
   toWorldY,
   VIDEO_WIDTH,
@@ -19,49 +14,23 @@ import {
 } from "./utils"
 import { createDockerImageBox } from "../../../components/docker"
 import { createRegistry } from "../../../components/registries"
-import { Txt } from "@motion-canvas/2d"
-
-function* rotatePhaseToken(
-  world: World,
-  next: string,
-  color: string,
-): ThreadGenerator {
-  const token = world.elements?.phaseToken
-
-  if (!token) {
-    return
-  }
-
-  yield* token.scale.y(0, 0.16, easeInCubic)
-  token.text(next)
-  token.fill(color)
-  yield* token.scale.y(1, 0.22, easeOutBack)
-}
 
 export const playImageRegistry = function* (world: World): ThreadGenerator {
   const { liftedCommand, terminal } = world.elements ?? {}
 
-  if (!liftedCommand || !terminal) {
+  if (!liftedCommand) {
     return
   }
 
-  const targetHeight = terminal.node.height() / 2
-  const targetWidth = terminal.node.width() / 2
+  // The terminal did its one honest job in the intro — showing the pull log —
+  // so it bows out for good here instead of lingering as a corner chip. The
+  // phase rail now carries where we are; the lifted command fades with it.
+  terminal?.node.remove()
+  world.elements.terminal = undefined
 
-  yield* all(
-    liftedCommand.phrase.node.opacity(0, 1.2),
-    terminal.node.opacity(1, 1.2),
-  )
-  yield* all(
-    liftedCommand.phrase.node.opacity(0, 1.2),
-    delay(0.2, terminal.node.y(targetHeight - PADDING * 2, 1, easeOutBack)),
-    delay(0.2, terminal.node.x(-targetWidth + PADDING * 2, 1, easeOutBack)),
+  yield* liftedCommand.phrase.node.opacity(0, 1.2)
 
-    delay(0.2, terminal.node.scale(0.5, 1, easeOutBack)),
-  )
-
-  // TODO - Draw line separating Local from Remote locations
-  yield* waitFor(1.5)
+  yield* waitFor(1)
 
   // Create the Registry visual on the right.
   const registry = createRegistry()
