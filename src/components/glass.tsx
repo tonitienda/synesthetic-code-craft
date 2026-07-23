@@ -13,6 +13,7 @@ import {
   easeOutCubic,
   ThreadGenerator,
 } from "@motion-canvas/core"
+import { theme } from "../theme"
 
 export interface GlassRectangleProps
   extends Omit<RectProps, "fill" | "stroke" | "lineWidth"> {
@@ -37,17 +38,10 @@ export interface GlassShockwaveOptions {
 }
 
 function defaultGlassBackground() {
-  return new Gradient({
-    type: "linear",
-    from: [-420, -260],
-    to: [420, 260],
-    stops: [
-      { offset: 0, color: "#ffffff13" },
-      { offset: 0.28, color: "#111b2bdc" },
-      { offset: 0.72, color: "#0b1324d2" },
-      { offset: 1, color: "#07101bdc" },
-    ],
-  })
+  // Flat, slightly translucent panel. Kept translucent so the animated scene
+  // background still breathes through — that liveness is intentional — but with
+  // no gradient or bright corner, so the surface reads as a plain shape.
+  return theme.surfaceRaised + "d0"
 }
 
 /**
@@ -59,18 +53,16 @@ export class GlassRectangle extends Rect {
     background,
     border,
     borderWidth,
-    sheen = true,
+    sheen = false,
     sheenColor = "#ffffff12",
     ...props
   }: GlassRectangleProps = {}) {
     super({
       radius: 24,
       smoothCorners: true,
-      shadowColor: "#00000055",
-      shadowBlur: 24,
       ...props,
       fill: background ?? defaultGlassBackground(),
-      stroke: border ?? "#ffffff24",
+      stroke: border ?? theme.borderSubtle,
       lineWidth: borderWidth ?? 2,
     })
 
@@ -116,7 +108,7 @@ export class GlassWindow extends GlassRectangle {
 
   public constructor({
     headerHeight = 54,
-    headerBackground = "#0f172acc",
+    headerBackground = theme.surfaceRaised + "cc",
     headerProps = {},
     bodyProps = {},
     shockwaveColor = "#ffffff66",

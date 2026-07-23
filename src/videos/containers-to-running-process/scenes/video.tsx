@@ -63,10 +63,10 @@ export default makeScene2D(function* (view) {
     from: [-1120, -680],
     to: [1020, 620],
     stops: [
-      { offset: 0, color: "#050713" },
-      { offset: 0.34, color: "#0a1020" },
-      { offset: 0.68, color: "#101225" },
-      { offset: 1, color: "#07121b" },
+      { offset: 0, color: "#050505" },
+      { offset: 0.34, color: "#101010" },
+      { offset: 0.68, color: "#161616" },
+      { offset: 1, color: "#0a0a0a" },
     ],
   })
 
@@ -80,9 +80,9 @@ export default makeScene2D(function* (view) {
     fromRadius: 0,
     toRadius: 1500,
     stops: [
-      { offset: 0, color: "#1c2c52" },
-      { offset: 0.42, color: "#111d36" },
-      { offset: 1, color: "#0a1020" },
+      { offset: 0, color: "#161616" },
+      { offset: 0.42, color: "#101010" },
+      { offset: 1, color: "#0a0a0a" },
     ],
   })
 
@@ -95,9 +95,9 @@ export default makeScene2D(function* (view) {
     fromRadius: 120,
     toRadius: 1180,
     stops: [
-      { offset: 0, color: "#2a3a63" },
-      { offset: 0.5, color: "#16223f" },
-      { offset: 1, color: "#0a102000" },
+      { offset: 0, color: "#181818" },
+      { offset: 0.5, color: "#111111" },
+      { offset: 1, color: "#10101000" },
     ],
   })
 
@@ -109,8 +109,8 @@ export default makeScene2D(function* (view) {
     fromRadius: 720,
     toRadius: 1500,
     stops: [
-      { offset: 0, color: "#03050e00" },
-      { offset: 1, color: "#03050ecc" },
+      { offset: 0, color: "#02020200" },
+      { offset: 1, color: "#020202cc" },
     ],
   })
 
@@ -206,15 +206,15 @@ export default makeScene2D(function* (view) {
   // so it reads as "alive" without ever shimmering or pushing neighbours.
   const pulseBreath = yield loop(Infinity, () =>
     pulseGlow()
-      .opacity(0.28, 5, easeInOutCubic)
-      .to(0.55, 5, easeInOutCubic),
+      .opacity(0.12, 5, easeInOutCubic)
+      .to(0.26, 5, easeInOutCubic),
   )
 
   yield* all(
     // Ignition: the world comes alive as the process starts — the field rises,
     // the key light blooms in and settles elastically, the vignette closes in.
     atmosphere().opacity(1, 1.4, easeOutCubic),
-    depthGlow().opacity(0.9, 1.4, easeOutCubic),
+    depthGlow().opacity(0.42, 1.4, easeOutCubic),
     depthGlow().scale(1, 1.6, easeOutBack),
     vignette().opacity(1, 1.6, easeOutCubic),
     playMovie(world),

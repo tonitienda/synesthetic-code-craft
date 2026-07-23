@@ -48,8 +48,8 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   // scaling, so the panel never shimmers or nudges its neighbours.
   // world.cancellation.registryBreath = yield loop(Infinity, () =>
   //   registry.node
-  //     .stroke("#94a3b8", 1.6, easeInOutCubic)
-  //     .to("#64748b", 1.6, easeInOutCubic),
+  //     .stroke("#a1a1a1", 1.6, easeInOutCubic)
+  //     .to("#5a5a5a", 1.6, easeInOutCubic),
   // )
 
   world.stage().add(registry.node)

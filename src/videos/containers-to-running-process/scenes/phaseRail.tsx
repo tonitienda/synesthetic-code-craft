@@ -12,6 +12,7 @@ import {
   waitFor,
 } from "@motion-canvas/core"
 import { breathe } from "../../../choreography"
+import { theme } from "../../../theme"
 import { colors, PhaseRail } from "./utils"
 
 // Where the rail lives once it has graduated from the teaching cards: a compact
@@ -25,11 +26,13 @@ const RAIL_X = -340
 const RAIL_SCALE = 0.55
 
 const AMBER = colors.amber
+// Pulse endpoints — mid-tones between an accent's base and dim that the theme
+// doesn't carry, kept local so the breathing animation is unchanged.
 const AMBER_DIM = "#a16207" // the dim end of the active pill's breathing pulse
-const SLATE = "#334155" // an upcoming (not-yet-reached) step
-const MUTED = "#64748b"
-const GREEN = "#34d399" // a completed step
 const GREEN_DIM = "#1f6f52"
+const SLATE = theme.border // an upcoming (not-yet-reached) step
+const MUTED = theme.borderStrong
+const GREEN = theme.success.base // a completed step
 
 type Step = {
   name: string
@@ -56,11 +59,9 @@ function createStepCard(name: string, gloss: string): Step {
       paddingLeft={20}
       paddingRight={20}
       radius={20}
-      fill={"#0f172acc"}
+      fill={theme.surfaceRaised + "cc"}
       stroke={AMBER + "99"}
       lineWidth={3}
-      shadowColor={"#00000055"}
-      shadowBlur={18}
       opacity={0}
     >
       <Txt
@@ -71,7 +72,7 @@ function createStepCard(name: string, gloss: string): Step {
         fill={AMBER}
         fontWeight={700}
       />
-      <Txt ref={glossRef} text={gloss} fontSize={23} fill={"#cbd5e1"} />
+      <Txt ref={glossRef} text={gloss} fontSize={23} fill={theme.textSoft} />
     </Rect>
   ) as Rect
 

@@ -9,6 +9,7 @@ import {
   waitFor,
   sound,
 } from "@motion-canvas/core"
+import { theme } from "../../../theme"
 import { colors, World } from "./utils"
 import { Rect, Txt } from "@motion-canvas/2d"
 import { createLineBird } from "../../../components"
@@ -39,8 +40,8 @@ export const playSplash = function* (world: World): ThreadGenerator {
 
   const words = [
     { text: "Synesthetic", position: [255, -100], settle: colors.amber },
-    { text: "Code", position: [50, 40], settle: "#e5e7eb" },
-    { text: "Craft", position: [370, 40], settle: "#e5e7eb" },
+    { text: "Code", position: [50, 40], settle: theme.text },
+    { text: "Craft", position: [370, 40], settle: theme.text },
   ].map(({ text, position, settle }) => {
     const node = (
       <Txt
@@ -56,9 +57,9 @@ export const playSplash = function* (world: World): ThreadGenerator {
     splash().add(node)
     return { node, settle }
   })
-  words[0].node.fill("#a78bfa")
-  words[1].node.fill("#38bdf8")
-  words[2].node.fill("#4ade80")
+  words[0].node.fill(theme.accent.base)
+  words[1].node.fill(theme.primary.base)
+  words[2].node.fill(theme.success.base)
 
   yield* splash().opacity(1, 0.8, easeInOutCubic)
   yield* bird.draw()

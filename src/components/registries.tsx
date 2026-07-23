@@ -1,6 +1,7 @@
 import { Layout, Rect, Txt } from "@motion-canvas/2d"
 import { createRef, Reference, Vector2 } from "@motion-canvas/core"
 import { GlassRectangle } from "./glass"
+import { theme } from "../theme"
 
 export type Registry = {
   node: Rect
@@ -25,12 +26,10 @@ export function createRegistry(): Registry {
       width={900}
       height={200}
       radius={28}
-      border={"#94a3b899"}
+      border={theme.textMuted + "99"}
       borderWidth={3}
       padding={24}
       gap={22}
-      shadowColor={"#38bdf81f"}
-      shadowBlur={28}
     >
       <Layout
         layout
@@ -42,7 +41,7 @@ export function createRegistry(): Registry {
         <Txt
           text={"Remote registry"}
           fontSize={30}
-          fill={"#f8fafc"}
+          fill={theme.text}
           fontWeight={700}
         />
       </Layout>
@@ -58,9 +57,9 @@ export function createRegistry(): Registry {
           width={230}
           height={100}
           radius={20}
-          stroke={"#ffffff24"}
+          stroke={theme.borderSubtle}
           lineWidth={3}
-          fill={"#020617a8"}
+          fill={theme.surfaceDim + "a8"}
           opacity={0}
         />
       </Layout>
@@ -88,12 +87,10 @@ export function createLocalsystem(): LocalSystem {
       width={"100%"}
       height={200}
       radius={28}
-      border={"#94a3b899"}
+      border={theme.textMuted + "99"}
       borderWidth={3}
       padding={24}
       gap={22}
-      shadowColor={"#38bdf81f"}
-      shadowBlur={28}
     >
       <Layout
         layout
@@ -107,7 +104,7 @@ export function createLocalsystem(): LocalSystem {
           ref={title}
           text={"Local system"}
           fontSize={30}
-          fill={"#f8fafc"}
+          fill={theme.text}
           fontWeight={700}
         />
       </Layout>
@@ -123,9 +120,9 @@ export function createLocalsystem(): LocalSystem {
           width={230}
           height={100}
           radius={20}
-          stroke={"#ffffff24"}
+          stroke={theme.borderSubtle}
           lineWidth={3}
-          fill={"#020617a8"}
+          fill={theme.surfaceDim + "a8"}
           opacity={0}
         />
       </Layout>

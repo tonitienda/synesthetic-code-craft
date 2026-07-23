@@ -24,6 +24,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start:containers:toni", "--", "--port", "9002"],
       "port": 9002
+    },
+    {
+      "name": "containers-flat",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:containers", "--", "--port", "9010"],
+      "port": 9010
     }
   ]
 }

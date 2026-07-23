@@ -6,6 +6,7 @@ import {
   easeOutBack,
   waitFor,
 } from "@motion-canvas/core"
+import { theme } from "../../../theme"
 import { World } from "./utils"
 
 export const playCgroups = function* (world: World): ThreadGenerator {
@@ -15,8 +16,8 @@ export const playCgroups = function* (world: World): ThreadGenerator {
     return
   }
 
-  const cg1 = "#38bdf8"
-  const cg2 = "#f472b6"
+  const cg1 = theme.primary.base
+  const cg2 = theme.danger.base
   // The track must sit INSIDE the host panel and below its title. The host now
   // grows to start under the top breadcrumb strip (top edge at y≈-400), so the
   // bar rides ~116px lower than it used to — still narrower than the panel so it
@@ -36,8 +37,8 @@ export const playCgroups = function* (world: World): ThreadGenerator {
       width={trackW}
       height={trackH}
       radius={14}
-      fill={"#1e293b"}
-      stroke={"#475569"}
+      fill={theme.divider}
+      stroke={theme.borderStrong}
       lineWidth={2}
       clip
       opacity={0}
@@ -51,7 +52,7 @@ export const playCgroups = function* (world: World): ThreadGenerator {
     <Txt
       text={"host CPU & memory"}
       fontSize={22}
-      fill={"#cbd5e1"}
+      fill={theme.textSoft}
       y={captionRestY}
       opacity={0}
     />

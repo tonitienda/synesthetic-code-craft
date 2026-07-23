@@ -9,6 +9,7 @@ import {
   World,
 } from "./utils"
 import { liftCommandPhrase } from "../../../choreography"
+import { theme } from "../../../theme"
 import { Txt } from "@motion-canvas/2d"
 
 export const playIntro = function* (world: World): ThreadGenerator {
@@ -93,7 +94,7 @@ export const playIntro = function* (world: World): ThreadGenerator {
 
   yield* all(
     liftedCommand.phrase.restyle({ gap: 75 }, 1),
-    (liftedCommand.phrase.token("run") as Txt).fill("#f9c74f", 1),
+    (liftedCommand.phrase.token("run") as Txt).fill(theme.highlight, 1),
   )
   yield* waitFor(8)
   world.elements.terminal = terminal

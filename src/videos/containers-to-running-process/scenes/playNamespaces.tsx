@@ -1,5 +1,6 @@
 import { Rect, Txt } from "@motion-canvas/2d"
 import { ThreadGenerator, all, sequence, waitFor } from "@motion-canvas/core"
+import { theme } from "../../../theme"
 import { World } from "./utils"
 
 function createBadge(text: string, color: string): Rect {
@@ -29,7 +30,7 @@ export const playNamespaces = function* (world: World): ThreadGenerator {
     return
   }
 
-  const nsColor = "#c084fc" // purple = namespaces
+  const nsColor = theme.accent.base // purple = namespaces
   const names = ["pid", "net", "mnt", "uts", "ipc"]
 
   const badgesA = names.map((n) => createBadge(n, nsColor))

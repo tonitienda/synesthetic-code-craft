@@ -67,12 +67,12 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   // Hand the "breathing" glow over: settle the registry's border back to rest,
   // and start the same soft pulse on the local system instead.
   // cancel(registryBreath)
-  // yield* registry.node.stroke("#64748b", 0.4)
+  // yield* registry.node.stroke("#5a5a5a", 0.4)
 
   // world.cancellation.localSystemBreath = yield loop(Infinity, () =>
   //   localSystem.node
-  //     .stroke("#94a3b8", 1.6, easeInOutCubic)
-  //     .to("#64748b", 1.6, easeInOutCubic),
+  //     .stroke("#a1a1a1", 1.6, easeInOutCubic)
+  //     .to("#5a5a5a", 1.6, easeInOutCubic),
   // )
 
   world.background().add(localSystem.node)

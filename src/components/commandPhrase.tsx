@@ -2,6 +2,7 @@ import { Layout, Txt } from "@motion-canvas/2d"
 import type { PossibleCanvasStyle } from "@motion-canvas/2d"
 import { all, createRef, waitFor } from "@motion-canvas/core"
 import type { Reference, ThreadGenerator } from "@motion-canvas/core"
+import { theme } from "../theme"
 
 export type CommandPhraseAnimation = ThreadGenerator
 
@@ -66,13 +67,13 @@ export interface CommandPhraseRestyleOptions {
 }
 
 export const defaultCommandPhraseTheme: CommandPhraseTheme = {
-  text: "#e2e8f0",
-  command: "#e2e8f0",
-  flag: "#fde68a",
-  operator: "#fde68a",
-  path: "#c4b5fd",
-  highlight: "#facc15",
-  dimmed: "#64748b",
+  text: theme.textSoft,
+  command: theme.textSoft,
+  flag: theme.secondary.on,
+  operator: theme.secondary.on,
+  path: theme.accent.on,
+  highlight: theme.highlight,
+  dimmed: theme.textDim,
 }
 
 export function createCommandPhrase(

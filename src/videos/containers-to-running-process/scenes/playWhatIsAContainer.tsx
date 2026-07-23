@@ -1,4 +1,5 @@
 import {
+  PossibleVector2,
   ThreadGenerator,
   all,
   delay,
@@ -13,6 +14,7 @@ import {
   SimpleSignal,
 } from "@motion-canvas/core"
 import { containerColors } from "../../../components/docker"
+import { theme } from "../../../theme"
 import {
   World,
   colors,
@@ -22,12 +24,7 @@ import {
 } from "./utils"
 import { Circle, Layout, Line, Node, Rect, Txt } from "@motion-canvas/2d"
 import { createFileChip } from "../../../components/filesystem"
-import {
-  breathe,
-  flowSignal,
-  impact,
-  spreadLayer,
-} from "../../../choreography"
+import { breathe, flowSignal, impact, spreadLayer } from "../../../choreography"
 
 type WritableLayer = {
   node: Rect
@@ -58,11 +55,9 @@ function createWritableLayer(width: number, height: number): WritableLayer {
       paddingLeft={26}
       paddingRight={26}
       radius={12}
-      fill={"#1c130088"}
+      fill={theme.secondary.soft}
       stroke={containerColors.writable + "cc"}
       lineWidth={3}
-      shadowColor={containerColors.writable + "22"}
-      shadowBlur={14}
       opacity={0}
     >
       <Txt
@@ -98,8 +93,6 @@ function createProcessBox(
       fill={containerColors.processSoft}
       stroke={containerColors.process}
       lineWidth={3}
-      shadowColor={containerColors.process + "44"}
-      shadowBlur={20}
       opacity={0}
     >
       <Circle ref={dotRef} size={16} fill={containerColors.process} />
@@ -107,7 +100,7 @@ function createProcessBox(
         text={name}
         fontFamily={"monospace"}
         fontSize={34}
-        fill={"#ecfdf5"}
+        fill={theme.text}
       />
       <Txt text={pid} fontSize={22} fill={containerColors.process} />
     </Rect>
@@ -159,16 +152,72 @@ function createPerspectiveBlock(
   const PAD_LEFT = 54
   const GAP = 16
   const rows = [
-    { text: "/", fontSize: 40, fill: "#0f172a", weight: 700, indent: 0, h: 50 },
-    { text: "📁  bin", fontSize: 30, fill: "#1e293b", weight: 400, indent: 44, h: 40 },
-    { text: "📁  etc", fontSize: 30, fill: "#1e293b", weight: 400, indent: 44, h: 40 },
-    { text: "📁  home", fontSize: 30, fill: "#1e293b", weight: 400, indent: 44, h: 40 },
-    { text: "📁  usr", fontSize: 30, fill: "#1e293b", weight: 400, indent: 44, h: 40 },
-    { text: "📁  var", fontSize: 30, fill: "#1e293b", weight: 400, indent: 44, h: 40 },
+    {
+      text: "/",
+      fontSize: 40,
+      fill: theme.text,
+      weight: 700,
+      indent: 0,
+      h: 50,
+    },
+    {
+      text: "📁  bin",
+      fontSize: 30,
+      fill: theme.text,
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
+    {
+      text: "📁  etc",
+      fontSize: 30,
+      fill: theme.text,
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
+    {
+      text: "📁  home",
+      fontSize: 30,
+      fill: theme.text,
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
+    {
+      text: "📁  usr",
+      fontSize: 30,
+      fill: theme.text,
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
+    {
+      text: "📁  var",
+      fontSize: 30,
+      fill: theme.text,
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
     // The file we just wrote to the writable layer — kept amber so the viewer
     // recognises it as the same access.log, now visible in the merged view.
-    { text: "📄  access.log", fontSize: 28, fill: "#b45309", weight: 700, indent: 88, h: 38 },
-    { text: "📄  nginx.conf", fontSize: 30, fill: "#475569", weight: 400, indent: 44, h: 40 },
+    {
+      text: "📄  access.log",
+      fontSize: 28,
+      fill: theme.text,
+      weight: 400,
+      indent: 88,
+      h: 38,
+    },
+    {
+      text: "📄  nginx.conf",
+      fontSize: 30,
+      fill: "#ccc",
+      weight: 400,
+      indent: 44,
+      h: 40,
+    },
   ]
   const contentH =
     rows.reduce((sum, r) => sum + r.h, 0) + GAP * (rows.length - 1)
@@ -200,11 +249,38 @@ function createPerspectiveBlock(
   const topOpacity = () => Math.pow(Math.sin(phi()), 0.6)
   const frontOpacity = () => Math.pow(Math.cos(phi()), 0.7)
 
-  const topOutline = () => [
+  const topOutline = (): PossibleVector2[] => [
     [-hw, 0],
     [hw, 0],
     [hw * sT(Ht), -yT(Ht)],
     [-hw * sT(Ht), -yT(Ht)],
+  ]
+
+  // Project the filesystem tree through the same perspective transform as its
+  // labels.  The main trunk connects the root's direct children; the indented
+  // branch beneath `var` connects its `access.log` child.
+  const rowX = -hw + PAD_LEFT
+  const mainTrunkX = rowX + 20
+  const mainBranchEndX = rowX + 36
+  const childTrunkX = rowX + 64
+  const childBranchEndX = rowX + 80
+  const topLevelRowIndexes = [1, 2, 3, 4, 5, 7]
+  const projectTopPoint = (x: number, u: number): PossibleVector2 => [
+    x * sT(u),
+    -yT(u),
+  ]
+  const mainTrunkPoints = (): PossibleVector2[] => [
+    projectTopPoint(mainTrunkX, rowU[0] - rows[0].h / 2),
+    ...topLevelRowIndexes.map((i) => projectTopPoint(mainTrunkX, rowU[i])),
+  ]
+  const mainBranchPoints = (rowIndex: number) => (): PossibleVector2[] => [
+    projectTopPoint(mainTrunkX, rowU[rowIndex]),
+    projectTopPoint(mainBranchEndX, rowU[rowIndex]),
+  ]
+  const childBranchPoints = (): PossibleVector2[] => [
+    projectTopPoint(childTrunkX, (rowU[5] + rowU[6]) / 2),
+    projectTopPoint(childTrunkX, rowU[6]),
+    projectTopPoint(childBranchEndX, rowU[6]),
   ]
 
   // Split the front face into equal layer bands, top-to-bottom from the hinge.
@@ -216,13 +292,12 @@ function createPerspectiveBlock(
     const a1 = a0 + bandH // bottom edge (down-distance)
     return { ...layer, a0, a1, amid: (a0 + a1) / 2 }
   })
-  const bandPoints = (a0: number, a1: number) => () =>
-    [
-      [-hw * sF(a0), yF(a0)], // top-left
-      [hw * sF(a0), yF(a0)], // top-right
-      [hw * sF(a1), yF(a1)], // bottom-right (narrower)
-      [-hw * sF(a1), yF(a1)], // bottom-left (narrower)
-    ]
+  const bandPoints = (a0: number, a1: number) => (): PossibleVector2[] => [
+    [-hw * sF(a0), yF(a0)], // top-left
+    [hw * sF(a0), yF(a0)], // top-right
+    [hw * sF(a1), yF(a1)], // bottom-right (narrower)
+    [-hw * sF(a1), yF(a1)], // bottom-left (narrower)
+  ]
 
   const node = (
     <Node opacity={0}>
@@ -260,11 +335,35 @@ function createPerspectiveBlock(
           points={topOutline}
           closed
           radius={14}
-          fill={"#e8eef7"}
-          stroke={"#7dd3fc"}
+          fill={"#333"}
+          stroke={"#ccc"}
           lineWidth={3}
-          shadowColor={"#7dd3fc66"}
-          shadowBlur={44}
+        />
+        <Line
+          points={mainTrunkPoints}
+          stroke={theme.textMuted}
+          lineWidth={3}
+          lineCap={"round"}
+          lineJoin={"round"}
+          opacity={0.9}
+        />
+        {topLevelRowIndexes.map((rowIndex) => (
+          <Line
+            points={mainBranchPoints(rowIndex)}
+            stroke={theme.textMuted}
+            lineWidth={3}
+            lineCap={"round"}
+            opacity={0.9}
+          />
+        ))}
+        <Line
+          points={childBranchPoints}
+          stroke={theme.textMuted}
+          lineWidth={3}
+          lineCap={"round"}
+          lineJoin={"round"}
+          radius={6}
+          opacity={0.9}
         />
         {rows.map((r, i) => (
           <Node
@@ -367,7 +466,7 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   // Then it settles into a restrained "alive" breathing outline — pulsing the
   // green stroke brighter and back, never scaling.
   const processBreath = yield breathe(process.node, {
-    from: "#6ee7b7",
+    from: theme.success.on,
     to: containerColors.process,
     period: 0.9,
   })
@@ -430,19 +529,19 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
       label: "nginx · PID 1",
       fill: containerColors.processSoft,
       stroke: containerColors.process,
-      textColor: "#ecfdf5",
+      textColor: theme.text,
     },
     {
       label: "writable layer",
-      fill: "#1c130088",
+      fill: theme.secondary.soft,
       stroke: containerColors.writable + "cc",
       textColor: containerColors.writable,
     },
     ...[...imageFs.layers].reverse().map((layer) => ({
       label: layer.label.text(),
-      fill: "#0f172a88",
-      stroke: "#7dd3fc99",
-      textColor: "#f8fafc",
+      fill: theme.surfaceRaised + "88",
+      stroke: theme.primary.base + "99",
+      textColor: theme.text,
     })),
   ]
 
@@ -465,7 +564,7 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
       text={"overlayfs · one merged filesystem"}
       fontFamily={"monospace"}
       fontSize={26}
-      fill={"#94a3b8"}
+      fill={theme.textMuted}
       opacity={0}
       position={[imageFs.node.x(), panelTop + 40]}
     />
@@ -482,10 +581,7 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   // Turn the block back to a clear three-quarter angle first: the top face opens
   // up (trapezoid narrowing toward its far edge) while the front-face layers
   // recede and converge toward the bottom — reading as one solid turning in space.
-  yield* all(
-    block.rot(0.62, 1.1, easeOutCubic),
-    mergedCaption.opacity(1, 0.8),
-  )
+  yield* all(block.rot(0.62, 1.1, easeOutCubic), mergedCaption.opacity(1, 0.8))
   yield* waitFor(0.3)
 
   // Complete the quarter-turn: the merged filesystem straightens into a flat,

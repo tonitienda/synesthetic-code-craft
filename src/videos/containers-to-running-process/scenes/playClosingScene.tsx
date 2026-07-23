@@ -11,14 +11,15 @@ import {
 } from "@motion-canvas/core"
 import { World, colors } from "./utils"
 import { containerColors } from "../../../components/docker"
+import { theme } from "../../../theme"
 
 // Accent colours echo the motifs the video already used, so every formula term
 // can be traced back to something the viewer has already seen.
 const termColors = {
   process: containerColors.process, // green — the running process
   filesystem: containerColors.readonly, // cyan — the image layers
-  namespaces: "#c084fc", // purple — namespaces (see playNamespaces)
-  cgroups: "#f472b6", // pink — cgroups (see playCgroups)
+  namespaces: theme.accent.base, // purple — namespaces (see playNamespaces)
+  cgroups: theme.danger.base, // pink — cgroups (see playCgroups)
 }
 
 const FORMULA_Y = 70
@@ -36,11 +37,9 @@ function termShell(title: string, color: string, inner: Layout | Rect): Rect {
       width={TERM_W}
       height={TERM_H}
       radius={18}
-      fill={"#0f172acc"}
+      fill={theme.surfaceRaised + "cc"}
       stroke={color + "99"}
       lineWidth={3}
-      shadowColor={color + "33"}
-      shadowBlur={16}
       opacity={0}
     >
       {inner}
@@ -71,7 +70,7 @@ function processTerm(): Rect {
         text={"nginx"}
         fontFamily={"monospace"}
         fontSize={20}
-        fill={"#ecfdf5"}
+        fill={theme.text}
       />
     </Rect>
   ) as Rect
@@ -87,7 +86,7 @@ function filesystemTerm(): Rect {
           width={124}
           height={15}
           radius={4}
-          fill={"#0f172a"}
+          fill={theme.surfaceRaised}
           stroke={termColors.filesystem + "aa"}
           lineWidth={2}
         />
@@ -104,7 +103,7 @@ function namespacesTerm(): Rect {
       width={128}
       height={66}
       radius={12}
-      fill={"#00000000"}
+      fill={theme.bg + "00"}
       stroke={termColors.namespaces}
       lineWidth={3}
     >
@@ -128,7 +127,7 @@ function cgroupsTerm(): Rect {
       size={66}
       lineWidth={7}
       stroke={termColors.cgroups}
-      fill={"#00000000"}
+      fill={theme.bg + "00"}
       startAngle={-90}
       endAngle={200}
     />
@@ -148,17 +147,15 @@ function containerCard(): Rect {
       width={240}
       height={TERM_H + 28}
       radius={22}
-      fill={"#0b1220dd"}
-      stroke={"#94a3b8"}
+      fill={theme.surface + "dd"}
+      stroke={theme.textMuted}
       lineWidth={3}
-      shadowColor={"#00000066"}
-      shadowBlur={22}
     >
       <Txt
         text={"container"}
         fontFamily={"monospace"}
         fontSize={28}
-        fill={"#e2e8f0"}
+        fill={theme.textSoft}
         fontWeight={700}
       />
       <Layout layout direction={"column"} gap={6}>
@@ -217,7 +214,7 @@ export const playClosingScene = function* (world: World): ThreadGenerator {
       text={"$ docker run nginx"}
       fontFamily={"monospace"}
       fontSize={66}
-      fill={"#e2e8f0"}
+      fill={theme.textSoft}
       y={-300}
       opacity={0}
       scale={0.9}

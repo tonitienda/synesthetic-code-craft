@@ -5,7 +5,8 @@ import {
   ThreadGenerator,
 } from "@motion-canvas/core"
 import { LiftedCommandPhrase } from "../../../choreography"
-import { defaultTerminalTheme, Terminal } from "../../../components"
+import { Terminal } from "../../../components"
+import { theme } from "../../../theme"
 import { LocalSystem, Registry } from "../../../components/registries"
 import {
   ContainerCard,
@@ -65,14 +66,14 @@ export type World = {
 }
 
 export const Theme = {
-  highlight: "#facc15",
-  text: defaultTerminalTheme.text,
+  highlight: theme.highlight,
+  text: theme.textSoft,
 }
 
 export const colors = {
-  bg: "#090b1a",
-  muted: "#94a3b8",
-  amber: "#facc15",
+  bg: theme.bg,
+  muted: theme.textMuted,
+  amber: theme.highlight,
 }
 
 export // Advance the phase breadcrumb to the next step of `run`: light the named

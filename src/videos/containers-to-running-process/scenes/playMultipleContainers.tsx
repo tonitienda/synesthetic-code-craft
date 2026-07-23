@@ -13,6 +13,7 @@ import {
   containerColors,
 } from "../../../components/docker"
 import { createFileChip } from "../../../components/filesystem"
+import { theme } from "../../../theme"
 import { World, rotatePhaseToken, Theme, VIDEO_WIDTH } from "./utils"
 
 export const playMultipleContainers = function* (
@@ -73,7 +74,7 @@ export const playMultipleContainers = function* (
       width={roW}
       height={stackH}
       radius={14}
-      fill={"#0b122055"}
+      fill={theme.surface + "55"}
       stroke={containerColors.readonly + "55"}
       lineWidth={2}
       position={[baseLocal.x, stackCenterY]}
@@ -88,11 +89,11 @@ export const playMultipleContainers = function* (
           width={"100%"}
           height={layerH}
           radius={10}
-          fill={"#0f172a88"}
+          fill={theme.surfaceRaised + "88"}
           stroke={containerColors.readonly + "99"}
           lineWidth={2}
         >
-          <Txt text={`${lbl}  🔒`} fontSize={20} fill={"#e0f2fe"} />
+          <Txt text={`${lbl}  🔒`} fontSize={20} fill={theme.primary.on} />
         </Rect>
       ))}
     </Rect>
@@ -154,7 +155,9 @@ export const playMultipleContainers = function* (
   world.stage().add(B.node)
 
   yield* all(
-    base.node.stroke("#7dd3fc", 0.35, easeOutCubic).to("#7dd3fc99", 0.7),
+    base.node
+      .stroke(theme.primary.base, 0.35, easeOutCubic)
+      .to(theme.primary.base + "99", 0.7),
     B.node.opacity(1, 0.5, easeOutCubic),
     B.node.y(cardCenterY, 0.78, easeOutBack),
     B.node.scale(1, 0.78, easeOutBack),

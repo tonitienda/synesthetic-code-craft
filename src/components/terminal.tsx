@@ -13,6 +13,7 @@ import type {
   CommandPhraseTokenKind,
 } from "./commandPhrase"
 import { GlassWindow } from "./glass"
+import { theme } from "../theme"
 
 export type TerminalPrintKind =
   | "normal"
@@ -113,22 +114,22 @@ interface TerminalOutputLine {
 }
 
 export const defaultTerminalTheme: TerminalTheme = {
-  background: "#020617dc",
-  header: "#0f172acc",
-  headerFocus: "#334155cc",
-  border: "#334155",
-  borderFocus: "#64748b",
-  text: "#e2e8f0",
-  muted: "#94a3b8",
-  prompt: "#22d3ee",
-  cursor: "#facc15",
-  command: "#e2e8f0",
-  flag: "#fde68a",
-  amber: "#facc15",
-  amberSoft: "#fde68a",
-  success: "#86efac",
-  warning: "#fbbf24",
-  error: "#fca5a5",
+  background: theme.surfaceDim + "dc",
+  header: theme.surfaceRaised + "cc",
+  headerFocus: theme.border + "cc",
+  border: theme.border,
+  borderFocus: theme.borderStrong,
+  text: theme.textSoft,
+  muted: theme.textMuted,
+  prompt: theme.primary.base,
+  cursor: theme.highlight,
+  command: theme.textSoft,
+  flag: theme.secondary.on,
+  amber: theme.highlight,
+  amberSoft: theme.secondary.on,
+  success: theme.success.on,
+  warning: theme.secondary.base,
+  error: theme.danger.base,
 }
 
 export function createTerminal(options: TerminalOptions = {}) {
@@ -173,8 +174,6 @@ export class Terminal {
       background: this.theme.background,
       border: this.theme.border,
       borderWidth: 3,
-      shadowColor: "#38bdf824",
-      shadowBlur: 28,
       headerHeight: this.headerHeight,
       headerBackground: this.theme.header,
       headerProps: {
