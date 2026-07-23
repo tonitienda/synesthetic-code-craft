@@ -26,6 +26,8 @@
     "narration:containers:speak": "node scripts/timeline-to-say.mjs content/videos/containers-image-to-running-process/04-narration.md --out artifacts/narration/containers-image-to-running-process.say.txt --speak",
     "start:containers": "MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite",
     "build:containers": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-image-to-running-process.ts vite build",
+    "start:containers2": "MOTION_CANVAS_PROJECT=./src/projects/containers-to-running-processes-2.ts vite",
+    "build:containers2": "tsc && MOTION_CANVAS_PROJECT=./src/projects/containers-to-running-processes-2.ts vite build",
     "screenshots:containers": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process",
     "screenshots:containers:alive": "node scripts/generate-video-screenshots.mjs containers-image-to-running-process-alive",
     "screenshot:frame": "node scripts/capture-motion-canvas-frame.mjs",
