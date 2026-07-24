@@ -722,5 +722,28 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   yield* waitFor(1)
 
+  // Preserve this exact container for the multiple-container scene. Namespace
+  // badges arrive later, so reserve a non-layout row in the existing panel now
+  // without changing any visible geometry.
+  const badgeRow = createRef<Layout>()
+  imageFs.node.add(
+    <Layout
+      layout={false}
+      x={() => imageFs.node.width() / 2 - 190}
+      y={() => -imageFs.node.height() / 2 + 50}
+    >
+      <Layout ref={badgeRow} layout direction={"row"} gap={8} />
+    </Layout>,
+  )
+  world.elements.containerA = {
+    node: imageFs.node,
+    titleRef: imageFs.titleRef,
+    process: process.node,
+    dot: process.dot,
+    writable: writable.node,
+    chipsRow: writable.chipsRow,
+    badgeRow,
+  }
+
   yield* process.node.stroke(containerColors.process, 0.3)
 }

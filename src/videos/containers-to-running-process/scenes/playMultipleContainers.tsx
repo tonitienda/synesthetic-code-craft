@@ -1,169 +1,224 @@
+import {Circle, Layout, Rect, Txt} from "@motion-canvas/2d"
 import {
   all,
+  createRef,
   easeInOutCubic,
   easeOutBack,
   easeOutCubic,
   ThreadGenerator,
   waitFor,
 } from "@motion-canvas/core"
-import { Rect, Txt } from "@motion-canvas/2d"
 import {
+  ContainerCard,
   SharedImageBase,
-  createContainerCard,
 } from "../../../components/docker"
-import { createFileChip } from "../../../components/filesystem"
-import { containerColors, theme } from "../theme"
-import { World, rotatePhaseToken, Theme, VIDEO_WIDTH } from "./utils"
+import {createFileChip} from "../../../components/filesystem"
+import {containerColors, theme} from "../theme"
+import {World, rotatePhaseToken, Theme} from "./utils"
+
+const PRIVATE_GAP = 32
+
+// Build web-2 from the same panel, process and writable-layer vocabulary as the
+// existing container. Its private nodes use the same vertical coordinates; only
+// their horizontal footprint differs from the original full-width state.
+function createPrivateContainer(
+  name: string,
+  width: number,
+  height: number,
+  processY: number,
+  writableY: number,
+  writableHeight: number,
+): ContainerCard {
+  const titleRef = createRef<Txt>()
+  const processRef = createRef<Rect>()
+  const dotRef = createRef<Circle>()
+  const writableRef = createRef<Rect>()
+  const chipsRow = createRef<Layout>()
+  const badgeRow = createRef<Layout>()
+
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"start"}
+      justifyContent={"start"}
+      width={width}
+      height={height}
+      padding={32}
+      gap={52}
+      radius={28}
+      fill={theme.surfaceRaised + "88"}
+      stroke={theme.danger.base}
+      lineWidth={3}
+      opacity={0}
+    >
+      <Txt
+        ref={titleRef}
+        text={name}
+        fontSize={28}
+        fill={containerColors.writable}
+        fontWeight={700}
+      />
+      <Layout layout={false} y={processY}>
+        <Rect
+          ref={processRef}
+          layout
+          direction={"row"}
+          gap={14}
+          alignItems={"center"}
+          justifyContent={"center"}
+          width={width - 64}
+          height={78}
+          radius={999}
+          fill={containerColors.processSoft}
+          stroke={containerColors.process}
+          lineWidth={3}
+        >
+          <Circle ref={dotRef} size={16} fill={containerColors.process} />
+          <Txt
+            text={"nginx"}
+            fontFamily={"monospace"}
+            fontSize={34}
+            fill={theme.text}
+          />
+          <Txt
+            text={"PID 1"}
+            fontSize={22}
+            fill={containerColors.process}
+          />
+        </Rect>
+      </Layout>
+      <Layout layout={false} y={writableY}>
+        <Rect
+          ref={writableRef}
+          layout
+          direction={"column"}
+          alignItems={"start"}
+          justifyContent={"center"}
+          gap={10}
+          width={width - 64}
+          height={writableHeight}
+          paddingLeft={26}
+          paddingRight={26}
+          radius={12}
+          fill={theme.secondary.soft}
+          stroke={containerColors.writable + "cc"}
+          lineWidth={3}
+        >
+          <Txt
+            text={"writable layer (read-write)"}
+            fontSize={24}
+            fill={containerColors.writable}
+            fontWeight={700}
+          />
+          <Layout ref={chipsRow} layout direction={"row"} gap={10} />
+        </Rect>
+      </Layout>
+      <Layout
+        layout={false}
+        x={width / 2 - 190}
+        y={-height / 2 + 50}
+      >
+        <Layout ref={badgeRow} layout direction={"row"} gap={8} />
+      </Layout>
+    </Rect>
+  ) as Rect
+
+  return {
+    node,
+    titleRef,
+    process: processRef(),
+    dot: dotRef(),
+    writable: writableRef(),
+    chipsRow,
+    badgeRow,
+  }
+}
 
 export const playMultipleContainers = function* (
   world: World,
 ): ThreadGenerator {
-  const { imageFs } = world.elements ?? {}
+  const {imageFs, containerA: A} = world.elements ?? {}
 
-  if (!imageFs) {
+  if (!imageFs || !A) {
     return
   }
 
-  // All three phases have played out — the banner settles back to `run`,
-  // which is exactly what we're about to do again with a second container.
   yield* rotatePhaseToken(world, "run", Theme.text)
 
-  // The shared read-only image is the foundation, so it must NOT move. We read
-  // where the single collapsed bar sits, then present that image as the distinct
-  // read-only layers it is actually made of — the stack every container shares.
-  const readonlyNode = imageFs.layers[0].node
-  const roPos = readonlyNode.absolutePosition()
-  const roW = readonlyNode.width()
-  const roH = readonlyNode.height()
+  // Capture every position before removing anything from the original layout.
+  // This prevents layout reflow from moving the private or shared layers.
+  const sharedLayers = imageFs.layers.map((layer) => ({
+    node: layer.node,
+    absolute: layer.node.absolutePosition(),
+  }))
+  const processAbsolute = A.process.absolutePosition()
+  const writableAbsolute = A.writable.absolutePosition()
 
-  // Detach the collapsed bar, pinned in place, so it can cross-fade into the
-  // layered view while the old panel chrome fades around it. The cards live in
-  // world.stage() alongside it, so we work in the base's LOCAL space.
-  readonlyNode.remove()
-  world.stage().add(readonlyNode)
-  readonlyNode.absolutePosition(roPos)
-  const baseLocal = readonlyNode.position()
+  for (const layer of sharedLayers) {
+    layer.node.remove()
+    world.stage().add(layer.node)
+    layer.node.absolutePosition(layer.absolute)
+  }
 
-  // Build the shared image as its read-only layers (app files on top → base
-  // filesystem at the bottom), bottom-aligned to where the single bar sat so it
-  // reads as that image expanding into the layers it is composed of. Each layer
-  // is locked; nothing here is ever written — that is the whole point.
-  const roLabels = [
-    "application files",
-    "runtime dependencies",
-    "packages",
-    "base filesystem",
-  ] // top → bottom
-  const layerH = 42
-  const layerGap = 6
-  const stackPad = 8
-  const stackH =
-    stackPad * 2 + roLabels.length * layerH + (roLabels.length - 1) * layerGap
-  const stackBottom = baseLocal.y + roH / 2
-  const stackCenterY = stackBottom - stackH / 2
+  // The process and writable layer also leave layout, but remain the exact same
+  // nodes at the exact same vertical positions. They only narrow and move left.
+  A.process.remove()
+  world.overlay().add(A.process)
+  A.process.absolutePosition(processAbsolute)
+  A.writable.remove()
+  world.overlay().add(A.writable)
+  A.writable.absolutePosition(writableAbsolute)
 
-  const sharedStack = (
-    <Rect
-      layout
-      direction={"column"}
-      gap={layerGap}
-      padding={stackPad}
-      alignItems={"center"}
-      justifyContent={"center"}
-      width={roW}
-      height={stackH}
-      radius={14}
-      fill={theme.surface + "55"}
-      stroke={containerColors.readonly + "55"}
-      lineWidth={2}
-      position={[baseLocal.x, stackCenterY]}
-      opacity={0}
-    >
-      {roLabels.map((lbl) => (
-        <Rect
-          layout
-          alignItems={"center"}
-          justifyContent={"start"}
-          paddingLeft={26}
-          width={"100%"}
-          height={layerH}
-          radius={10}
-          fill={theme.surfaceRaised + "88"}
-          stroke={containerColors.readonly + "99"}
-          lineWidth={2}
-        >
-          <Txt text={`${lbl}  🔒`} fontSize={20} fill={theme.primary.on} />
-        </Rect>
-      ))}
-    </Rect>
-  ) as Rect
-  world.stage().add(sharedStack)
+  const sharedCenterX =
+    sharedLayers.reduce((sum, {node}) => sum + node.position().x, 0) /
+    sharedLayers.length
+  const originalWidth = A.node.width()
+  const privateWidth = (originalWidth - PRIVATE_GAP) / 2
+  const privateInnerWidth = privateWidth - 64
+  const horizontalOffset = (privateWidth + PRIVATE_GAP) / 2
+  const aTargetX = sharedCenterX - horizontalOffset
+  const bTargetX = sharedCenterX + horizontalOffset
+  const panelY = A.node.y()
+  const panelHeight = A.node.height()
+  const processY = A.process.y()
+  const writableY = A.writable.y()
 
-  const base: SharedImageBase = { node: sharedStack }
-
-  // Two container boxes sit directly on top of the shared layer stack.
-  const topEdgeY = stackCenterY - stackH / 2
-  const cardHeight = 320
-  const cardCenterY = topEdgeY - cardHeight / 2
-  const cardWidthPx = Math.round(VIDEO_WIDTH * 0.45)
-  const aTargetX = baseLocal.x - 500
-  const bTargetX = baseLocal.x + 500
-
-  // web-1 begins AS the single container, covering the whole stack. We give it
-  // its final layout width right away and use scale.x to make it *look*
-  // full-width — so the later shrink is a smooth stretch, not a content reflow.
-  const A = createContainerCard("web-1", theme)
-  A.node.width(cardWidthPx)
-  A.node.scale.x(roW / cardWidthPx)
-  A.node.position([baseLocal.x, cardCenterY])
-  A.node.opacity(0)
-  world.stage().add(A.node)
-
-  // The collapsed bar expands into its layers as the old panel fades and web-1
-  // takes shape over it.
   yield* all(
-    imageFs.node.opacity(0, 0.6),
-    readonlyNode.opacity(0, 0.6),
-    sharedStack.opacity(1, 0.6),
-    A.node.opacity(1, 0.6),
-  )
-  imageFs.node.remove()
-  readonlyNode.remove()
-
-  // Hold on the single container so "a single container on top of a read-only
-  // image" lands before we add the second one.
-  yield* waitFor(1.0)
-
-  // web-2 is ADDED, not split off. Docker doesn't copy the image — so first web-1
-  // settles to its resting size and slides aside to make room, the read-only
-  // stack staying exactly where it is.
-  yield* all(
-    A.node.scale.x(1, 0.9, easeInOutCubic),
-    A.node.x(aTargetX, 0.9, easeOutBack),
+    A.titleRef().text("web-1", 0.5),
+    A.node.width(privateWidth, 1.2, easeInOutCubic),
+    A.node.x(aTargetX, 1.2, easeOutBack),
+    A.process.width(privateInnerWidth, 1.2, easeInOutCubic),
+    A.process.x(aTargetX, 1.2, easeOutBack),
+    A.writable.width(privateInnerWidth, 1.2, easeInOutCubic),
+    A.writable.x(aTargetX, 1.2, easeOutBack),
   )
 
-  // Then a brand-new container is instantiated on the SAME shared image: web-2
-  // rises out of the base at its resting spot and inflates into place with an
-  // elastic settle, while the base flashes once to say both containers share
-  // this one read-only image.
-  const B = createContainerCard("web-2", theme)
-  B.node.width(cardWidthPx)
-  B.node.position([bTargetX, cardCenterY + 52])
+  yield* waitFor(1.3)
+
+  const B = createPrivateContainer(
+    "web-2",
+    privateWidth,
+    panelHeight,
+    processY - panelY,
+    writableY - panelY,
+    A.writable.height(),
+  )
+  B.node.position([bTargetX, panelY])
   B.node.scale(0.72)
-  B.node.opacity(0)
-  world.stage().add(B.node)
+  world.overlay().add(B.node)
 
+  const baseNode = imageFs.layers[0].node
+  const base: SharedImageBase = {node: baseNode}
+  const baseRestStroke = base.node.stroke()
   yield* all(
     base.node
       .stroke(theme.primary.base, 0.35, easeOutCubic)
-      .to(theme.primary.base + "99", 0.7),
+      .to(baseRestStroke, 0.7),
     B.node.opacity(1, 0.5, easeOutCubic),
-    B.node.y(cardCenterY, 0.78, easeOutBack),
     B.node.scale(1, 0.78, easeOutBack),
   )
-  B.node.y(cardCenterY)
 
-  // Writes stay isolated to each container's own writable layer.
   const chipA = createFileChip("web-1.log", containerColors.writable)
   chipA.scale(0.8)
   A.chipsRow().add(chipA)
@@ -171,21 +226,6 @@ export const playMultipleContainers = function* (
   yield* all(chipA.opacity(1, 0.4), chipA.scale(1, 0.4, easeOutBack))
   yield* waitFor(1.4)
 
-  // Both processes are alive — pulse each status light between a bright and a
-  // dim green so they read as steady heartbeats without anything resizing.
-  // world.cancellation.heartA = yield loop(Infinity, () =>
-  //   A.dot
-  //     .fill(theme.success.on, 0.7, easeInOutCubic)
-  //     .to(theme.success.base, 0.7, easeInOutCubic),
-  // )
-  // world.cancellation.heartB = yield loop(Infinity, () =>
-  //   B.dot
-  //     .fill(theme.success.on, 0.7, easeInOutCubic)
-  //     .to(theme.success.base, 0.7, easeInOutCubic),
-  // )
-
-  // `run` is complete for both containers — the phase breadcrumb has done its
-  // job and bows out before the namespace/cgroup deep-dives take over the top.
   const rail = world.elements.phaseRail
   if (rail) {
     yield* rail.retract()
