@@ -108,39 +108,26 @@ function createProcessBox(
   return { node, dot: dotRef() }
 }
 
-// A layer band on the block's FRONT face — one of the container's stacked layers.
-type BandSpec = {
-  label: string
-  fill: string
-  stroke: string
-  textColor: string
-}
-
-// One rigid 3D block, rotated about its shared top-front edge (the hinge).
+// A 2.5D turn that opens the merged-filesystem face behind the real layer stack.
 //
-//   rot 0 → upright: the layered FRONT face squarely faces the viewer (it looks
-//           just like the container stack) and the merged-filesystem TOP face is
-//           edge-on, so it is invisible.
+//   rot 0 → upright: the original layered stack faces the viewer and the merged
+//           filesystem face is edge-on, so it is invisible.
 //   rot 1 → a quarter-turn back: the TOP face has swung up to face the viewer
-//           head-on (a flat, readable rectangle — the one filesystem the process
-//           sees) while the FRONT face has swung down to horizontal, foreshorten-
-//           ing to a sliver and fading out.
+//           head-on while the original stack has foreshortened to a sliver.
 //
-// Both faces are TRUE perspective trapezoids that converge *away from* the shared
-// hinge: the top face narrows toward its far edge, the front face narrows toward
-// its BOTTOM. That opposed convergence is what makes it read as a solid block
-// turning in space rather than a rectangle being squashed.
-//
-// The trick that keeps this cheap: under a pure rotate-about-x every horizontal
-// row stays a horizontal line on screen — it only slides, converges toward the
-// centreline, and foreshortens. So each row/band is a plain per-row affine
-// transform (a y-offset + a non-uniform scale), and each outline is a four-point
-// trapezoid. No homography, no WebGL — just reactive signals.
-type PerspectiveBlock = { node: Node; rot: SimpleSignal<number> }
+// The caller drives the real stack with the front-face projection returned here.
+// That preserves every existing layer, label, process, and file chip instead of
+// cross-fading to a static duplicate at the start of the turn.
+type PerspectiveBlock = {
+  node: Node
+  rot: SimpleSignal<number>
+  frontOffset: (distanceFromBase: number) => number
+  frontScale: (distanceFromBase: number) => number
+  frontOpacity: () => number
+}
 function createPerspectiveBlock(
   width: number,
   frontHeight: number,
-  frontLayers: BandSpec[],
 ): PerspectiveBlock {
   const rot = createSignal(0)
   const hw = width / 2
@@ -238,13 +225,14 @@ function createPerspectiveBlock(
   // viewer, its depth b·cosφ shrinks to 0 → at head-on it is full width/height.
   const sT = (b: number) => D / (D + b * Math.cos(phi()))
   const yT = (b: number) => b * Math.sin(phi()) * sT(b) // magnitude, up
-  // FRONT face (a = down-distance from the hinge): as φ grows it swings back,
-  // its depth a·sinφ grows → it foreshortens to a sliver and converges downward.
-  const sF = (a: number) => D / (D + a * Math.sin(phi()))
-  const yF = (a: number) => a * Math.cos(phi()) * sF(a) // magnitude, down
+  // FRONT face projection used by the original stack as it folds toward its
+  // planted base. The bottom is farther from the viewer, so it becomes the
+  // short edge while the top remains wider.
+  const sF = (a: number) =>
+    D / (D + (frontHeight - a) * Math.sin(phi()))
+  const yF = (a: number) => a * Math.cos(phi()) * sF(a)
 
-  // Each face is only "there" when it is turned toward us; fade with its angle so
-  // the collapsed (edge-on) face never smears a bright line across the hinge.
+  // Each face is only "there" when it is turned toward us.
   const topOpacity = () => Math.pow(Math.sin(phi()), 0.6)
   const frontOpacity = () => Math.pow(Math.cos(phi()), 0.7)
 
@@ -253,6 +241,12 @@ function createPerspectiveBlock(
     [hw, 0],
     [hw * sT(Ht), -yT(Ht)],
     [-hw * sT(Ht), -yT(Ht)],
+  ]
+  const frontOutline = (): PossibleVector2[] => [
+    [-hw * sF(frontHeight), 0],
+    [hw * sF(frontHeight), 0],
+    [hw * sF(0), yF(frontHeight)],
+    [-hw * sF(0), yF(frontHeight)],
   ]
 
   // Project the filesystem tree through the same perspective transform as its
@@ -282,51 +276,19 @@ function createPerspectiveBlock(
     projectTopPoint(childBranchEndX, rowU[6]),
   ]
 
-  // Split the front face into equal layer bands, top-to-bottom from the hinge.
-  const nb = frontLayers.length
-  const BAND_GAP = 10
-  const bandH = (frontHeight - BAND_GAP * (nb - 1)) / nb
-  const bands = frontLayers.map((layer, i) => {
-    const a0 = i * (bandH + BAND_GAP) // top edge (down-distance)
-    const a1 = a0 + bandH // bottom edge (down-distance)
-    return { ...layer, a0, a1, amid: (a0 + a1) / 2 }
-  })
-  const bandPoints = (a0: number, a1: number) => (): PossibleVector2[] => [
-    [-hw * sF(a0), yF(a0)], // top-left
-    [hw * sF(a0), yF(a0)], // top-right
-    [hw * sF(a1), yF(a1)], // bottom-right (narrower)
-    [-hw * sF(a1), yF(a1)], // bottom-left (narrower)
-  ]
-
   const node = (
     <Node opacity={0}>
-      {/* FRONT face — the stacked layers, converging toward the bottom. */}
-      <Node opacity={frontOpacity}>
-        {bands.map((b) => (
-          <Node>
-            <Line
-              points={bandPoints(b.a0, b.a1)}
-              closed
-              radius={10}
-              fill={b.fill}
-              stroke={b.stroke}
-              lineWidth={3}
-            />
-            <Node
-              y={() => yF(b.amid)}
-              scale={() => [sF(b.amid), Math.cos(phi()) * sF(b.amid)]}
-            >
-              <Txt
-                text={b.label}
-                fontFamily={"monospace"}
-                fontSize={24}
-                fontWeight={700}
-                fill={b.textColor}
-              />
-            </Node>
-          </Node>
-        ))}
-      </Node>
+      {/* A quiet converging silhouette ties the independently projected original
+          layers into one rigid front face during the turn. */}
+      <Line
+        points={frontOutline}
+        closed
+        radius={12}
+        fill={theme.surface + "22"}
+        stroke={theme.primary.base + "66"}
+        lineWidth={2}
+        opacity={frontOpacity}
+      />
 
       {/* TOP face — the single merged filesystem, converging toward the far edge. */}
       <Node opacity={topOpacity}>
@@ -384,7 +346,13 @@ function createPerspectiveBlock(
     </Node>
   ) as Node
 
-  return { node, rot }
+  return {
+    node,
+    rot,
+    frontOffset: yF,
+    frontScale: sF,
+    frontOpacity,
+  }
 }
 
 export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
@@ -519,44 +487,107 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   const stackCenterX = stackAbs.x - VIDEO_WIDTH / 2
   const stackCenterY = stackAbs.y - VIDEO_HEIGHT / 2
   const stackHeight = stack.height()
+  const stackBaseY = stackCenterY + stackHeight / 2
 
-  // The block's FRONT face mirrors the real stack's layers, top-to-bottom, so the
-  // cross-fade from the live stack into the block is near-seamless. Colours match
-  // the real nodes: process green, writable amber, read-only image layers slate.
-  const frontLayers: BandSpec[] = [
-    {
-      label: "nginx · PID 1",
-      fill: containerColors.processSoft,
-      stroke: containerColors.process,
-      textColor: theme.text,
-    },
-    {
-      label: "writable layer",
-      fill: theme.secondary.soft,
-      stroke: containerColors.writable + "cc",
-      textColor: containerColors.writable,
-    },
-    ...[...imageFs.layers].reverse().map((layer) => ({
-      label: layer.label.text(),
-      fill: theme.surfaceRaised + "88",
-      stroke: theme.primary.base + "99",
-      textColor: theme.text,
-    })),
-  ]
+  // The process is about to become part of one rigid geometric turn. Stop its
+  // independent outline pulse before its stroke is handed to the trapezoid.
+  cancel(processBreath)
+  process.node.stroke(containerColors.process)
 
-  const block = createPerspectiveBlock(barWidth, stackHeight, frontLayers)
-  block.node.x(stackCenterX)
-  // Hinge sits on the stack's top edge when upright; as the block turns we pan it
-  // gently down so the head-on filesystem (which rises above the hinge) stays
-  // centred in the panel instead of climbing out of frame.
-  const hingeUprightY = stackCenterY - stackHeight / 2
-  const hingeHeadOnY = imageFs.node.y() + 60
-  block.node.y(
-    () => hingeUprightY + (hingeHeadOnY - hingeUprightY) * block.rot(),
+  // Capture each real layer's centre before taking layout out of the equation.
+  // Their content remains live, but their rectangular surfaces will be replaced
+  // by clipping paths that can actually deform into trapezoids.
+  const projectedItems = (stack.children() as Rect[]).map((node) => {
+    const absolute = node.absolutePosition()
+    const centerY = absolute.y - VIDEO_HEIGHT / 2
+    return {
+      node,
+      distanceFromBase: stackBaseY - centerY,
+      width: node.width(),
+      height: node.height(),
+      fill: node.fill(),
+      stroke: node.stroke(),
+      lineWidth: node.lineWidth(),
+    }
+  })
+  const frontHeight = Math.max(
+    ...projectedItems.map(
+      ({distanceFromBase, height}) => distanceFromBase + height / 2,
+    ),
   )
+
+  const block = createPerspectiveBlock(barWidth, frontHeight)
+  block.node.x(stackCenterX)
+  // The shared top-front hinge moves toward the planted base as the layer face
+  // folds. The merged filesystem opens above that hinge, rather than occupying
+  // the same plane as the receding layers.
+  block.node.y(() => stackBaseY - block.frontOffset(frontHeight))
   block.rot(0) // start upright, front face facing us — a twin of the real stack
-  block.node.opacity(0)
+  block.node.opacity(1)
   world.overlay().add(block.node)
+
+  // Wrap each original layer in a four-point clipping surface. The content is
+  // still the original node, while the wrapper supplies the shape a Rect cannot:
+  // a wide top edge and a shorter bottom edge, with continuous slanted sides.
+  const projectedSurfaces = projectedItems.map((item) => {
+    const topDistance = item.distanceFromBase + item.height / 2
+    const bottomDistance = item.distanceFromBase - item.height / 2
+    const halfWidth = item.width / 2
+    const points = (): PossibleVector2[] => [
+      [
+        -halfWidth * block.frontScale(topDistance),
+        -block.frontOffset(topDistance),
+      ],
+      [
+        halfWidth * block.frontScale(topDistance),
+        -block.frontOffset(topDistance),
+      ],
+      [
+        halfWidth * block.frontScale(bottomDistance),
+        -block.frontOffset(bottomDistance),
+      ],
+      [
+        -halfWidth * block.frontScale(bottomDistance),
+        -block.frontOffset(bottomDistance),
+      ],
+    ]
+    const surface = (
+      <Line
+        points={points}
+        closed
+        clip
+        radius={item.node === process.node ? PROCESS_HEIGHT / 2 : 12}
+        fill={item.fill}
+        stroke={item.stroke}
+        lineWidth={item.lineWidth}
+        opacity={block.frontOpacity}
+        position={[stackCenterX, stackBaseY]}
+      />
+    ) as Line
+    world.overlay().add(surface)
+
+    item.node.remove()
+    item.node.fill("#00000000")
+    item.node.stroke("#00000000")
+    surface.add(item.node)
+    item.node.x(0)
+    item.node.y(
+      () =>
+        -(
+          block.frontOffset(topDistance) +
+          block.frontOffset(bottomDistance)
+        ) / 2,
+    )
+    item.node.scale(() => [
+      (block.frontScale(topDistance) +
+        block.frontScale(bottomDistance)) / 2,
+      (block.frontOffset(topDistance) -
+        block.frontOffset(bottomDistance)) /
+        item.height,
+    ])
+
+    return {...item, surface}
+  })
 
   const mergedCaption = (
     <Txt
@@ -570,17 +601,10 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   ) as Txt
   world.overlay().add(mergedCaption)
 
-  // Cross-fade the live stack into the block while both stand upright and share
-  // the same footprint, so the swap to the rotatable "solid" is invisible.
-  yield* all(
-    stack.opacity(0, 0.6, easeInOutCubic),
-    block.node.opacity(1, 0.6, easeInOutCubic),
-  )
-
   // Turn the block back to a clear three-quarter angle first: the top face opens
-  // up (trapezoid narrowing toward its far edge) while the front-face layers
-  // recede and converge toward the bottom — reading as one solid turning in space.
-  yield* all(block.rot(0.62, 1.1, easeOutCubic), mergedCaption.opacity(1, 0.8))
+  // up while the original component foreshortens toward its planted base.
+  // Absorb the old handoff time into this turn so narration timing is unchanged.
+  yield* all(block.rot(0.62, 1.7, easeOutCubic), mergedCaption.opacity(1, 0.8))
   yield* waitFor(0.3)
 
   // Complete the quarter-turn: the merged filesystem straightens into a flat,
@@ -590,14 +614,25 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   yield* waitFor(3)
 
-  // Fold back down: the block turns upright again, then cross-fades back to the
-  // live layer stack, ready for the container to be multiplied.
-  yield* block.rot(0, 0.9, easeInOutCubic)
+  // Fold the same stack back upright. The previous swap-back time is absorbed
+  // into the rotation, keeping the approved duration without another handoff.
   yield* all(
-    block.node.opacity(0, 0.5, easeInOutCubic),
+    block.rot(0, 1.5, easeInOutCubic),
     mergedCaption.opacity(0, 0.4),
-    stack.opacity(1, 0.6, easeInOutCubic),
   )
+
+  // Restore the same nodes, in their original order, to the persistent layout.
+  // Reset projection signals first so layout can resume ownership of geometry.
+  for (const item of projectedSurfaces) {
+    item.node.remove()
+    item.surface.remove()
+    item.node.fill(item.fill)
+    item.node.stroke(item.stroke)
+    item.node.opacity(1)
+    item.node.scale(1)
+    item.node.position([0, 0])
+    stack.add(item.node)
+  }
   block.node.remove()
   mergedCaption.remove()
 
@@ -609,6 +644,5 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   yield* waitFor(1)
 
-  cancel(processBreath)
   yield* process.node.stroke(containerColors.process, 0.3)
 }
