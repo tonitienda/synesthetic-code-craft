@@ -9,7 +9,7 @@ import {
   World,
 } from "./utils"
 import { liftCommandPhrase } from "../../../choreography"
-import { theme } from "../../../theme"
+import { terminalTheme, theme } from "../theme"
 import { Txt } from "@motion-canvas/2d"
 
 export const playIntro = function* (world: World): ThreadGenerator {
@@ -22,6 +22,7 @@ export const playIntro = function* (world: World): ThreadGenerator {
     height: VIDEO_HEIGHT / 1.5,
     fontSize: 25,
     typingDelay: 0.1,
+    theme: terminalTheme,
   })
 
   terminal.node.y(0)

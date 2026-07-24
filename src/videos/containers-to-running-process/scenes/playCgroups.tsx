@@ -6,7 +6,7 @@ import {
   easeOutBack,
   waitFor,
 } from "@motion-canvas/core"
-import { theme } from "../../../theme"
+import { theme } from "../theme"
 import { World } from "./utils"
 
 export const playCgroups = function* (world: World): ThreadGenerator {

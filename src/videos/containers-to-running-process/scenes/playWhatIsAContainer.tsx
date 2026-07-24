@@ -13,8 +13,7 @@ import {
   Reference,
   SimpleSignal,
 } from "@motion-canvas/core"
-import { containerColors } from "../../../components/docker"
-import { theme } from "../../../theme"
+import { containerColors, theme } from "../theme"
 import {
   World,
   colors,
@@ -213,7 +212,7 @@ function createPerspectiveBlock(
     {
       text: "📄  nginx.conf",
       fontSize: 30,
-      fill: "#ccc",
+      fill: theme.details.mergedFilesystemText,
       weight: 400,
       indent: 44,
       h: 40,
@@ -335,8 +334,8 @@ function createPerspectiveBlock(
           points={topOutline}
           closed
           radius={14}
-          fill={"#333"}
-          stroke={"#ccc"}
+          fill={theme.details.mergedFilesystem}
+          stroke={theme.details.mergedFilesystemText}
           lineWidth={3}
         />
         <Line

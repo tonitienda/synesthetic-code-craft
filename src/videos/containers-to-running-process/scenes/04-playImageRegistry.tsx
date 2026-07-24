@@ -14,6 +14,7 @@ import {
 } from "./utils"
 import { createDockerImageBox } from "../../../components/docker"
 import { createRegistry } from "../../../components/registries"
+import { theme } from "../theme"
 
 export const playImageRegistry = function* (world: World): ThreadGenerator {
   const { liftedCommand, terminal } = world.elements ?? {}
@@ -33,7 +34,7 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   yield* waitFor(1)
 
   // Create the Registry visual on the right.
-  const registry = createRegistry()
+  const registry = createRegistry(theme)
   registry.node.position([
     toWorldX(
       VIDEO_WIDTH - registry.node.width() - PADDING,
@@ -48,14 +49,14 @@ export const playImageRegistry = function* (world: World): ThreadGenerator {
   // scaling, so the panel never shimmers or nudges its neighbours.
   // world.cancellation.registryBreath = yield loop(Infinity, () =>
   //   registry.node
-  //     .stroke("#a1a1a1", 1.6, easeInOutCubic)
-  //     .to("#5a5a5a", 1.6, easeInOutCubic),
+  //     .stroke(theme.textMuted, 1.6, easeInOutCubic)
+  //     .to(theme.textDim, 1.6, easeInOutCubic),
   // )
 
   world.stage().add(registry.node)
 
   // // Create an overlay Docker-image object from the "nginx" token.
-  const nginxImage = createDockerImageBox("nginx")
+  const nginxImage = createDockerImageBox("nginx", theme)
   world.overlay().add(nginxImage.node)
 
   // // Start the box exactly over the title token.

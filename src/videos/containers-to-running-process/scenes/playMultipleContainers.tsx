@@ -10,10 +10,9 @@ import { Rect, Txt } from "@motion-canvas/2d"
 import {
   SharedImageBase,
   createContainerCard,
-  containerColors,
 } from "../../../components/docker"
 import { createFileChip } from "../../../components/filesystem"
-import { theme } from "../../../theme"
+import { containerColors, theme } from "../theme"
 import { World, rotatePhaseToken, Theme, VIDEO_WIDTH } from "./utils"
 
 export const playMultipleContainers = function* (
@@ -113,7 +112,7 @@ export const playMultipleContainers = function* (
   // web-1 begins AS the single container, covering the whole stack. We give it
   // its final layout width right away and use scale.x to make it *look*
   // full-width — so the later shrink is a smooth stretch, not a content reflow.
-  const A = createContainerCard("web-1")
+  const A = createContainerCard("web-1", theme)
   A.node.width(cardWidthPx)
   A.node.scale.x(roW / cardWidthPx)
   A.node.position([baseLocal.x, cardCenterY])
@@ -147,7 +146,7 @@ export const playMultipleContainers = function* (
   // rises out of the base at its resting spot and inflates into place with an
   // elastic settle, while the base flashes once to say both containers share
   // this one read-only image.
-  const B = createContainerCard("web-2")
+  const B = createContainerCard("web-2", theme)
   B.node.width(cardWidthPx)
   B.node.position([bTargetX, cardCenterY + 52])
   B.node.scale(0.72)
@@ -176,13 +175,13 @@ export const playMultipleContainers = function* (
   // dim green so they read as steady heartbeats without anything resizing.
   // world.cancellation.heartA = yield loop(Infinity, () =>
   //   A.dot
-  //     .fill("#6ee7b7", 0.7, easeInOutCubic)
-  //     .to("#10b981", 0.7, easeInOutCubic),
+  //     .fill(theme.success.on, 0.7, easeInOutCubic)
+  //     .to(theme.success.base, 0.7, easeInOutCubic),
   // )
   // world.cancellation.heartB = yield loop(Infinity, () =>
   //   B.dot
-  //     .fill("#6ee7b7", 0.7, easeInOutCubic)
-  //     .to("#10b981", 0.7, easeInOutCubic),
+  //     .fill(theme.success.on, 0.7, easeInOutCubic)
+  //     .to(theme.success.base, 0.7, easeInOutCubic),
   // )
 
   // `run` is complete for both containers — the phase breadcrumb has done its

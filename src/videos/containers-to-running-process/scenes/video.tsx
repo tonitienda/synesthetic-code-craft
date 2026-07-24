@@ -12,6 +12,7 @@ import {
   waitFor,
 } from "@motion-canvas/core"
 import { colors, VIDEO_WIDTH, World } from "./utils"
+import { theme } from "../theme"
 import { playNarrationVoice } from "./playNarration"
 import { playSoundtrack } from "./playSoundtrack"
 import { playIntro } from "./01-playIntro"
@@ -63,10 +64,10 @@ export default makeScene2D(function* (view) {
     from: [-1120, -680],
     to: [1020, 620],
     stops: [
-      { offset: 0, color: "#050505" },
-      { offset: 0.34, color: "#101010" },
-      { offset: 0.68, color: "#161616" },
-      { offset: 1, color: "#0a0a0a" },
+      { offset: 0, color: theme.background.atmosphere[0] },
+      { offset: 0.34, color: theme.background.atmosphere[1] },
+      { offset: 0.68, color: theme.background.atmosphere[2] },
+      { offset: 1, color: theme.background.atmosphere[3] },
     ],
   })
 
@@ -80,9 +81,9 @@ export default makeScene2D(function* (view) {
     fromRadius: 0,
     toRadius: 1500,
     stops: [
-      { offset: 0, color: "#161616" },
-      { offset: 0.42, color: "#101010" },
-      { offset: 1, color: "#0a0a0a" },
+      { offset: 0, color: theme.background.depth[0] },
+      { offset: 0.42, color: theme.background.depth[1] },
+      { offset: 1, color: theme.background.depth[2] },
     ],
   })
 
@@ -95,9 +96,9 @@ export default makeScene2D(function* (view) {
     fromRadius: 120,
     toRadius: 1180,
     stops: [
-      { offset: 0, color: "#181818" },
-      { offset: 0.5, color: "#111111" },
-      { offset: 1, color: "#10101000" },
+      { offset: 0, color: theme.background.pulse[0] },
+      { offset: 0.5, color: theme.background.pulse[1] },
+      { offset: 1, color: theme.background.pulse[2] },
     ],
   })
 
@@ -109,8 +110,8 @@ export default makeScene2D(function* (view) {
     fromRadius: 720,
     toRadius: 1500,
     stops: [
-      { offset: 0, color: "#02020200" },
-      { offset: 1, color: "#020202cc" },
+      { offset: 0, color: theme.background.vignette[0] },
+      { offset: 1, color: theme.background.vignette[1] },
     ],
   })
 

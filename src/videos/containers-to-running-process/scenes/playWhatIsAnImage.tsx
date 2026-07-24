@@ -8,6 +8,7 @@ import {
 } from "@motion-canvas/core"
 import { createFileSystemLayers } from "../../../components/filesystem"
 import { World, VIDEO_HEIGHT, PADDING, toWorldY } from "./utils"
+import { theme } from "../theme"
 
 export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
   const { registry, localSystem, registryImage, localImage } =
@@ -68,6 +69,7 @@ export const playWhatIsAnImage = function* (world: World): ThreadGenerator {
       "runtime dependencies",
       "application files",
     ],
+    theme,
   )
   fsLayers.node.opacity(0)
   world.overlay().add(fsLayers.node)

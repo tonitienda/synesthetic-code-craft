@@ -10,8 +10,7 @@ import {
   delay,
 } from "@motion-canvas/core"
 import { World, colors } from "./utils"
-import { containerColors } from "../../../components/docker"
-import { theme } from "../../../theme"
+import { containerColors, theme } from "../theme"
 
 // Accent colours echo the motifs the video already used, so every formula term
 // can be traced back to something the viewer has already seen.

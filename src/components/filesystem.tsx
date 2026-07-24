@@ -7,7 +7,7 @@ import {
   easeOutBack,
   Reference,
 } from "@motion-canvas/core"
-import { theme } from "../theme"
+import { theme, Theme } from "../theme"
 
 // A persisted file that lives inside the writable layer after a write.
 export function createFileChip(text: string, color: string): Rect {
@@ -40,9 +40,10 @@ class FileSystemLayer {
     x: number,
     y: number,
     label: string,
+    selectedTheme: Theme = theme,
   ) {
     this.label = (
-      <Txt text={label} fontSize={26} fill={theme.text} fontWeight={700} />
+      <Txt text={label} fontSize={26} fill={selectedTheme.text} fontWeight={700} />
     ) as Txt
 
     this.node = (
@@ -55,8 +56,8 @@ class FileSystemLayer {
         height={height}
         paddingLeft={26}
         radius={12}
-        fill={theme.surfaceRaised + "88"}
-        stroke={theme.primary.base + "99"}
+        fill={selectedTheme.surfaceRaised + "88"}
+        stroke={selectedTheme.primary.base + "99"}
         lineWidth={3}
         //backdropBlur={8}
         opacity={0}
@@ -81,6 +82,7 @@ export class FileSystem {
     x: number,
     y: number,
     title: string,
+    selectedTheme: Theme = theme,
   ) {
     this.layers = layers
     this.layersContainer = createRef<Layout>()
@@ -98,8 +100,8 @@ export class FileSystem {
         padding={32}
         gap={52}
         radius={28}
-        fill={theme.surfaceRaised + "88"}
-        stroke={theme.primary.base + "99"}
+        fill={selectedTheme.surfaceRaised + "88"}
+        stroke={selectedTheme.primary.base + "99"}
         lineWidth={3}
         //backdropBlur={8}
       >
@@ -107,7 +109,7 @@ export class FileSystem {
           ref={this.titleRef}
           text={title}
           fontSize={28}
-          fill={theme.primary.base}
+          fill={selectedTheme.primary.base}
           fontWeight={700}
         />
         <Layout
@@ -174,6 +176,7 @@ export const createFileSystemLayers = (
   y: number,
   title: string,
   labels: string[],
+  selectedTheme: Theme = theme,
 ): FileSystem => {
   const panelPadding = 32
   const titleAreaHeight = 86
@@ -183,7 +186,15 @@ export const createFileSystemLayers = (
     height - panelPadding * 2 - titleAreaHeight - layerGap * (labels.length - 1)
   const layerHeight = layersHeight / labels.length
   const layers = labels.map(
-    (label) => new FileSystemLayer(layerWidth, layerHeight, 0, 0, label),
+    (label) =>
+      new FileSystemLayer(
+        layerWidth,
+        layerHeight,
+        0,
+        0,
+        label,
+        selectedTheme,
+      ),
   )
-  return new FileSystem(layers, width, height, x, y, title)
+  return new FileSystem(layers, width, height, x, y, title, selectedTheme)
 }

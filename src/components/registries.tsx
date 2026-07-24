@@ -1,7 +1,7 @@
 import { Layout, Rect, Txt } from "@motion-canvas/2d"
 import { createRef, Reference, Vector2 } from "@motion-canvas/core"
 import { GlassRectangle } from "./glass"
-import { theme } from "../theme"
+import { theme, Theme } from "../theme"
 
 export type Registry = {
   node: Rect
@@ -15,7 +15,7 @@ export type LocalSystem = {
   slot: Reference<Rect>
 }
 
-export function createRegistry(): Registry {
+export function createRegistry(selectedTheme: Theme = theme): Registry {
   const slot = createRef<Rect>()
 
   const node = (
@@ -26,7 +26,8 @@ export function createRegistry(): Registry {
       width={900}
       height={200}
       radius={28}
-      border={theme.textMuted + "99"}
+      background={selectedTheme.surfaceRaised + "d0"}
+      border={selectedTheme.textMuted + "99"}
       borderWidth={3}
       padding={24}
       gap={22}
@@ -41,7 +42,7 @@ export function createRegistry(): Registry {
         <Txt
           text={"Remote registry"}
           fontSize={30}
-          fill={theme.text}
+          fill={selectedTheme.text}
           fontWeight={700}
         />
       </Layout>
@@ -57,9 +58,9 @@ export function createRegistry(): Registry {
           width={230}
           height={100}
           radius={20}
-          stroke={theme.borderSubtle}
+          stroke={selectedTheme.borderSubtle}
           lineWidth={3}
-          fill={theme.surfaceDim + "a8"}
+          fill={selectedTheme.surfaceDim + "a8"}
           opacity={0}
         />
       </Layout>
@@ -74,7 +75,7 @@ export function createRegistry(): Registry {
   }
 }
 
-export function createLocalsystem(): LocalSystem {
+export function createLocalsystem(selectedTheme: Theme = theme): LocalSystem {
   const slot = createRef<Rect>()
   const label = createRef<Layout>()
   const title = createRef<Txt>()
@@ -87,7 +88,8 @@ export function createLocalsystem(): LocalSystem {
       width={"100%"}
       height={200}
       radius={28}
-      border={theme.textMuted + "99"}
+      background={selectedTheme.surfaceRaised + "d0"}
+      border={selectedTheme.textMuted + "99"}
       borderWidth={3}
       padding={24}
       gap={22}
@@ -104,7 +106,7 @@ export function createLocalsystem(): LocalSystem {
           ref={title}
           text={"Local system"}
           fontSize={30}
-          fill={theme.text}
+          fill={selectedTheme.text}
           fontWeight={700}
         />
       </Layout>
@@ -120,9 +122,9 @@ export function createLocalsystem(): LocalSystem {
           width={230}
           height={100}
           radius={20}
-          stroke={theme.borderSubtle}
+          stroke={selectedTheme.borderSubtle}
           lineWidth={3}
-          fill={theme.surfaceDim + "a8"}
+          fill={selectedTheme.surfaceDim + "a8"}
           opacity={0}
         />
       </Layout>

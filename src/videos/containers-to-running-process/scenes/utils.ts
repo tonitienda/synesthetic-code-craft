@@ -6,7 +6,7 @@ import {
 } from "@motion-canvas/core"
 import { LiftedCommandPhrase } from "../../../choreography"
 import { Terminal } from "../../../components"
-import { theme } from "../../../theme"
+import { theme } from "../theme"
 import { LocalSystem, Registry } from "../../../components/registries"
 import {
   ContainerCard,

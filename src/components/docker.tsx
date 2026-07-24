@@ -1,7 +1,7 @@
 import { Txt, Rect, Circle, Layout } from "@motion-canvas/2d"
 import { createRef, Reference } from "@motion-canvas/core"
 import { GlassRectangle } from "./glass"
-import { theme } from "../theme"
+import { theme, Theme } from "../theme"
 
 export type DockerImage = {
   node: Rect
@@ -15,7 +15,10 @@ export const containerColors = {
   processSoft: theme.success.soft,
 }
 
-export function createDockerImageBox(label: string): DockerImage {
+export function createDockerImageBox(
+  label: string,
+  selectedTheme: Theme = theme,
+): DockerImage {
   const node = (
     <GlassRectangle
       layout
@@ -25,20 +28,20 @@ export function createDockerImageBox(label: string): DockerImage {
       width={220}
       height={86}
       radius={18}
-      background={theme.surfaceRaised + "d6"}
-      border={theme.primary.base + "99"}
+      background={selectedTheme.surfaceRaised + "d6"}
+      border={selectedTheme.primary.base + "99"}
       borderWidth={3}
     >
       <Txt
         text={label}
         fontFamily={"monospace"}
         fontSize={42}
-        fill={theme.primary.on}
+        fill={selectedTheme.primary.on}
       />
       <Txt
         text={"Docker Image"}
         fontSize={20}
-        fill={theme.primary.base}
+        fill={selectedTheme.primary.base}
         marginTop={4}
       />
     </GlassRectangle>
@@ -61,7 +64,16 @@ export type ContainerCard = {
   badgeRow: Reference<Layout>
 }
 
-export function createContainerCard(name: string): ContainerCard {
+export function createContainerCard(
+  name: string,
+  selectedTheme: Theme = theme,
+): ContainerCard {
+  const colors = {
+    readonly: selectedTheme.primary.base,
+    writable: selectedTheme.secondary.base,
+    process: selectedTheme.success.base,
+    processSoft: selectedTheme.success.soft,
+  }
   const titleRef = createRef<Txt>()
   const chipsRow = createRef<Layout>()
   const badgeRow = createRef<Layout>()
@@ -80,8 +92,8 @@ export function createContainerCard(name: string): ContainerCard {
       height={320}
       padding={22}
       radius={22}
-      background={theme.surface + "d8"}
-      border={theme.textMuted + "aa"}
+      background={selectedTheme.surface + "d8"}
+      border={selectedTheme.textMuted + "aa"}
       borderWidth={3}
       opacity={0}
     >
@@ -97,7 +109,7 @@ export function createContainerCard(name: string): ContainerCard {
           text={name}
           fontFamily={"monospace"}
           fontSize={28}
-          fill={theme.textSoft}
+          fill={selectedTheme.textSoft}
           fontWeight={700}
         />
         <Layout ref={badgeRow} layout direction={"row"} gap={8} />
@@ -112,18 +124,18 @@ export function createContainerCard(name: string): ContainerCard {
         justifyContent={"center"}
         height={64}
         radius={999}
-        fill={containerColors.processSoft}
-        stroke={containerColors.process}
+        fill={colors.processSoft}
+        stroke={colors.process}
         lineWidth={3}
       >
-        <Circle ref={dotRef} size={14} fill={containerColors.process} />
+        <Circle ref={dotRef} size={14} fill={colors.process} />
         <Txt
           text={"nginx"}
           fontFamily={"monospace"}
           fontSize={26}
-          fill={theme.text}
+          fill={selectedTheme.text}
         />
-        <Txt text={"PID 1"} fontSize={18} fill={containerColors.process} />
+        <Txt text={"PID 1"} fontSize={18} fill={colors.process} />
       </Rect>
 
       <Rect
@@ -137,14 +149,14 @@ export function createContainerCard(name: string): ContainerCard {
         paddingLeft={20}
         paddingRight={20}
         radius={12}
-        fill={theme.secondary.soft}
-        stroke={containerColors.writable + "cc"}
+        fill={selectedTheme.secondary.soft}
+        stroke={colors.writable + "cc"}
         lineWidth={3}
       >
         <Txt
           text={"writable layer"}
           fontSize={20}
-          fill={containerColors.writable}
+          fill={colors.writable}
           fontWeight={700}
         />
         <Layout ref={chipsRow} layout direction={"row"} gap={8} />

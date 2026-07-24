@@ -9,7 +9,7 @@ import {
   waitFor,
   sound,
 } from "@motion-canvas/core"
-import { theme } from "../../../theme"
+import { theme } from "../theme"
 import { colors, World } from "./utils"
 import { Rect, Txt } from "@motion-canvas/2d"
 import { createLineBird } from "../../../components"
@@ -32,7 +32,11 @@ export const playSplash = function* (world: World): ThreadGenerator {
 
   // The channel's line-art bird sketches itself on, then sings the title into
   // existence — colored ripples carrying each word in.
-  const bird = createLineBird()
+  const bird = createLineBird({
+    stroke: theme.textSoft,
+    eye: theme.secondary.base,
+    glow: theme.primary.base,
+  })
   bird.node.position([-420, -30])
   bird.node.scale(1.15)
   splash().add(bird.node)
@@ -67,7 +71,17 @@ export const playSplash = function* (world: World): ThreadGenerator {
 
   yield* bird.tiltHead(-14, 0.35)
   yield* all(
-    bird.sing({ spread: 2400, duration: 1.9, stagger: 0.28 }),
+    bird.sing({
+      colors: [
+        theme.primary.base,
+        theme.accent.base,
+        theme.secondary.base,
+        theme.success.base,
+      ],
+      spread: 2400,
+      duration: 1.9,
+      stagger: 0.28,
+    }),
     delay(
       0.35,
       sequence(

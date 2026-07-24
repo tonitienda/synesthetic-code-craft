@@ -1,7 +1,7 @@
 import {Layout, Rect, Txt, makeScene2D} from '@motion-canvas/2d';
 import {all, createRef, waitFor} from '@motion-canvas/core';
 import {TitleBlock} from './components';
-import {c, timing} from './theme';
+import {c, theme, timing} from './theme';
 
 export interface Moment {
   label: string;
@@ -28,8 +28,8 @@ export function makeContainersV2Scene({title, subtitle, moments}: SceneConfig) {
     view.add(
       <Layout width={'100%'} height={'100%'}>
         <Rect width={'100%'} height={'100%'} fill={c.bg} />
-        <Rect x={-520} y={-300} width={560} height={560} radius={280} fill={'#0c4a6e22'} />
-        <Rect x={520} y={300} width={620} height={620} radius={310} fill={'#2e106522'} />
+        <Rect x={-520} y={-300} width={560} height={560} radius={280} fill={theme.background.cyanGlow} />
+        <Rect x={520} y={300} width={620} height={620} radius={310} fill={theme.background.violetGlow} />
 
         <Layout layout direction={'column'} gap={26} alignItems={'center'} justifyContent={'center'} width={'100%'} height={'100%'} padding={58}>
           <Layout ref={heading} opacity={0} y={-18}>

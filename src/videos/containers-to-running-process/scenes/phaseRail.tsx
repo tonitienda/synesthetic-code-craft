@@ -12,7 +12,7 @@ import {
   waitFor,
 } from "@motion-canvas/core"
 import { breathe } from "../../../choreography"
-import { theme } from "../../../theme"
+import { theme } from "../theme"
 import { colors, PhaseRail } from "./utils"
 
 // Where the rail lives once it has graduated from the teaching cards: a compact
@@ -28,8 +28,8 @@ const RAIL_SCALE = 0.55
 const AMBER = colors.amber
 // Pulse endpoints — mid-tones between an accent's base and dim that the theme
 // doesn't carry, kept local so the breathing animation is unchanged.
-const AMBER_DIM = "#a16207" // the dim end of the active pill's breathing pulse
-const GREEN_DIM = "#1f6f52"
+const AMBER_DIM = theme.phase.activeDim
+const GREEN_DIM = theme.phase.completeDim
 const SLATE = theme.border // an upcoming (not-yet-reached) step
 const MUTED = theme.borderStrong
 const GREEN = theme.success.base // a completed step

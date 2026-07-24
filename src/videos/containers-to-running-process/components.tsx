@@ -1,5 +1,5 @@
 import {Circle, Layout, Line, Rect, Txt} from '@motion-canvas/2d';
-import {c, layers} from './theme';
+import {c, layers, theme} from './theme';
 
 export function TitleBlock({title, subtitle}: {title: string; subtitle?: string}) {
   return (
@@ -61,7 +61,7 @@ export function CommandCallout({command = 'docker run nginx', focus = 'run'}: {c
   const after = hasFocus ? command.slice(index + focus.length) : '';
 
   return (
-    <Rect layout gap={8} alignItems={'center'} justifyContent={'center'} width={780} height={138} radius={28} fill={'#020617'} stroke={c.stroke} lineWidth={4}>
+    <Rect layout gap={8} alignItems={'center'} justifyContent={'center'} width={780} height={138} radius={28} fill={theme.details.commandSurface} stroke={c.stroke} lineWidth={4}>
       <Txt text={before} fontFamily={'monospace'} fontSize={58} fill={c.text} />
       {hasFocus && (
         <Rect radius={12} padding={[8, 16]} fill={c.amberSoft} stroke={c.amber} lineWidth={3}>
@@ -87,8 +87,8 @@ export function RegistryShelf() {
   return (
     <Rect layout direction={'column'} gap={13} alignItems={'center'} justifyContent={'center'} width={330} height={235} radius={26} padding={22} fill={c.violetSoft} stroke={c.violet} lineWidth={5}>
       <Txt text={'registry'} fontSize={35} fontWeight={800} fill={c.text} />
-      <Rect width={245} height={32} radius={8} fill={'#3b1f66'} stroke={c.stroke} lineWidth={2} />
-      <Rect width={245} height={32} radius={8} fill={'#3b1f66'} stroke={c.stroke} lineWidth={2} />
+      <Rect width={245} height={32} radius={8} fill={theme.details.registryShelf} stroke={c.stroke} lineWidth={2} />
+      <Rect width={245} height={32} radius={8} fill={theme.details.registryShelf} stroke={c.stroke} lineWidth={2} />
       <Txt text={'storage + distribution'} fontSize={21} fill={c.muted} />
       <Txt text={'not where containers run'} fontSize={18} fill={c.amber} />
     </Rect>
@@ -160,7 +160,7 @@ export function ProcessPulse({label = 'process'}: {label?: string}) {
 export function BoundaryFrame({label, children, tone = 'container'}: {label: string; children: any; tone?: 'container' | 'namespace' | 'cgroup' | 'filesystem'}) {
   const stroke = tone === 'namespace' ? c.violet : tone === 'cgroup' ? c.amber : tone === 'filesystem' ? c.cyan : c.green;
   return (
-    <Rect layout direction={'column'} gap={10} alignItems={'center'} justifyContent={'center'} width={420} height={300} radius={28} padding={18} fill={'#02061766'} stroke={stroke} lineWidth={4}>
+    <Rect layout direction={'column'} gap={10} alignItems={'center'} justifyContent={'center'} width={420} height={300} radius={28} padding={18} fill={theme.details.boundarySurface} stroke={stroke} lineWidth={4}>
       <Txt text={label} fontSize={22} fill={stroke} fontWeight={800} />
       {children}
     </Rect>
@@ -204,7 +204,7 @@ export function WritableLayer({label}: {label: string}) {
 
 export function KernelLayer() {
   return (
-    <Rect layout gap={22} alignItems={'center'} justifyContent={'center'} width={1040} height={92} radius={22} fill={'#111827'} stroke={c.stroke} lineWidth={4}>
+    <Rect layout gap={22} alignItems={'center'} justifyContent={'center'} width={1040} height={92} radius={22} fill={theme.details.kernelSurface} stroke={c.stroke} lineWidth={4}>
       <Txt text={'host kernel'} fontSize={34} fontWeight={800} fill={c.text} />
       <Txt text={'the container is anchored to the host'} fontSize={22} fill={c.muted} />
     </Rect>

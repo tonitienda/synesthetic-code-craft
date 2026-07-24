@@ -1,6 +1,6 @@
 import { Rect, Txt } from "@motion-canvas/2d"
 import { ThreadGenerator, all, sequence, waitFor } from "@motion-canvas/core"
-import { theme } from "../../../theme"
+import { theme } from "../theme"
 import { World } from "./utils"
 
 function createBadge(text: string, color: string): Rect {

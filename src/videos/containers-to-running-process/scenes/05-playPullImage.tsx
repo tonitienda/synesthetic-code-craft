@@ -11,11 +11,9 @@ import {
   easeOutCubic,
   delay,
 } from "@motion-canvas/core"
-import {
-  containerColors,
-  createDockerImageBox,
-} from "../../../components/docker"
+import { createDockerImageBox } from "../../../components/docker"
 import { createLocalsystem } from "../../../components/registries"
+import { containerColors, theme } from "../theme"
 import { impact, transferRibbon } from "../../../choreography"
 import {
   PADDING,
@@ -43,7 +41,7 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   // First act of `run`: pull.
   yield* rotatePhaseToken(world, "pull", Theme.text)
 
-  const localSystem = createLocalsystem()
+  const localSystem = createLocalsystem(theme)
   // Frame the local system as "the host" from the very first time we see it, so
   // it can persist unchanged all the way through to the container scenes.
   localSystem.title().text("Your machine — the host")
@@ -67,12 +65,12 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   // Hand the "breathing" glow over: settle the registry's border back to rest,
   // and start the same soft pulse on the local system instead.
   // cancel(registryBreath)
-  // yield* registry.node.stroke("#5a5a5a", 0.4)
+  // yield* registry.node.stroke(theme.textDim, 0.4)
 
   // world.cancellation.localSystemBreath = yield loop(Infinity, () =>
   //   localSystem.node
-  //     .stroke("#a1a1a1", 1.6, easeInOutCubic)
-  //     .to("#5a5a5a", 1.6, easeInOutCubic),
+  //     .stroke(theme.textMuted, 1.6, easeInOutCubic)
+  //     .to(theme.textDim, 1.6, easeInOutCubic),
   // )
 
   world.background().add(localSystem.node)
@@ -118,7 +116,7 @@ export const playPullImage = function* (world: World): ThreadGenerator {
   const cx = localSlotCenter.x
   const cy = localSlotCenter.y
 
-  const localImage = createDockerImageBox("nginx")
+  const localImage = createDockerImageBox("nginx", theme)
   localImage.node.position(registryImage.node.position())
   localImage.node.opacity(0)
   localImage.node.scale(1)
