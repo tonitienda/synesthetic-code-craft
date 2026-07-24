@@ -57,26 +57,69 @@ export const playCgroups = function* (world: World): ThreadGenerator {
       opacity={0}
     />
   ) as Txt
+  // A heading in the freed top strip names what a cgroup is, echoing the
+  // narration: a control group that caps a container's share of the host.
+  const heading = (
+    <Txt
+      text={"cgroups · a control group caps CPU & memory"}
+      fontSize={30}
+      fill={cg2}
+      fontWeight={700}
+      y={-452}
+      opacity={0}
+    />
+  ) as Txt
   world.stage().add(track)
   world.stage().add(caption)
+  world.stage().add(heading)
 
   // Drift down into place while fading in, instead of materialising in situ.
   track.y(trackRestY - 30)
   caption.y(captionRestY - 30)
 
   yield* all(
+    heading.opacity(1, 0.6),
+    heading.y(-442, 0.6, easeOutCubic),
     track.opacity(1, 0.5),
     track.y(trackRestY, 0.7, easeOutCubic),
     caption.opacity(1, 0.5),
     caption.y(captionRestY, 0.7, easeOutCubic),
   )
 
+  // web-1 is given the larger share; its cool cgroup colour matches its card
+  // border, so the segment reads as "web-1's slice".
   yield* all(seg1.width(288, 0.8, easeOutCubic), A.node.stroke(cg1, 0.5))
 
+  // web-2 gets a tighter limit — a smaller slice, matching its own card.
   yield* all(seg2.width(176, 0.8, easeOutCubic), B.node.stroke(cg2, 0.5))
 
-  // web-2 tries to grab more, but the cgroup clamps it back.
+  // Even under load, web-2 can't exceed its cap: it strains past the limit and
+  // the cgroup clamps it straight back, so it can never starve web-1 or the host.
   yield* seg2.width(214, 0.3).to(176, 0.6, easeOutBack)
 
-  yield* waitFor(1.5)
+  yield* waitFor(1)
+
+  // The payoff: the two mechanisms answer two different questions. Namespaces
+  // shape what a container can SEE; cgroups limit what it can USE. It takes over
+  // the top strip from the heading (the host panel fills the rest of the frame,
+  // so this is the only place guaranteed clear).
+  const seeUse = (
+    <Txt
+      text={"namespaces → what it can see        cgroups → what it can use"}
+      fontFamily={"monospace"}
+      fontSize={28}
+      fill={theme.textSoft}
+      y={-452 - 12}
+      opacity={0}
+    />
+  ) as Txt
+  world.stage().add(seeUse)
+  yield* all(
+    heading.opacity(0, 0.5),
+    seeUse.opacity(1, 0.6),
+    seeUse.y(-452, 0.6, easeOutCubic),
+  )
+  heading.remove()
+
+  yield* waitFor(1.2)
 }

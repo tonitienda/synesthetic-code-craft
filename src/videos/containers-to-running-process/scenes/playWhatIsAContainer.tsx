@@ -10,6 +10,7 @@ import {
   cancel,
   createRef,
   createSignal,
+  sequence,
   Reference,
   SimpleSignal,
 } from "@motion-canvas/core"
@@ -106,6 +107,80 @@ function createProcessBox(
   ) as Rect
 
   return { node, dot: dotRef() }
+}
+
+// The container's runtime configuration, prepared during CREATE alongside the
+// writable layer: the command, environment, network and mounted volumes Docker
+// records before anything is running. Drawn as a small manifest card so the
+// narration's list has something concrete to point at.
+function createConfigManifest(): { node: Rect; rows: Rect[] } {
+  const entries: [string, string][] = [
+    ["command", "nginx -g 'daemon off;'"],
+    ["env", "NGINX_VERSION=1.27"],
+    ["network", "bridge · port 80"],
+    ["volumes", "/var/cache/nginx"],
+  ]
+
+  const rows = entries.map(
+    ([key, value]) =>
+      (
+        <Rect
+          layout
+          direction={"row"}
+          gap={18}
+          alignItems={"center"}
+          justifyContent={"start"}
+          width={"100%"}
+          height={40}
+          opacity={0}
+        >
+          <Txt
+            text={key}
+            fontFamily={"monospace"}
+            fontSize={22}
+            fill={containerColors.writable}
+            width={128}
+          />
+          <Txt
+            text={value}
+            fontFamily={"monospace"}
+            fontSize={22}
+            fill={theme.textSoft}
+          />
+        </Rect>
+      ) as Rect,
+  )
+
+  const node = (
+    <Rect
+      layout
+      direction={"column"}
+      alignItems={"start"}
+      justifyContent={"center"}
+      gap={10}
+      paddingTop={22}
+      paddingBottom={22}
+      paddingLeft={30}
+      paddingRight={30}
+      radius={18}
+      width={640}
+      fill={theme.surface + "e6"}
+      stroke={containerColors.writable + "88"}
+      lineWidth={3}
+      opacity={0}
+    >
+      <Txt
+        text={"runtime config"}
+        fontSize={22}
+        fill={theme.textMuted}
+        fontWeight={700}
+        marginBottom={4}
+      />
+      {rows}
+    </Rect>
+  ) as Rect
+
+  return { node, rows }
 }
 
 // A 2.5D turn that opens the merged-filesystem face behind the real layer stack.
@@ -407,8 +482,33 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   yield* waitFor(0.5)
 
-  // 2) START — the container's main process ignites into life as PID 1.
+  // 1b) CREATE also records the container's runtime configuration — its command,
+  // environment, network and mounted volumes. It surfaces as a manifest in the
+  // free space above the stack: the container now fully exists on disk, but the
+  // config is still just data — nothing is running yet.
+  const manifest = createConfigManifest()
+  const createPanelTop = imageFs.node.y() - imageFs.node.height() / 2
+  manifest.node.position([imageFs.node.x(), createPanelTop + 150])
+  world.overlay().add(manifest.node)
+
+  yield* all(
+    manifest.node.opacity(1, 0.5),
+    manifest.node.y(createPanelTop + 140, 0.6, easeOutBack),
+    sequence(0.12, ...manifest.rows.map((row) => row.opacity(1, 0.35))),
+  )
+
+  yield* waitFor(0.8)
+
+  // 2) START — the container's main process ignites into life as PID 1. As it
+  // comes alive the config manifest recedes: those settings are now baked into
+  // the running container, not a checklist we still need to see.
   yield* rotatePhaseToken(world, "start", colors.amber)
+
+  yield* all(
+    manifest.node.opacity(0, 0.5, easeInOutCubic),
+    manifest.node.y(createPanelTop + 172, 0.5, easeInOutCubic),
+  )
+  manifest.node.remove()
 
   const process = createProcessBox("nginx", "PID 1")
   process.node.width(imageFs.layersContainer().width())
@@ -660,7 +760,7 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   const mergedCaption = (
     <Txt
-      text={"overlayfs · one merged filesystem"}
+      text={"storage driver · overlayfs merges the layers into one filesystem"}
       fontFamily={"monospace"}
       fontSize={26}
       fill={theme.textMuted}
