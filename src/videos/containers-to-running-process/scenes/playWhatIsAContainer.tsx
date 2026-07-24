@@ -124,6 +124,7 @@ type PerspectiveBlock = {
   frontOffset: (distanceFromBase: number) => number
   frontScale: (distanceFromBase: number) => number
   frontOpacity: () => number
+  topOutline: () => PossibleVector2[]
 }
 function createPerspectiveBlock(
   width: number,
@@ -352,6 +353,7 @@ function createPerspectiveBlock(
     frontOffset: yF,
     frontScale: sF,
     frontOpacity,
+    topOutline,
   }
 }
 
@@ -494,22 +496,35 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
   cancel(processBreath)
   process.node.stroke(containerColors.process)
 
+  const processAbsolute = process.node.absolutePosition()
+  const processCenter: [number, number] = [
+    processAbsolute.x - VIDEO_WIDTH / 2,
+    processAbsolute.y - VIDEO_HEIGHT / 2,
+  ]
+  const processWidth = process.node.width()
+  const processHeight = process.node.height()
+  const processFill = process.node.fill()
+  const processStroke = process.node.stroke()
+  const processLineWidth = process.node.lineWidth()
+
   // Capture each real layer's centre before taking layout out of the equation.
   // Their content remains live, but their rectangular surfaces will be replaced
   // by clipping paths that can actually deform into trapezoids.
-  const projectedItems = (stack.children() as Rect[]).map((node) => {
-    const absolute = node.absolutePosition()
-    const centerY = absolute.y - VIDEO_HEIGHT / 2
-    return {
-      node,
-      distanceFromBase: stackBaseY - centerY,
-      width: node.width(),
-      height: node.height(),
-      fill: node.fill(),
-      stroke: node.stroke(),
-      lineWidth: node.lineWidth(),
-    }
-  })
+  const projectedItems = (stack.children() as Rect[])
+    .filter((node) => node !== process.node)
+    .map((node) => {
+      const absolute = node.absolutePosition()
+      const centerY = absolute.y - VIDEO_HEIGHT / 2
+      return {
+        node,
+        distanceFromBase: stackBaseY - centerY,
+        width: node.width(),
+        height: node.height(),
+        fill: node.fill(),
+        stroke: node.stroke(),
+        lineWidth: node.lineWidth(),
+      }
+    })
   const frontHeight = Math.max(
     ...projectedItems.map(
       ({distanceFromBase, height}) => distanceFromBase + height / 2,
@@ -589,6 +604,60 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
     return {...item, surface}
   })
 
+  // The process does not fold into the storage stack. It becomes a translucent
+  // viewing layer over the filesystem face, carrying the same nginx/PID content
+  // while the data beneath remains visible through a restrained green tint.
+  const processHalfWidth = processWidth / 2
+  const processHalfHeight = processHeight / 2
+  const processStartPoints: [number, number][] = [
+    [processCenter[0] - processHalfWidth, processCenter[1] + processHalfHeight],
+    [processCenter[0] + processHalfWidth, processCenter[1] + processHalfHeight],
+    [processCenter[0] + processHalfWidth, processCenter[1] - processHalfHeight],
+    [processCenter[0] - processHalfWidth, processCenter[1] - processHalfHeight],
+  ]
+  const processGlassPoints = (): PossibleVector2[] => {
+    const mix = block.rot()
+    const hingeY = stackBaseY - block.frontOffset(frontHeight)
+    const target = block.topOutline() as [number, number][]
+    return target.map(([x, y], index) => {
+      const [startX, startY] = processStartPoints[index]
+      const targetX = stackCenterX + x
+      const targetY = hingeY + y
+      return [
+        startX + (targetX - startX) * mix,
+        startY + (targetY - startY) * mix,
+      ]
+    })
+  }
+  const processGlassCenter = (): [number, number] => {
+    const points = processGlassPoints() as [number, number][]
+    return [
+      points.reduce((sum, [x]) => sum + x, 0) / points.length,
+      points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+    ]
+  }
+  const processGlass = (
+    <Line
+      points={processGlassPoints}
+      closed
+      clip
+      radius={() =>
+        PROCESS_HEIGHT / 2 + (14 - PROCESS_HEIGHT / 2) * block.rot()
+      }
+      fill={processFill}
+      stroke={processStroke}
+      lineWidth={processLineWidth}
+    />
+  ) as Line
+  world.overlay().add(processGlass)
+
+  process.node.remove()
+  process.node.fill("#00000000")
+  process.node.stroke("#00000000")
+  processGlass.add(process.node)
+  process.node.position(processGlassCenter)
+  process.node.scale(1)
+
   const mergedCaption = (
     <Txt
       text={"overlayfs · one merged filesystem"}
@@ -623,6 +692,15 @@ export const playWhatIsAContainer = function* (world: World): ThreadGenerator {
 
   // Restore the same nodes, in their original order, to the persistent layout.
   // Reset projection signals first so layout can resume ownership of geometry.
+  process.node.remove()
+  processGlass.remove()
+  process.node.fill(processFill)
+  process.node.stroke(processStroke)
+  process.node.opacity(1)
+  process.node.scale(1)
+  process.node.position([0, 0])
+  stack.add(process.node)
+
   for (const item of projectedSurfaces) {
     item.node.remove()
     item.surface.remove()
