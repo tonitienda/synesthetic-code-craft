@@ -26,6 +26,13 @@
       "port": 9002
     },
     {
+      "name": "palette-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "9020"],
+      "port": 9020,
+      "env": { "MOTION_CANVAS_PROJECT": "./src/projects/_palette-preview.ts" }
+    },
+    {
       "name": "containers-flat",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start:containers", "--", "--port", "9010"],
